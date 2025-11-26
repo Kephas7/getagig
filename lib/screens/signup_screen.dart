@@ -34,33 +34,44 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-     body: Padding(
-      padding:EdgeInsets.all(25),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text("Sign Up",style: TextStyle(fontSize: 35,fontWeight: FontWeight.bold),),
-          SizedBox(height: 30),
-          TextField(
-            controller: nameController,
-            decoration: InputDecoration(labelText: "Full Name"),
-          ),
-          SizedBox(height: 30),
-          TextField(
-            controller: emailController,
-            decoration: InputDecoration(labelText: "Email"),
-          ),
-          SizedBox(height: 30),
-          TextField(
-            controller: passwordController,
-            decoration: InputDecoration(labelText: "Password"),
-            obscureText: true,
-          )
-
-
-
-        ],
-      ),
+      body: Padding(
+        padding: EdgeInsets.all(25),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              "Sign Up",
+              style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 30),
+            TextField(
+              controller: nameController,
+              decoration: InputDecoration(labelText: "Full Name"),
+            ),
+            SizedBox(height: 30),
+            TextField(
+              controller: emailController,
+              decoration: InputDecoration(labelText: "Email"),
+            ),
+            SizedBox(height: 30),
+            TextField(
+              controller: passwordController,
+              decoration: InputDecoration(labelText: "Password"),
+              obscureText: true,
+            ),
+            SizedBox(height: 30),
+            loading
+                ? const CircularProgressIndicator()
+                : ElevatedButton(
+                    onPressed: createAccount,
+                    child: Text("Sign Up"),
+                  ),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Already have an account? Login"),
+            ),
+          ],
+        ),
       ),
     );
   }
