@@ -9,12 +9,11 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     return MaterialApp(
       routes: {
         '/login': (context) => LoginScreen(),
-        '/register':(context)=>SignupScreen(),
-        '/home':(context)=>HomeScreen(),
+        '/signup': (context) => SignupScreen(),
+        '/home': (context) => HomeScreen(),
       },
       home: SplashScreen(),
     );
