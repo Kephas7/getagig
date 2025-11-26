@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "955607266806",
+    "project_id": "getagig-a6fb3",
+    "storage_bucket": "getagig-a6fb3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:955607266806:android:a08c43ab801d47184d03d7",
+        "android_client_info": {
+          "package_name": "com.api.simondiyali.getagig.getagig"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCqGvaYUwXAeoUbZWXgg9fjbyJVjXumCFI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
