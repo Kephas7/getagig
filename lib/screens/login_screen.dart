@@ -29,6 +29,21 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => loading = false);
   }
 
+  Future<void> resetPassword() async {
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(
+        email: emailController.text.trim(),
+      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Password reset email sent!")));
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,7 +66,8 @@ class _LoginScreenState extends State<LoginScreen> {
               decoration: InputDecoration(labelText: 'Password'),
               obscureText: true,
             ),
-            SizedBox(height: 30),
+            SizedBox(height: 20),
+            TextButton(onPressed: () {}, child: Text("Forgot Password?")),
             loading
                 ? const CircularProgressIndicator()
                 : ElevatedButton(onPressed: loginUser, child: Text("Login")),
