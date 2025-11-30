@@ -67,7 +67,10 @@ class _LoginScreenState extends State<LoginScreen> {
               obscureText: true,
             ),
             SizedBox(height: 20),
-            TextButton(onPressed: () {}, child: Text("Forgot Password?")),
+            TextButton(
+              onPressed: resetPassword,
+              child: Text("Forgot Password?"),
+            ),
             loading
                 ? const CircularProgressIndicator()
                 : ElevatedButton(onPressed: loginUser, child: Text("Login")),
