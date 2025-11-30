@@ -18,11 +18,16 @@ class _SignupScreenState extends State<SignupScreen> {
   Future<void> createAccount() async {
     setState(() => loading = true);
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
-      Navigator.pushReplacementNamed(context, '/home');
+      UserCredential userCrendential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+            email: emailController.text.trim(),
+            password: passwordController.text.trim(),
+          );
+      await userCrendential.user?.sendEmailVerification();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Verify your email.")));
+      Navigator.pop(context);
     } catch (e) {
       ScaffoldMessenger.of(
         context,
