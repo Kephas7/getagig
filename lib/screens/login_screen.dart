@@ -203,11 +203,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
-
-                    TextButton(
-                      onPressed: () => Navigator.pushNamed(context, '/onboard'),
-                      child: const Text("Back"),
-                    ),
                   ],
                 ),
               ),
