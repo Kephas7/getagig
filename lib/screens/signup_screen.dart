@@ -10,7 +10,6 @@ class SignupScreen extends StatefulWidget {
 
 class _SignupScreenState extends State<SignupScreen> {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -28,7 +27,8 @@ class _SignupScreenState extends State<SignupScreen> {
             email: emailController.text.trim(),
             password: passwordController.text.trim(),
           );
-
+      await userCredential.user!.updateDisplayName(nameController.text.trim());
+      await userCredential.user!.reload();
       await userCredential.user?.sendEmailVerification();
 
       ScaffoldMessenger.of(
