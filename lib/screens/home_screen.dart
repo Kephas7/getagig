@@ -53,7 +53,7 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 8),
 
               Text(
-                user?.displayName ?? user?. ?? "User",
+                user?.displayName ?? "User",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: isLandscape ? 24 : 28,
