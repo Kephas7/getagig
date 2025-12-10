@@ -1,5 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:getagig/screens/musician_navbar_screens/gigs.dart';
+import 'package:getagig/screens/musician_navbar_screens/home.dart';
+import 'package:getagig/screens/musician_navbar_screens/messages.dart';
+import 'package:getagig/screens/musician_navbar_screens/profile.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -9,9 +13,16 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  int _selectedIndex = 0;
+  List<Widget> lstBottomSCcreen = [
+    const Home(),
+    const Gigs(),
+    const Messages(),
+    const Profile(),
+  ];
+
   @override
   Widget build(BuildContext context) {
-    final User? user = FirebaseAuth.instance.currentUser;
     final orientation = MediaQuery.of(context).orientation;
     final isLandscape = orientation == Orientation.landscape;
 
@@ -32,8 +43,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+      body: lstBottomSCcreen[_selectedIndex],
 
-      body: BottomNavigationBar(
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.white,
         type: BottomNavigationBarType.fixed,
         items: [
           BottomNavigationBarItem(
@@ -46,13 +59,19 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.message, color: Colors.black),
-            label: "Home",
+            label: "Messages",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person, color: Colors.black),
             label: "Profile",
           ),
         ],
+        currentIndex: _selectedIndex,
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
       ),
     );
   }
