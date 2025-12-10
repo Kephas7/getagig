@@ -4,6 +4,7 @@ import 'package:getagig/screens/musician_navbar_screens/gigs.dart';
 import 'package:getagig/screens/musician_navbar_screens/home.dart';
 import 'package:getagig/screens/musician_navbar_screens/messages.dart';
 import 'package:getagig/screens/musician_navbar_screens/profile.dart';
+import 'package:getagig/theme/customHeader.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,21 +29,31 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
+
       appBar: AppBar(
-        title: const Text("Home"),
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 3,
+
+        title: Row(
+          children: [
+            // Logo
+            Image.asset("assets/images/mylogo.png", height: 50),
+          ],
+        ),
+
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-              Navigator.pushReplacementNamed(context, '/login');
-            },
+            icon: const Icon(Icons.notifications_none, color: Colors.black),
+            onPressed: () {},
+          ),
+
+          IconButton(
+            icon: const Icon(Icons.message, color: Colors.black),
+            onPressed: () {},
           ),
         ],
       ),
+
       body: lstBottomSCcreen[_selectedIndex],
 
       bottomNavigationBar: BottomNavigationBar(
