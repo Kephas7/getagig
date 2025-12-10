@@ -157,14 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: resetPassword,
-                        child: const Text(
-                          "Forgot Password?",
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: Colors.black,
-                            decoration: TextDecoration.underline,
-                          ),
-                        ),
+                        child: const Text("Forgot Password?"),
                       ),
                     ),
 
@@ -176,18 +169,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             width: double.infinity,
                             child: ElevatedButton(
                               onPressed: loginUser,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.black,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 15,
-                                ),
-                                shape: RoundedRectangleBorder(),
-                              ),
-                              child: const Text(
-                                "Log in",
-                                style: TextStyle(fontSize: 18),
-                              ),
+                              child: const Text("Log in"),
                             ),
                           ),
 
@@ -195,13 +177,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     TextButton(
                       onPressed: () => Navigator.pushNamed(context, '/signup'),
-                      child: const Text(
-                        "Create Account",
-                        style: TextStyle(
-                          color: Colors.black,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
+                      child: const Text("Create Account"),
                     ),
                   ],
                 ),

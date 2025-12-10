@@ -181,18 +181,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             width: double.infinity,
                             child: ElevatedButton(
                               onPressed: createAccount,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.black,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                shape: RoundedRectangleBorder(),
-                              ),
-                              child: const Text(
-                                "Sign Up",
-                                style: TextStyle(fontSize: 18),
-                              ),
+                              child: const Text("Sign Up"),
                             ),
                           ),
 
@@ -200,14 +189,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text(
-                        "Already have an account? Login",
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: Colors.black,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
+                      child: const Text("Already have an account? Login"),
                     ),
 
                     SizedBox(height: isLandscape ? 10 : 20),
