@@ -72,6 +72,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             "Skip",
                             style: TextStyle(
                               color: Colors.black,
+                              fontFamily: 'Urbanist-Medium',
                               fontSize: isSmallScreen ? 14 : 16,
                             ),
                           ),
@@ -89,7 +90,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     itemCount: onboardingData.length,
                     itemBuilder: (_, index) {
                       return SingleChildScrollView(
-                        // Only enable scrolling in landscape or on very small screens
                         physics: isLandscape || isSmallScreen
                             ? const AlwaysScrollableScrollPhysics()
                             : const NeverScrollableScrollPhysics(),
@@ -103,7 +103,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              // Image container - responsive sizing
                               Container(
                                 height: isLandscape
                                     ? size.height * 0.4
@@ -115,12 +114,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 child: Image.asset(
                                   onboardingData[index]["image"]!,
                                   fit: BoxFit.contain,
-                                  // Use scale-down for very small images
+
                                   filterQuality: FilterQuality.high,
                                 ),
                               ),
 
-                              // Title - responsive font size
                               Padding(
                                 padding: EdgeInsets.symmetric(
                                   horizontal: isSmallScreen ? 10 : 0,
@@ -137,6 +135,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                         ? 22
                                         : 28,
                                     fontWeight: FontWeight.bold,
+                                    fontFamily: 'Urbanist-Bold',
+
                                     height: 1.2,
                                   ),
                                 ),
@@ -161,6 +161,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                         : isSmallScreen
                                         ? 14
                                         : 16,
+                                    fontFamily: 'Urbanist-Medium',
+
                                     color: Colors.grey[700],
                                     height: 1.5,
                                   ),

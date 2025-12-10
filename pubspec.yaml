@@ -83,6 +83,19 @@ flutter:
     - family: JosefinSans-Regular
       fonts:
         - asset: assets/fonts/JosefinSans-Regular.ttf
+
+    - family: Urbanist-Bold
+      fonts:
+        - asset: assets/fonts/Urbanist-Bold.ttf
+
+    - family: Urbanist-Regular
+      fonts:
+        - asset: assets/fonts/Urbanist-Regular.ttf
+
+    - family: Urbanist-Medium
+      fonts:
+        - asset: assets/fonts/Urbanist-Medium.ttf
+
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
   #   - family: Trajan Pro
