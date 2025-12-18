@@ -30,10 +30,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
       appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 3,
+        elevation: 1,
 
-        title: Row(
-          children: [Image.asset("assets/images/mylogo.png", height: 50)],
+        title: InkWell(
+          onTap: () {
+            setState(() {
+              _selectedIndex = 0;
+            });
+          },
+          child: Image.asset("assets/images/mylogo.png", height: 50),
         ),
 
         actions: [
@@ -43,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
 
           IconButton(
-            icon: const Icon(Icons.message, color: Colors.black),
+            icon: const Icon(Icons.chat_bubble_outline, color: Colors.black),
             onPressed: () {
               setState(() {
                 _selectedIndex = 2;
@@ -57,31 +62,40 @@ class _HomeScreenState extends State<HomeScreen> {
 
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.white,
+        elevation: 0,
         type: BottomNavigationBarType.fixed,
-        items: [
+
+        currentIndex: _selectedIndex,
+        onTap: (index) {
+          setState(() => _selectedIndex = index);
+        },
+
+        selectedItemColor: Colors.black,
+        unselectedItemColor: Colors.black45,
+        showUnselectedLabels: true,
+
+        items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home, color: Colors.black),
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
             label: "Home",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.work, color: Colors.black),
+            icon: Icon(Icons.work_outline),
+            activeIcon: Icon(Icons.work),
             label: "Gigs",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.message, color: Colors.black),
+            icon: Icon(Icons.chat_bubble_outline),
+            activeIcon: Icon(Icons.chat_bubble),
             label: "Messages",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person, color: Colors.black),
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
             label: "Profile",
           ),
         ],
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
       ),
     );
   }

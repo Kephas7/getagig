@@ -5,6 +5,6 @@ class Home extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox.expand(child: Text("Home Screen"));
+    return SizedBox.expand(child: Center(child: Text("Home Screen")));
   }
 }

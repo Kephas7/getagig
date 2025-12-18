@@ -5,6 +5,6 @@ class Profile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox.expand(child: Text("Profile Screen"));
+    return SizedBox.expand(child: Center(child: Text("Profile Screen")));
   }
 }
