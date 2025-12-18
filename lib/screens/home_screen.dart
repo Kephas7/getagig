@@ -1,10 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:getagig/screens/musician_navbar_screens/gigs.dart';
 import 'package:getagig/screens/musician_navbar_screens/home.dart';
 import 'package:getagig/screens/musician_navbar_screens/messages.dart';
+import 'package:getagig/screens/musician_navbar_screens/notification_screen.dart';
 import 'package:getagig/screens/musician_navbar_screens/profile.dart';
-import 'package:getagig/theme/customHeader.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,6 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
     const Gigs(),
     const Messages(),
     const Profile(),
+    const NotificationScreen(),
   ];
 
   @override
@@ -44,12 +44,20 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_none, color: Colors.black),
-            onPressed: () {},
+            onPressed: () {
+              setState(() {
+                _selectedIndex = 4;
+              });
+            },
           ),
 
           IconButton(
             icon: const Icon(Icons.message, color: Colors.black),
-            onPressed: () {},
+            onPressed: () {
+              setState(() {
+                _selectedIndex = 2;
+              });
+            },
           ),
         ],
       ),
