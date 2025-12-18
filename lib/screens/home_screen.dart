@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:getagig/screens/musician_navbar_screens/gigs.dart';
 import 'package:getagig/screens/musician_navbar_screens/home.dart';
 import 'package:getagig/screens/musician_navbar_screens/messages.dart';
-import 'package:getagig/screens/musician_navbar_screens/notification_screen.dart';
 import 'package:getagig/screens/musician_navbar_screens/profile.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -19,7 +18,6 @@ class _HomeScreenState extends State<HomeScreen> {
     const Gigs(),
     const Messages(),
     const Profile(),
-    const NotificationScreen(),
   ];
 
   @override
@@ -35,20 +33,13 @@ class _HomeScreenState extends State<HomeScreen> {
         elevation: 3,
 
         title: Row(
-          children: [
-            // Logo
-            Image.asset("assets/images/mylogo.png", height: 50),
-          ],
+          children: [Image.asset("assets/images/mylogo.png", height: 50)],
         ),
 
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_none, color: Colors.black),
-            onPressed: () {
-              setState(() {
-                _selectedIndex = 4;
-              });
-            },
+            onPressed: () {},
           ),
 
           IconButton(
