@@ -3,6 +3,7 @@ import 'package:getagig/screens/musician_navbar_screens/gigs.dart';
 import 'package:getagig/screens/musician_navbar_screens/home.dart';
 import 'package:getagig/screens/musician_navbar_screens/messages.dart';
 import 'package:getagig/screens/musician_navbar_screens/profile.dart';
+import 'package:getagig/screens/notification_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -44,7 +45,12 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_none, color: Colors.black),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => NotificationsScreen()),
+              );
+            },
           ),
 
           IconButton(

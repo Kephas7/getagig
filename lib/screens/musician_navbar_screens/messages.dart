@@ -5,6 +5,6 @@ class Messages extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox.expand(child: Center(child: Text("Messages Screen")));
+    return SizedBox.expand(child: Center(child: Text("No messages yet.")));
   }
 }
