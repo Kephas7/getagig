@@ -29,13 +29,11 @@ class HiveService {
   Box<AuthHiveModel> get _authBox =>
       Hive.box<AuthHiveModel>(HiveTableConstant.authTable);
 
-  // Register user
   Future<AuthHiveModel> register(AuthHiveModel user) async {
     await _authBox.put(user.userId, user);
     return user;
   }
 
-  // Login - find user by email and password
   AuthHiveModel? login(String email, String password) {
     try {
       return _authBox.values.firstWhere(
@@ -46,12 +44,10 @@ class HiveService {
     }
   }
 
-  // Get user by ID
   AuthHiveModel? getUserById(String userId) {
     return _authBox.get(userId);
   }
 
-  // Get user by email
   AuthHiveModel? getUserByEmail(String email) {
     try {
       return _authBox.values.firstWhere((user) => user.email == email);
@@ -60,7 +56,6 @@ class HiveService {
     }
   }
 
-  // Update user
   Future<bool> updateUser(AuthHiveModel user) async {
     if (_authBox.containsKey(user.userId)) {
       await _authBox.put(user.userId, user);
@@ -69,7 +64,6 @@ class HiveService {
     return false;
   }
 
-  // Delete user
   Future<void> deleteUser(String userId) async {
     await _authBox.delete(userId);
   }
