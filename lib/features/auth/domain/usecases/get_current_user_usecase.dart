@@ -1,10 +1,15 @@
 import 'package:dartz/dartz.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/core/error/failures.dart';
 import 'package:getagig/core/usecases/app_usecase.dart';
 import 'package:getagig/features/auth/data/repositories/auth_repository.dart';
 import 'package:getagig/features/auth/domain/entities/auth_entity.dart';
 import 'package:getagig/features/auth/domain/repositories/auth_repository.dart';
 
+final getCurrentUserUsecaseProvider = Provider<GetCurrentUserUsecase>((ref) {
+  final authRepository = ref.read(authRepositoryProvider);
+  return GetCurrentUserUsecase(authRepository: authRepository);
+});
 class GetCurrentUserUsecase implements UsecaseWithoutParams<AuthEntity> {
   final IAuthRepository _authRepository;
 
