@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:getagig/app/theme/app_theme.dart';
-import 'package:getagig/features/auth/presentation/pages/login_page.dart';
-
+import 'package:getagig/features/splash/presentaion/pages/splash_page.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -11,7 +10,7 @@ class App extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: getApplicationTheme(),
-      home: const LoginPage(),
+      home: const SplashPage(),
     );
   }
 }
