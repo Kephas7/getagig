@@ -10,10 +10,11 @@ final getCurrentUserUsecaseProvider = Provider<GetCurrentUserUsecase>((ref) {
   final authRepository = ref.read(authRepositoryProvider);
   return GetCurrentUserUsecase(authRepository: authRepository);
 });
+
 class GetCurrentUserUsecase implements UsecaseWithoutParams<AuthEntity> {
   final IAuthRepository _authRepository;
 
-  GetCurrentUserUsecase({required AuthRepository authRepository})
+  GetCurrentUserUsecase({required IAuthRepository authRepository})
     : _authRepository = authRepository;
   @override
   Future<Either<Failures, AuthEntity>> call() {

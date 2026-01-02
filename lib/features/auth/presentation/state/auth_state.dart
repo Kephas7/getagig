@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:equatable/equatable.dart';
 import 'package:getagig/features/auth/domain/entities/auth_entity.dart';
 

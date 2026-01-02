@@ -19,7 +19,7 @@ class AuthViewModel extends Notifier<AuthState> {
     _registerUsecase = ref.read(registerUsecaseProvider);
     _loginUsecase = ref.read(loginUsecaseProvider);
     _getCurrentUserUsecase = ref.read(getCurrentUserUsecaseProvider);
-    _loginUsecase = ref.read(loginUsecaseProvider);
+    _logoutUsecase = ref.read(logoutUsecaseProvider);
     return const AuthState();
   }
 
