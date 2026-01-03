@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/app/app.dart';
 import 'package:getagig/core/services/hive_service.dart';
+import 'package:getagig/core/services/storage/user_session_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
@@ -15,5 +15,13 @@ void main() async {
   // Initialize SharedPreferences : because this is async operation
   // but riverpod providers are sync so we need to initialize it here
   final sharedPreferences = await SharedPreferences.getInstance();
-  runApp(ProviderScope(child: const App()));
+  runApp(
+    ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(sharedPreferences),
+      ],
+
+      child: const App(),
+    ),
+  );
 }

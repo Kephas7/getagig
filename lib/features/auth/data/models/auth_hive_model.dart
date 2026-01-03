@@ -36,7 +36,7 @@ class AuthHiveModel extends HiveObject {
   }
   AuthEntity toEntity() {
     return AuthEntity(
-      userId: password,
+      userId: userId,
       name: name,
       email: email,
       password: password,

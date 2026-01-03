@@ -1,32 +1,54 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:getagig/app/routes/app_routes.dart';
+import 'package:getagig/features/auth/presentation/pages/login_page.dart';
+import 'package:getagig/features/auth/presentation/state/auth_state.dart';
+import 'package:getagig/features/auth/presentation/view_model/auth_viewmodel.dart';
 
-class Profile extends StatelessWidget {
+class Profile extends ConsumerWidget {
   const Profile({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authViewModelProvider);
+    final user = authState.user;
+
+    ref.listen<AuthState>(authViewModelProvider, (previous, next) {
+      if (next.status == AuthStatus.unauthenticated) {
+        AppRoutes.pushAndRemoveUntil(context, LoginPage());
+      }
+    });
+
+    if (user == null) {
+      return const Center(child: Text('No user data available'));
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 👤 USER HEADER
           Row(
             children: [
-              CircleAvatar(
+              const CircleAvatar(
                 radius: 35,
                 backgroundColor: Colors.grey,
-                child: const Icon(Icons.person, size: 40, color: Colors.black),
+                child: Icon(Icons.person, size: 40, color: Colors.black),
               ),
               const SizedBox(width: 16),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Text(
-                    "Musician Name",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    user.name,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  SizedBox(height: 4),
-                  Text("Singer • Guitarist"),
+                  const SizedBox(height: 4),
+                  Text(user.email, style: const TextStyle(color: Colors.grey)),
                 ],
               ),
             ],
@@ -34,20 +56,23 @@ class Profile extends StatelessWidget {
 
           const SizedBox(height: 30),
 
-          _profileItem("Email", "musician@gmail.com"),
-          _profileItem("Location", "Kathmandu"),
-          _profileItem("Experience", "3+ years"),
-          _profileItem("Genres", "Rock, Acoustic"),
+          // 📧 EMAIL INFO
+          _profileItem("Email", user.email),
 
-          const SizedBox(height: 30),
+          const SizedBox(height: 40),
 
-          // ⚙ Actions
-          Column(
-            children: [
-              _actionButton("Edit Profile"),
-              _actionButton("My Gigs"),
-              _actionButton("Logout"),
-            ],
+          // 🚪 LOGOUT BUTTON
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () {
+                ref.read(authViewModelProvider.notifier).logout();
+              },
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Colors.red),
+              ),
+              child: const Text("Logout", style: TextStyle(color: Colors.red)),
+            ),
           ),
         ],
       ),
@@ -62,22 +87,15 @@ class Profile extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
           ),
           const SizedBox(height: 4),
           Text(value, style: const TextStyle(fontSize: 16)),
         ],
-      ),
-    );
-  }
-
-  Widget _actionButton(String text) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      child: OutlinedButton(
-        onPressed: () {},
-        child: Text(text, style: TextStyle(color: Colors.black)),
       ),
     );
   }
