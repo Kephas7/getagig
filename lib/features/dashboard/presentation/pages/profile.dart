@@ -41,7 +41,7 @@ class Profile extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    user.name,
+                    user.username,
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,

@@ -15,9 +15,10 @@ final userSessionServiceProvider = Provider<UserSessionService>((ref) {
 class UserSessionService {
   final SharedPreferences _prefs;
 
-  static const String _keyUserId = 'user_id';
-  static const String _keyUserEmail = 'user_email';
-  static const String _keyUserName = 'user_name';
+  static const String _keyUserId = 'userId';
+  static const String _keyUserEmail = 'email';
+  static const String _keyUserName = 'username';
+  static const String _keyUserRole = 'role';
 
   UserSessionService(this._prefs);
 
@@ -25,11 +26,13 @@ class UserSessionService {
   Future<void> saveUserSession({
     required String userId,
     required String email,
-    required String name,
+    required String username,
+    required String role,
   }) async {
     await _prefs.setString(_keyUserId, userId);
     await _prefs.setString(_keyUserEmail, email);
-    await _prefs.setString(_keyUserName, name);
+    await _prefs.setString(_keyUserName, username);
+    await _prefs.setString(_keyUserRole, role);
   }
 
   /// Logged in if userId exists
@@ -50,10 +53,15 @@ class UserSessionService {
     return _prefs.getString(_keyUserName);
   }
 
+  String? getCurrentUserRole() {
+    return _prefs.getString(_keyUserRole);
+  }
+
   /// Clear session (logout)
   Future<void> clearSession() async {
     await _prefs.remove(_keyUserId);
     await _prefs.remove(_keyUserEmail);
     await _prefs.remove(_keyUserName);
+    await _prefs.remove(_keyUserRole);
   }
 }

@@ -8,10 +8,10 @@ part 'auth_hive_model.g.dart';
 @HiveType(typeId: HiveTableConstant.authTypeId)
 class AuthHiveModel extends HiveObject {
   @HiveField(0)
-  final String? userId;
+  final String userId;
 
   @HiveField(1)
-  final String name;
+  final String username;
 
   @HiveField(2)
   final String email;
@@ -19,27 +19,35 @@ class AuthHiveModel extends HiveObject {
   @HiveField(3)
   final String? password;
 
+  @HiveField(4)
+  final String role; // musician | organizer | admin
+
   AuthHiveModel({
     String? userId,
-    required this.name,
+    required this.username,
     required this.email,
     this.password,
-  }) : userId = userId ?? Uuid().v4();
+    this.role = 'musician',
+  }) : userId = userId ?? const Uuid().v4();
 
+  /// Entity → Hive
   factory AuthHiveModel.fromEntity(AuthEntity entity) {
     return AuthHiveModel(
       userId: entity.userId,
-      name: entity.name,
+      username: entity.username,
       email: entity.email,
       password: entity.password,
+      role: entity.role,
     );
   }
+
+  /// Hive → Entity
   AuthEntity toEntity() {
     return AuthEntity(
       userId: userId,
-      name: name,
+      username: username,
       email: email,
-      password: password,
+      role: role,
     );
   }
 

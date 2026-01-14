@@ -4,16 +4,17 @@ import 'package:getagig/core/services/storage/user_session_service.dart';
 import 'package:getagig/features/auth/data/datasources/auth_datasource.dart';
 import 'package:getagig/features/auth/data/models/auth_hive_model.dart';
 
-final authLocalDatasourceProvider = Provider<AuthLocalDatasource>((ref) {
+final authLocalDatasourceProvider = Provider<IAuthLocalDataSource>((ref) {
   final hiveService = ref.read(hiveServiceProvider);
   final userSessionService = ref.read(userSessionServiceProvider);
+
   return AuthLocalDatasource(
     hiveService: hiveService,
     userSessionService: userSessionService,
   );
 });
 
-class AuthLocalDatasource implements IAuthDataSource {
+class AuthLocalDatasource implements IAuthLocalDataSource {
   final HiveService _hiveService;
   final UserSessionService _userSessionService;
 
@@ -23,30 +24,41 @@ class AuthLocalDatasource implements IAuthDataSource {
   }) : _hiveService = hiveService,
        _userSessionService = userSessionService;
 
+  // ─────────────────────────────────────────────
+  // REGISTER
+  // ─────────────────────────────────────────────
   @override
   Future<AuthHiveModel> register(AuthHiveModel user) async {
     return await _hiveService.register(user);
   }
 
+  // ─────────────────────────────────────────────
+  // LOGIN
+  // ─────────────────────────────────────────────
   @override
   Future<AuthHiveModel?> login(String email, String password) async {
     try {
-      final user = await _hiveService.login(email, password);
+      final user = _hiveService.login(email, password);
 
-      if (user != null && user.userId != null) {
-        await _userSessionService.saveUserSession(
-          userId: user.userId!,
-          email: user.email,
-          name: user.name,
-        );
-      }
+      if (user == null) return null;
+
+      // Save session (CRITICAL for restart)
+      await _userSessionService.saveUserSession(
+        userId: user.userId,
+        email: user.email,
+        username: user.username,
+        role: user.role,
+      );
 
       return user;
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }
 
+  // ─────────────────────────────────────────────
+  // SESSION RESTORE
+  // ─────────────────────────────────────────────
   @override
   Future<AuthHiveModel?> getCurrentUser() async {
     try {
@@ -54,55 +66,48 @@ class AuthLocalDatasource implements IAuthDataSource {
       if (userId == null) return null;
 
       return _hiveService.getUserById(userId);
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }
 
+  // ─────────────────────────────────────────────
+  // LOGOUT
+  // ─────────────────────────────────────────────
   @override
   Future<bool> logout() async {
     try {
       await _userSessionService.clearSession();
       return true;
-    } catch (e) {
+    } catch (_) {
       return false;
     }
   }
 
+  // ─────────────────────────────────────────────
+  // GETTERS
+  // ─────────────────────────────────────────────
   @override
   Future<AuthHiveModel?> getUserById(String authId) async {
-    try {
-      return _hiveService.getUserById(authId);
-    } catch (e) {
-      return null;
-    }
+    return _hiveService.getUserById(authId);
   }
 
   @override
   Future<AuthHiveModel?> getUserByEmail(String email) async {
-    try {
-      return _hiveService.getUserByEmail(email);
-    } catch (e) {
-      return null;
-    }
+    return _hiveService.getUserByEmail(email);
   }
 
+  // ─────────────────────────────────────────────
+  // UPDATE / DELETE
+  // ─────────────────────────────────────────────
   @override
   Future<bool> updateUser(AuthHiveModel user) async {
-    try {
-      return await _hiveService.updateUser(user);
-    } catch (e) {
-      return false;
-    }
+    return await _hiveService.updateUser(user);
   }
 
   @override
-  Future<bool> deleteUser(String userId) async {
-    try {
-      await _hiveService.deleteUser(userId);
-      return true;
-    } catch (e) {
-      return false;
-    }
+  Future<bool> deleteUser(String authId) async {
+    await _hiveService.deleteUser(authId);
+    return true;
   }
 }

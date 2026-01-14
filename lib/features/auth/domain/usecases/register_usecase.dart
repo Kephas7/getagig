@@ -35,7 +35,7 @@ class RegisterUsecase implements UsecaseWithParms<bool, RegisterParams> {
   @override
   Future<Either<Failures, bool>> call(RegisterParams params) {
     final authEntity = AuthEntity(
-      name: params.name,
+      username: params.name,
       email: params.email,
       password: params.password,
     );
