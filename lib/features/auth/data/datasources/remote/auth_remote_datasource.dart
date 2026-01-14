@@ -1,10 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/core/api/api_client.dart';
+import 'package:getagig/core/api/api_endpoints.dart';
 import 'package:getagig/core/services/storage/user_session_service.dart';
 import 'package:getagig/features/auth/data/datasources/auth_datasource.dart';
 import 'package:getagig/features/auth/data/models/auth_api_model.dart';
 
-final AuthRemoteDatasourceProvider =  <IAuthRemoteDataSource>((ref) {
+final authRemoteDatasourceProvider = Provider<IAuthRemoteDataSource>((ref) {
   return AuthRemoteDatasource(
     apiClient: ref.read(apiClientProvider),
     userSessionService: ref.read(userSessionServiceProvider),
@@ -20,21 +21,39 @@ class AuthRemoteDatasource implements IAuthRemoteDataSource {
     required UserSessionService userSessionService,
   }) : _apiClient = apiClient,
        _userSessionService = userSessionService;
+
   @override
-  Future<AuthApiModel?> getUserById(String userId) {
-    // TODO: implement getUserById
-    throw UnimplementedError();
+  Future<AuthApiModel?> login(String email, String password) async {
+    final response = await _apiClient.post(
+      ApiEndpoints.login,
+      data: {'email': email, 'password': password},
+    );
+    if (response.data['success'] == true) {
+      final data = response.data['data'] as Map<String, dynamic>;
+      final user = AuthApiModel.fromJson(data);
+
+      await _userSessionService.saveUserSession(
+        userId: user.id!,
+        email: user.email,
+        username: user.username,
+        role: user.role,
+      );
+      return user;
+    }
+    return null;
   }
 
   @override
-  Future<AuthApiModel?> login(String email, String password) {
-    // TODO: implement login
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<AuthApiModel> register(AuthApiModel user) {
-    // TODO: implement register
-    throw UnimplementedError();
+  Future<AuthApiModel> register(AuthApiModel user) async {
+    final response = await _apiClient.post(
+      ApiEndpoints.register,
+      data: user.toJson(),
+    );
+    if (response.data['success'] == true) {
+      final data = response.data['data'] as Map<String, dynamic>;
+      final registeredUser = AuthApiModel.fromJson(data);
+      return registeredUser;
+    }
+    return user;
   }
 }
