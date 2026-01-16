@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:getagig/core/error/failures.dart';
 import 'package:getagig/core/services/connectivity/network_info.dart';
 import 'package:getagig/features/auth/data/datasources/auth_datasource.dart';
@@ -16,6 +17,7 @@ final authRepositoryProvider = Provider<IAuthRepository>((ref) {
   final authLocalDatasource = ref.read(authLocalDatasourceProvider);
   final authRemoteDatasource = ref.read(authRemoteDatasourceProvider);
   final networkInfo = ref.read(networkInfoProvider);
+
   return AuthRepository(
     authLocalDataSource: authLocalDatasource,
     authRemoteDataSource: authRemoteDatasource,
@@ -27,6 +29,7 @@ class AuthRepository implements IAuthRepository {
   final IAuthLocalDataSource _authLocalDataSource;
   final IAuthRemoteDataSource _authRemoteDataSource;
   final NetworkInfo _networkInfo;
+  final _secureStorage = const FlutterSecureStorage();
 
   AuthRepository({
     required IAuthLocalDataSource authLocalDataSource,
@@ -46,6 +49,7 @@ class AuthRepository implements IAuthRepository {
       try {
         final apiModel = await _authRemoteDataSource.login(email, password);
         if (apiModel != null) {
+          await _secureStorage.write(key: 'auth_token', value: apiModel.token);
           final entity = apiModel.toEntity();
           return Right(entity);
         }
@@ -128,14 +132,37 @@ class AuthRepository implements IAuthRepository {
   // ================= CURRENT USER =================
   @override
   Future<Either<Failures, AuthEntity>> getCurrentUser() async {
-    try {
-      final model = await _authLocalDataSource.getCurrentUser();
+    // 🌐 ONLINE
+    if (await _networkInfo.isConnected) {
+      try {
+        final apiModel = await _authRemoteDataSource.getCurrentUser();
 
-      if (model == null) {
+        if (apiModel == null) {
+          return const Left(ApiFailure(message: "User not authenticated."));
+        }
+
+        return Right(apiModel.toEntity());
+      } on DioException catch (e) {
+        return Left(
+          ApiFailure(
+            statusCode: e.response?.statusCode,
+            message: e.response?.data['message'] ?? 'Failed to fetch user.',
+          ),
+        );
+      } catch (e) {
+        return Left(ApiFailure(message: e.toString()));
+      }
+    }
+
+    // 📦 OFFLINE (LOCAL)
+    try {
+      final localModel = await _authLocalDataSource.getCurrentUser();
+
+      if (localModel == null) {
         return const Left(LocalDatabaseFailure(message: "No user logged in."));
       }
 
-      return Right(model.toEntity());
+      return Right(localModel.toEntity());
     } catch (e) {
       return Left(LocalDatabaseFailure(message: e.toString()));
     }

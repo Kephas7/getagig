@@ -79,6 +79,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
     return Scaffold(
       backgroundColor: Colors.white,
+
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -102,7 +103,8 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    SizedBox(height: isLandscape ? 20 : 30),
+                    SizedBox(height: isLandscape ? 10 : 16),
+
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -118,52 +120,81 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                           children: [
                             Expanded(
                               child: ChoiceChip(
-                                label: const Row(
+                                label: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.music_note, size: 18),
-                                    SizedBox(width: 8),
-                                    Text('Musician'),
+                                    Icon(
+                                      Icons.music_note,
+                                      size: 18,
+                                      color: _selectedRole == 'musician'
+                                          ? Colors.white
+                                          : Colors.black,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Musician',
+                                      style: TextStyle(
+                                        color: _selectedRole == 'musician'
+                                            ? Colors.white
+                                            : Colors.black,
+                                      ),
+                                    ),
                                   ],
                                 ),
                                 selected: _selectedRole == 'musician',
-                                onSelected: (selected) {
+                                onSelected: (_) {
                                   setState(() {
                                     _selectedRole = 'musician';
                                   });
                                 },
-                                selectedColor: Theme.of(context).primaryColor,
-                                backgroundColor: Colors.grey[200],
-                                labelStyle: TextStyle(
-                                  color: _selectedRole == 'musician'
-                                      ? Colors.white
-                                      : Colors.black,
+                                selectedColor: Colors.black,
+                                backgroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  side: BorderSide(color: Colors.black),
+                                  borderRadius: BorderRadiusGeometry.circular(
+                                    10,
+                                  ),
                                 ),
                               ),
                             ),
+
                             const SizedBox(width: 16),
                             Expanded(
                               child: ChoiceChip(
-                                label: const Row(
+                                label: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.event, size: 18),
-                                    SizedBox(width: 8),
-                                    Text('Organizer'),
+                                    Icon(
+                                      Icons.event,
+                                      size: 18,
+                                      color: _selectedRole == 'organizer'
+                                          ? Colors.white
+                                          : Colors.black,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Organizer',
+                                      style: TextStyle(
+                                        color: _selectedRole == 'organizer'
+                                            ? Colors.white
+                                            : Colors.black,
+                                      ),
+                                    ),
                                   ],
                                 ),
                                 selected: _selectedRole == 'organizer',
-                                onSelected: (selected) {
+                                onSelected: (_) {
                                   setState(() {
                                     _selectedRole = 'organizer';
                                   });
                                 },
-                                selectedColor: Theme.of(context).primaryColor,
-                                backgroundColor: Colors.grey[200],
-                                labelStyle: TextStyle(
-                                  color: _selectedRole == 'organizer'
-                                      ? Colors.white
-                                      : Colors.black,
+                                selectedColor: Colors.black,
+                                backgroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  side: BorderSide(color: Colors.black),
+                                  borderRadius: BorderRadiusGeometry.circular(
+                                    10,
+                                  ),
                                 ),
                               ),
                             ),
@@ -198,7 +229,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                       },
                     ),
 
-                    SizedBox(height: isLandscape ? 20 : 30),
+                    SizedBox(height: isLandscape ? 10 : 16),
 
                     /// EMAIL
                     TextFormField(
@@ -219,7 +250,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                       },
                     ),
 
-                    SizedBox(height: isLandscape ? 20 : 30),
+                    SizedBox(height: isLandscape ? 10 : 16),
 
                     /// PASSWORD
                     TextFormField(
@@ -251,7 +282,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                       },
                     ),
 
-                    SizedBox(height: isLandscape ? 20 : 30),
+                    SizedBox(height: isLandscape ? 10 : 16),
 
                     /// CONFIRM PASSWORD
                     TextFormField(
@@ -292,7 +323,10 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                           _agreedToTerms = value ?? false;
                         });
                       },
-                      title: const Text("I agree to the Terms & Conditions"),
+                      title: const Text(
+                        "I agree to the Terms & Conditions",
+                        style: TextStyle(fontSize: 13),
+                      ),
                       controlAffinity: ListTileControlAffinity.leading,
                     ),
 
