@@ -21,6 +21,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _agreedToTerms = false;
+  String _selectedRole = 'musician'; // Default role
 
   @override
   void dispose() {
@@ -47,6 +48,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
             name: _nameController.text.trim(),
             email: _emailController.text.trim(),
             password: _passwordController.text,
+            role: _selectedRole,
           );
     }
   }
@@ -101,6 +103,85 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                       ),
                     ),
                     SizedBox(height: isLandscape ? 20 : 30),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Sign up as:',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ChoiceChip(
+                                label: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.music_note, size: 18),
+                                    SizedBox(width: 8),
+                                    Text('Musician'),
+                                  ],
+                                ),
+                                selected: _selectedRole == 'musician',
+                                onSelected: (selected) {
+                                  setState(() {
+                                    _selectedRole = 'musician';
+                                  });
+                                },
+                                selectedColor: Theme.of(context).primaryColor,
+                                backgroundColor: Colors.grey[200],
+                                labelStyle: TextStyle(
+                                  color: _selectedRole == 'musician'
+                                      ? Colors.white
+                                      : Colors.black,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: ChoiceChip(
+                                label: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.event, size: 18),
+                                    SizedBox(width: 8),
+                                    Text('Organizer'),
+                                  ],
+                                ),
+                                selected: _selectedRole == 'organizer',
+                                onSelected: (selected) {
+                                  setState(() {
+                                    _selectedRole = 'organizer';
+                                  });
+                                },
+                                selectedColor: Theme.of(context).primaryColor,
+                                backgroundColor: Colors.grey[200],
+                                labelStyle: TextStyle(
+                                  color: _selectedRole == 'organizer'
+                                      ? Colors.white
+                                      : Colors.black,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _selectedRole == 'musician'
+                              ? 'Looking for gig opportunities'
+                              : 'Hiring musicians for events',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ),
 
                     /// NAME
                     TextFormField(

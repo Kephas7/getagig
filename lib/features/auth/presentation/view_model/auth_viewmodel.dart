@@ -14,6 +14,7 @@ class AuthViewModel extends Notifier<AuthState> {
   late final LoginUsecase _loginUsecase;
   late final GetCurrentUserUsecase _getCurrentUserUsecase;
   late final LogoutUsecase _logoutUsecase;
+
   @override
   AuthState build() {
     _registerUsecase = ref.read(registerUsecaseProvider);
@@ -27,17 +28,25 @@ class AuthViewModel extends Notifier<AuthState> {
     required String name,
     required String email,
     required String password,
+    required String role,
   }) async {
     state = state.copyWith(status: AuthStatus.loading);
+
     final result = await _registerUsecase(
-      RegisterParams(name: name, email: email, password: password),
+      RegisterParams(
+        username: name,
+        email: email,
+        password: password,
+        role: role,
+      ),
     );
+
     result.fold(
       (failure) => state = state.copyWith(
         status: AuthStatus.error,
         errorMessage: failure.message,
       ),
-      (success) => state = state.copyWith(status: AuthStatus.registered),
+      (_) => state = state.copyWith(status: AuthStatus.registered),
     );
   }
 
@@ -83,14 +92,10 @@ class AuthViewModel extends Notifier<AuthState> {
         status: AuthStatus.error,
         errorMessage: failure.message,
       ),
-      (success) => state = state.copyWith(
+      (_) => state = state.copyWith(
         status: AuthStatus.unauthenticated,
         user: null,
       ),
     );
-  }
-
-  void clearError() {
-    state = state.copyWith(errorMessage: null);
   }
 }
