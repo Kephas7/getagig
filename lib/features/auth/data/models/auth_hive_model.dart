@@ -20,7 +20,7 @@ class AuthHiveModel extends HiveObject {
   final String? password;
 
   @HiveField(4)
-  final String role; // musician | organizer | admin
+  final String role; 
 
   AuthHiveModel({
     String? userId,
@@ -30,7 +30,7 @@ class AuthHiveModel extends HiveObject {
     this.role = 'musician',
   }) : userId = userId ?? const Uuid().v4();
 
-  /// Entity → Hive
+  
   factory AuthHiveModel.fromEntity(AuthEntity entity) {
     return AuthHiveModel(
       userId: entity.userId,
@@ -41,7 +41,7 @@ class AuthHiveModel extends HiveObject {
     );
   }
 
-  /// Hive → Entity
+  
   AuthEntity toEntity() {
     return AuthEntity(
       userId: userId,

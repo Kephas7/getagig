@@ -9,7 +9,7 @@ final hiveServiceProvider = Provider<HiveService>((ref) {
 });
 
 class HiveService {
-  /// Initialize Hive
+
   Future<void> init() async {
     final directory = await getApplicationDocumentsDirectory();
     final path = '${directory.path}/${HiveTableConstant.dbName}';
@@ -32,17 +32,11 @@ class HiveService {
   Box<AuthHiveModel> get _authBox =>
       Hive.box<AuthHiveModel>(HiveTableConstant.authTable);
 
-  // ─────────────────────────────────────────────
-  // AUTH METHODS
-  // ─────────────────────────────────────────────
-
-  /// Register new user
   Future<AuthHiveModel> register(AuthHiveModel user) async {
     await _authBox.put(user.userId, user);
     return user;
   }
 
-  /// Login user by email & password
   AuthHiveModel? login(String email, String password) {
     try {
       return _authBox.values.firstWhere(
@@ -53,12 +47,11 @@ class HiveService {
     }
   }
 
-  /// Get user by ID (used for session restore)
+
   AuthHiveModel? getUserById(String userId) {
     return _authBox.get(userId);
   }
 
-  /// Get user by email
   AuthHiveModel? getUserByEmail(String email) {
     try {
       return _authBox.values.firstWhere((u) => u.email == email);
@@ -67,7 +60,6 @@ class HiveService {
     }
   }
 
-  /// Update user
   Future<bool> updateUser(AuthHiveModel user) async {
     if (!_authBox.containsKey(user.userId)) return false;
 
@@ -75,13 +67,12 @@ class HiveService {
     return true;
   }
 
-  /// Delete user
   Future<void> deleteUser(String userId) async {
     await _authBox.delete(userId);
   }
 
-  /// Logout handled by UserSessionService (NOT Hive)
+  
   Future<void> logout() async {
-    // intentionally empty
+    
   }
 }

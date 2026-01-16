@@ -21,7 +21,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _agreedToTerms = false;
-  String _selectedRole = 'musician'; // Default role
+  String _selectedRole = 'musician'; 
 
   @override
   void dispose() {
@@ -214,7 +214,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                       ],
                     ),
 
-                    /// NAME
+                    
                     TextFormField(
                       controller: _nameController,
                       decoration: const InputDecoration(labelText: 'Full Name'),
@@ -231,7 +231,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
                     SizedBox(height: isLandscape ? 10 : 16),
 
-                    /// EMAIL
+                    
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
@@ -252,7 +252,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
                     SizedBox(height: isLandscape ? 10 : 16),
 
-                    /// PASSWORD
+                    
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
@@ -284,7 +284,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
                     SizedBox(height: isLandscape ? 10 : 16),
 
-                    /// CONFIRM PASSWORD
+                    
                     TextFormField(
                       controller: _confirmPasswordController,
                       obscureText: _obscureConfirmPassword,
@@ -315,7 +315,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                       },
                     ),
 
-                    /// TERMS
+                    
                     CheckboxListTile(
                       value: _agreedToTerms,
                       onChanged: (value) {
@@ -332,7 +332,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
                     const SizedBox(height: 10),
 
-                    /// SIGNUP BUTTON
+                    
                     isLoading
                         ? const CircularProgressIndicator()
                         : SizedBox(

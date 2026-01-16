@@ -28,7 +28,7 @@ class Profile extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 👤 USER HEADER
+     
           Row(
             children: [
               const CircleAvatar(
@@ -56,12 +56,12 @@ class Profile extends ConsumerWidget {
 
           const SizedBox(height: 30),
 
-          // 📧 EMAIL INFO
+
           _profileItem("Email", user.email),
 
           const SizedBox(height: 40),
 
-          // 🚪 LOGOUT BUTTON
+
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
@@ -77,7 +77,7 @@ class Profile extends ConsumerWidget {
     );
   }
 
-  // 🔔 LOGOUT CONFIRMATION DIALOG
+
   void _showLogoutDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,

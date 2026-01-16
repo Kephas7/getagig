@@ -65,7 +65,7 @@ class AuthRemoteDatasource implements IAuthRemoteDataSource {
   Future<AuthApiModel?> getCurrentUser() async {
     try {
       final response = await _apiClient.get(
-        ApiEndpoints.getCurrentUser, // e.g. /auth/me
+        ApiEndpoints.getCurrentUser, 
       );
 
       if (response.data['success'] == true) {
@@ -84,7 +84,7 @@ class AuthRemoteDatasource implements IAuthRemoteDataSource {
 
       return null;
     } catch (e) {
-      // Optional: log error
+      
       return null;
     }
   }
