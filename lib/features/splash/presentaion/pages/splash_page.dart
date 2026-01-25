@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/features/auth/presentation/state/auth_state.dart';
 import 'package:getagig/features/auth/presentation/view_model/auth_viewmodel.dart';
-import 'package:getagig/features/dashboard/presentation/pages/dashboard_page.dart';
+import 'package:getagig/features/musician/presentation/pages/musician_dashboard_page.dart';
 import 'package:getagig/features/onboard/presentation/pages/onboard_page.dart';
 
 class SplashPage extends ConsumerStatefulWidget {

@@ -24,17 +24,11 @@ class AuthLocalDatasource implements IAuthLocalDataSource {
   }) : _hiveService = hiveService,
        _userSessionService = userSessionService;
 
-  // ─────────────────────────────────────────────
-  // REGISTER
-  // ─────────────────────────────────────────────
   @override
   Future<AuthHiveModel> register(AuthHiveModel user) async {
     return await _hiveService.register(user);
   }
 
-  // ─────────────────────────────────────────────
-  // LOGIN
-  // ─────────────────────────────────────────────
   @override
   Future<AuthHiveModel?> login(String email, String password) async {
     try {
@@ -42,12 +36,11 @@ class AuthLocalDatasource implements IAuthLocalDataSource {
 
       if (user == null) return null;
 
-      // Save session (CRITICAL for restart)
       await _userSessionService.saveUserSession(
         userId: user.userId,
         email: user.email,
         username: user.username,
-        role: user.role,
+        role: user.role ?? 'musician',
       );
 
       return user;
@@ -56,9 +49,6 @@ class AuthLocalDatasource implements IAuthLocalDataSource {
     }
   }
 
-  // ─────────────────────────────────────────────
-  // SESSION RESTORE
-  // ─────────────────────────────────────────────
   @override
   Future<AuthHiveModel?> getCurrentUser() async {
     try {
@@ -71,9 +61,6 @@ class AuthLocalDatasource implements IAuthLocalDataSource {
     }
   }
 
-  // ─────────────────────────────────────────────
-  // LOGOUT
-  // ─────────────────────────────────────────────
   @override
   Future<bool> logout() async {
     try {
@@ -84,9 +71,6 @@ class AuthLocalDatasource implements IAuthLocalDataSource {
     }
   }
 
-  // ─────────────────────────────────────────────
-  // GETTERS
-  // ─────────────────────────────────────────────
   @override
   Future<AuthHiveModel?> getUserById(String authId) async {
     return _hiveService.getUserById(authId);
@@ -97,9 +81,6 @@ class AuthLocalDatasource implements IAuthLocalDataSource {
     return _hiveService.getUserByEmail(email);
   }
 
-  // ─────────────────────────────────────────────
-  // UPDATE / DELETE
-  // ─────────────────────────────────────────────
   @override
   Future<bool> updateUser(AuthHiveModel user) async {
     return await _hiveService.updateUser(user);

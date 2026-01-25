@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:getagig/features/dashboard/presentation/pages/gigs.dart';
-import 'package:getagig/features/dashboard/presentation/pages/home.dart';
-import 'package:getagig/features/dashboard/presentation/pages/messages.dart';
-import 'package:getagig/features/dashboard/presentation/pages/profile.dart';
+import 'package:getagig/features/musician/presentation/pages/gigs.dart';
+import 'package:getagig/features/musician/presentation/pages/home.dart';
+import 'package:getagig/features/musician/presentation/pages/messages.dart';
+import 'package:getagig/features/musician/presentation/pages/profile.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});

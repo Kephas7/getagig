@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:getagig/core/api/api_client.dart';
 import 'package:getagig/core/api/api_endpoints.dart';
 import 'package:getagig/core/services/storage/user_session_service.dart';
@@ -15,6 +16,8 @@ final authRemoteDatasourceProvider = Provider<IAuthRemoteDataSource>((ref) {
 class AuthRemoteDatasource implements IAuthRemoteDataSource {
   final ApiClient _apiClient;
   final UserSessionService _userSessionService;
+  final _secureStorage = const FlutterSecureStorage();
+
 
   AuthRemoteDatasource({
     required ApiClient apiClient,
@@ -87,5 +90,16 @@ class AuthRemoteDatasource implements IAuthRemoteDataSource {
       
       return null;
     }
+  }
+  
+  @override
+  Future<bool> logout() async{
+    try {
+      await _userSessionService.clearSession();
+      return true;
+    } catch (e) {
+      return false;
+    }
+    
   }
 }

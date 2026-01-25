@@ -4,7 +4,7 @@ import 'package:getagig/app/routes/app_routes.dart';
 import 'package:getagig/features/auth/presentation/pages/signup_page.dart';
 import 'package:getagig/features/auth/presentation/state/auth_state.dart';
 import 'package:getagig/features/auth/presentation/view_model/auth_viewmodel.dart';
-import 'package:getagig/features/dashboard/presentation/pages/dashboard_page.dart';
+import 'package:getagig/features/musician/presentation/pages/musician_dashboard_page.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});

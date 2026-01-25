@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 
@@ -19,6 +20,7 @@ class UserSessionService {
   static const String _keyUserEmail = 'email';
   static const String _keyUserName = 'username';
   static const String _keyUserRole = 'role';
+  final _secureStorage = const FlutterSecureStorage();
 
   UserSessionService(this._prefs);
 
@@ -61,5 +63,6 @@ class UserSessionService {
     await _prefs.remove(_keyUserEmail);
     await _prefs.remove(_keyUserName);
     await _prefs.remove(_keyUserRole);
+    await _secureStorage.delete(key:'auth_token');
   }
 }
