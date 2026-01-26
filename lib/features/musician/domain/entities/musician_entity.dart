@@ -1,11 +1,13 @@
-class MusicianEntity {
+import 'package:equatable/equatable.dart';
+
+class MusicianEntity extends Equatable {
   final String id;
   final String userId;
   final String stageName;
   final String? profilePicture;
   final String? bio;
   final String phone;
-  final Map<String, String> location;
+  final LocationEntity location;
   final List<String> genres;
   final List<String> instruments;
   final int experienceYears;
@@ -14,8 +16,10 @@ class MusicianEntity {
   final List<String> videos;
   final List<String> audioSamples;
   final bool isAvailable;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
-  MusicianEntity({
+  const MusicianEntity({
     required this.id,
     required this.userId,
     required this.stageName,
@@ -31,5 +35,43 @@ class MusicianEntity {
     required this.videos,
     required this.audioSamples,
     required this.isAvailable,
+    required this.createdAt,
+    required this.updatedAt,
   });
+
+  @override
+  List<Object?> get props => [
+    id,
+    userId,
+    stageName,
+    profilePicture,
+    bio,
+    phone,
+    location,
+    genres,
+    instruments,
+    experienceYears,
+    hourlyRate,
+    photos,
+    videos,
+    audioSamples,
+    isAvailable,
+    createdAt,
+    updatedAt,
+  ];
+}
+
+class LocationEntity extends Equatable {
+  final String city;
+  final String state;
+  final String country;
+
+  const LocationEntity({
+    required this.city,
+    required this.state,
+    required this.country,
+  });
+
+  @override
+  List<Object?> get props => [city, state, country];
 }
