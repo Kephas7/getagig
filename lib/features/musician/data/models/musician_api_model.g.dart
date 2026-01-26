@@ -30,6 +30,8 @@ MusicianApiModel _$MusicianApiModelFromJson(Map<String, dynamic> json) =>
           .map((e) => e as String)
           .toList(),
       isAvailable: json['isAvailable'] as bool,
+      createdAt: json['createdAt'] as String,
+      updatedAt: json['updatedAt'] as String,
     );
 
 Map<String, dynamic> _$MusicianApiModelToJson(MusicianApiModel instance) =>
@@ -49,4 +51,6 @@ Map<String, dynamic> _$MusicianApiModelToJson(MusicianApiModel instance) =>
       'videos': instance.videos,
       'audioSamples': instance.audioSamples,
       'isAvailable': instance.isAvailable,
+      'createdAt': instance.createdAt,
+      'updatedAt': instance.updatedAt,
     };
