@@ -32,10 +32,26 @@ class ApiEndpoints {
   static const String getCurrentUser = '/auth/me';
 
   // ============ Musicain Profile Endpoints ============
-  static const String MusicianProfile = '/musician/profile';
-  static const String UploadMusicianProfilePicture = '/musician/profile-picture';
-  static const String UploadMusicianPhotos = '/musician/photos';
-  static const String UploadMusicianVideos = '/musician/videos';
-  static const String UploadMusicianAudios= '/musician/audio';
+  
+  static const String musicianProfile = '/musicians/profile';
+  static String musicianProfileById(String id) => '/musicians/profile/$id';
+  static const String musicianSearch = '/musicians/search';
+  static const String musicianAvailability = '/musicians/availability';
+  static const String musicianProfilePicture = '/musicians/profile-picture';
+  static const String musicianPhotos = '/musicians/photos';
+  static const String musicianVideos = '/musicians/videos';
+  static const String musicianAudio = '/musicians/audio';
+
+
+  // ============ Organizer Profile Endpoints ============
+  static const String organizerProfile = '/organizers/profile';
+  static String organizerProfileById(String id) => '/organizers/profile/$id';
+  static const String organizerSearch = '/organizers/search';
+  static const String organizerActiveStatus = '/organizers/active-status';
+  static const String organizerVerify = '/organizers/verify';
+  static const String organizerProfilePicture = '/organizers/profile-picture';
+  static const String organizerPhotos = '/organizers/photos';
+  static const String organizerVideos = '/organizers/videos';
+  static const String organizerDocuments = '/organizers/verification-documents';
 
 }
