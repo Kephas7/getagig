@@ -45,12 +45,7 @@ class _DashboardPageState extends State<DashboardPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_none, color: Colors.black),
-            onPressed: () {
-              // Navigator.push(
-              // context,
-              // MaterialPageRoute(builder: (_) => NotificationsScreen()),
-              // );
-            },
+            onPressed: () {},
           ),
 
           IconButton(

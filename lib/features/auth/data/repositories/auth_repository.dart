@@ -39,7 +39,6 @@ class AuthRepository implements IAuthRepository {
        _authRemoteDataSource = authRemoteDataSource,
        _networkInfo = networkInfo;
 
-  // ================= LOGIN =================
   @override
   Future<Either<Failures, AuthEntity>> login(
     String email,
@@ -81,7 +80,6 @@ class AuthRepository implements IAuthRepository {
     }
   }
 
-  // ================= REGISTER =================
   @override
   Future<Either<Failures, bool>> register(AuthEntity user) async {
     if (await _networkInfo.isConnected) {
@@ -90,10 +88,15 @@ class AuthRepository implements IAuthRepository {
         await _authRemoteDataSource.register(apiModel);
         return const Right(true);
       } on DioException catch (e) {
+        final responseData = e.response?.data;
+        String? message;
+        if (responseData is Map<String, dynamic>) {
+          message = responseData['messsage'] as String?;
+        }
         return Left(
           ApiFailure(
             statusCode: e.response?.statusCode,
-            message: e.response?.data['messsage'] ?? 'Registeration failed.',
+            message: message ?? 'Login failed.',
           ),
         );
       } catch (e) {
@@ -101,7 +104,6 @@ class AuthRepository implements IAuthRepository {
       }
     } else {
       try {
-        // Check duplicate email
         final existingUser = await _authLocalDataSource.getUserByEmail(
           user.email,
         );
@@ -129,10 +131,8 @@ class AuthRepository implements IAuthRepository {
     }
   }
 
-  // ================= CURRENT USER =================
   @override
   Future<Either<Failures, AuthEntity>> getCurrentUser() async {
-    // 🌐 ONLINE
     if (await _networkInfo.isConnected) {
       try {
         final apiModel = await _authRemoteDataSource.getCurrentUser();
@@ -143,10 +143,15 @@ class AuthRepository implements IAuthRepository {
 
         return Right(apiModel.toEntity());
       } on DioException catch (e) {
+        final responseData = e.response?.data;
+        String? message;
+        if (responseData is Map<String, dynamic>) {
+          message = responseData['message'] as String?;
+        }
         return Left(
           ApiFailure(
             statusCode: e.response?.statusCode,
-            message: e.response?.data['message'] ?? 'Failed to fetch user.',
+            message: message ?? 'Failed to fetch user.',
           ),
         );
       } catch (e) {
@@ -154,7 +159,6 @@ class AuthRepository implements IAuthRepository {
       }
     }
 
-    // 📦 OFFLINE (LOCAL)
     try {
       final localModel = await _authLocalDataSource.getCurrentUser();
 
@@ -168,7 +172,6 @@ class AuthRepository implements IAuthRepository {
     }
   }
 
-  // ================= LOGOUT =================
   @override
   Future<Either<Failures, bool>> logout() async {
     try {

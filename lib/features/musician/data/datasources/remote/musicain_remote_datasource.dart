@@ -1,10 +1,17 @@
-
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/core/api/api_client.dart';
 import 'package:getagig/core/api/api_endpoints.dart';
 import 'package:getagig/features/musician/data/datasources/musician_datasource.dart';
 import 'package:getagig/features/musician/data/models/musician_api_model.dart';
+
+final musicianRemoteDataSourceProvider = Provider<IMusicianRemoteDataSource>((
+  ref,
+) {
+  final apiClient = ref.read(apiClientProvider);
+  return MusicianRemoteDataSource(apiClient: apiClient);
+});
 
 class MusicianRemoteDataSource implements IMusicianRemoteDataSource {
   final ApiClient apiClient;
@@ -138,13 +145,21 @@ class MusicianRemoteDataSource implements IMusicianRemoteDataSource {
         data: formData,
       );
 
+      print('Add Photos Response: ${response.data}');
+
       if (response.data['success'] == true && response.data['data'] != null) {
-        return MusicianApiModel.fromJson(response.data['data']);
+        final model = MusicianApiModel.fromJson(response.data['data']);
+        print('Parsed Photos: ${model.photos}');
+        return model;
       }
 
       throw Exception(response.data['message'] ?? 'Failed to add photos');
     } on DioException catch (e) {
+      print('DioException in addPhotos: ${e.message}');
       throw Exception(_handleError(e));
+    } catch (e) {
+      print('Exception in addPhotos: $e');
+      rethrow;
     }
   }
 
@@ -280,7 +295,6 @@ class MusicianRemoteDataSource implements IMusicianRemoteDataSource {
     }
   }
 
-  // Helper method to handle errors
   String _handleError(DioException error) {
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
@@ -289,7 +303,13 @@ class MusicianRemoteDataSource implements IMusicianRemoteDataSource {
         return 'Connection timeout. Please check your internet connection.';
       case DioExceptionType.badResponse:
         final statusCode = error.response?.statusCode;
-        final message = error.response?.data['message'];
+        final responseData = error.response?.data;
+
+        String? message;
+        if (responseData is Map<String, dynamic>) {
+          message = responseData['message'] as String?;
+        }
+
         if (statusCode == 401) {
           return 'Unauthorized. Please login again.';
         } else if (statusCode == 404) {

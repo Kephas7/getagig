@@ -45,5 +45,17 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Camera Permission -->
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs access to your camera to capture photos and videos for your profile.</string>
+	<!-- Photo Library Permission -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to your photo library to upload images for your profile.</string>
+	<!-- Microphone Permission -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs access to your microphone to record audio when capturing video.</string>
+	<!-- File Access Permission (iOS 11+) -->
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>This app needs access to files on your device.</string>
 </dict>
 </plist>

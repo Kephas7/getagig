@@ -11,7 +11,7 @@ final getCurrentUserUsecaseProvider = Provider<GetCurrentUserUsecase>((ref) {
   return GetCurrentUserUsecase(authRepository: authRepository);
 });
 
-class GetCurrentUserUsecase implements UsecaseWithoutParams<AuthEntity> {
+class GetCurrentUserUsecase implements UsecaseWithoutParms<AuthEntity> {
   final IAuthRepository _authRepository;
 
   GetCurrentUserUsecase({required IAuthRepository authRepository})

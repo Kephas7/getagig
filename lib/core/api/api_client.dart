@@ -36,9 +36,9 @@ class ApiClient {
         dio: dio,
         retries: 3,
         retryDelays: const [
+          Duration(milliseconds: 500),
           Duration(seconds: 1),
           Duration(seconds: 2),
-          Duration(seconds: 3),
         ],
         retryEvaluator: (error, _) =>
             error.type == DioExceptionType.connectionError ||

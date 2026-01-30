@@ -1,12 +1,13 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+
 class ApiEndpoints {
   ApiEndpoints._();
 
   // Configuration
-  static const bool isPhysicalDevice = false;
-  static const String _ipAddress = '192.168.1.1';
+  static const bool isPhysicalDevice = true;
+  static const String _ipAddress = '192.168.1.10';
   static const int _port = 5050;
 
   // Base URLs
@@ -21,9 +22,8 @@ class ApiEndpoints {
   static String get baseUrl => '$serverUrl/api';
   static String get mediaServerUrl => serverUrl;
 
-  // Timeouts
-  static const Duration connectionTimeout = Duration(seconds: 30);
-  static const Duration receiveTimeout = Duration(seconds: 30);
+  static const Duration connectionTimeout = Duration(seconds: 60);
+  static const Duration receiveTimeout = Duration(seconds: 60);
 
   // ============ Auth Endpoints ============
   static const String auth = '/auth';
@@ -32,7 +32,6 @@ class ApiEndpoints {
   static const String getCurrentUser = '/auth/me';
 
   // ============ Musicain Profile Endpoints ============
-  
   static const String musicianProfile = '/musicians/profile';
   static String musicianProfileById(String id) => '/musicians/profile/$id';
   static const String musicianSearch = '/musicians/search';
@@ -41,7 +40,6 @@ class ApiEndpoints {
   static const String musicianPhotos = '/musicians/photos';
   static const String musicianVideos = '/musicians/videos';
   static const String musicianAudio = '/musicians/audio';
-
 
   // ============ Organizer Profile Endpoints ============
   static const String organizerProfile = '/organizers/profile';
@@ -54,4 +52,80 @@ class ApiEndpoints {
   static const String organizerVideos = '/organizers/videos';
   static const String organizerDocuments = '/organizers/verification-documents';
 
+  // ============ Image URL Constructors ============
+  static String buildImageUrl(String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) return '';
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      final uri = Uri.parse(imageUrl);
+      final path = uri.path;
+      if (path.contains('/uploads/')) {
+        return '$mediaServerUrl$path';
+      }
+      return imageUrl;
+    }
+
+    if (imageUrl.startsWith('/uploads/')) {
+      return '$mediaServerUrl$imageUrl';
+    }
+
+    return '$mediaServerUrl/uploads/musicians/photos/$imageUrl';
+  }
+
+  static String buildProfilePictureUrl(String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) return '';
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      final uri = Uri.parse(imageUrl);
+      final path = uri.path;
+
+      if (path.contains('/uploads/')) {
+        return '$mediaServerUrl$path';
+      }
+
+      return imageUrl;
+    }
+
+    if (imageUrl.startsWith('/uploads/')) {
+      return '$mediaServerUrl$imageUrl';
+    }
+
+    return '$mediaServerUrl/uploads/musicians/profile/$imageUrl';
+  }
+
+  static String buildVideoUrl(String? videoUrl) {
+    if (videoUrl == null || videoUrl.isEmpty) return '';
+
+    if (videoUrl.startsWith('http://') || videoUrl.startsWith('https://')) {
+      final uri = Uri.parse(videoUrl);
+      final path = uri.path;
+      if (path.contains('/uploads/')) {
+        return '$mediaServerUrl$path';
+      }
+      return videoUrl;
+    }
+
+    if (videoUrl.startsWith('/uploads/')) {
+      return '$mediaServerUrl$videoUrl';
+    }
+
+    return '$mediaServerUrl/uploads/musicians/videos/$videoUrl';
+  }
+
+  static String buildAudioUrl(String? audioUrl) {
+    if (audioUrl == null || audioUrl.isEmpty) return '';
+    if (audioUrl.startsWith('http://') || audioUrl.startsWith('https://')) {
+      final uri = Uri.parse(audioUrl);
+      final path = uri.path;
+      if (path.contains('/uploads/')) {
+        return '$mediaServerUrl$path';
+      }
+
+      return audioUrl;
+    }
+
+    if (audioUrl.startsWith('/uploads/')) {
+      return '$mediaServerUrl$audioUrl';
+    }
+
+    return '$mediaServerUrl/uploads/musicians/audio/$audioUrl';
+  }
 }
