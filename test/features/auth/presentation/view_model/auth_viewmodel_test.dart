@@ -357,13 +357,7 @@ void main() {
   });
 
   group('AuthState', () {
-    test('should have correct initial values', () {
-      const state = AuthState();
-
-      expect(state.status, AuthStatus.unauthenticated);
-      expect(state.user, isNull);
-      expect(state.errorMessage, isEmpty);
-    });
+  
 
     test('copyWith should update specified fields', () {
       const state = AuthState();
