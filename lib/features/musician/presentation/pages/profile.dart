@@ -1,6 +1,8 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/app/routes/app_routes.dart';
+import 'package:getagig/core/api/api_endpoints.dart';
 import 'package:getagig/features/auth/presentation/pages/login_page.dart';
 import 'package:getagig/features/auth/presentation/state/auth_state.dart';
 import 'package:getagig/features/auth/presentation/view_model/auth_viewmodel.dart';
@@ -66,11 +68,21 @@ class _ProfileState extends ConsumerState<Profile> {
         children: [
           Row(
             children: [
-              const CircleAvatar(
+              CircleAvatar(
                 radius: 35,
                 backgroundColor: Colors.grey,
-                child: Icon(Icons.person, size: 40, color: Colors.black),
+                backgroundImage: musicianState.profile?.profilePicture != null
+                    ? CachedNetworkImageProvider(
+                        ApiEndpoints.buildProfilePictureUrl(
+                          musicianState.profile!.profilePicture!,
+                        ),
+                      )
+                    : null,
+                child: musicianState.profile?.profilePicture == null
+                    ? const Icon(Icons.person, size: 40, color: Colors.black)
+                    : null,
               ),
+
               const SizedBox(width: 16),
               Expanded(
                 child: Column(

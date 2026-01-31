@@ -15,93 +15,63 @@ class PermissionController {
   PermissionController(this._permissionService);
 
   Future<bool> requestCameraWithDialog(BuildContext context) async {
-    return await PermissionDialog.requestPermissionWithDialog(
+    return await requestPermissionWithDialog(
       context,
-      _permissionService,
+      permission: Permission.camera,
       title: 'Camera Permission',
       message:
           'This app needs access to your camera to capture photos and videos.',
-      permissionRequest: () async {
-        return await _permissionService.requestPermissionWithMessage(
-          Permission.camera,
-          'Camera',
-        );
-      },
+      permissionName: 'Camera',
     );
   }
 
   Future<bool> requestGalleryWithDialog(BuildContext context) async {
-    return await PermissionDialog.requestPermissionWithDialog(
+    return await requestPermissionWithDialog(
       context,
-      _permissionService,
+      permission: Permission.photos,
       title: 'Photo Library Access',
       message: 'This app needs access to your photo library.',
-      permissionRequest: () async {
-        return await _permissionService.requestPermissionWithMessage(
-          Permission.photos,
-          'Photos',
-        );
-      },
+      permissionName: 'Photos',
     );
   }
 
   Future<bool> requestStorageWithDialog(BuildContext context) async {
-    return await PermissionDialog.requestPermissionWithDialog(
+    return await requestPermissionWithDialog(
       context,
-      _permissionService,
+      permission: Permission.storage,
       title: 'Storage Access',
       message: 'This app needs access to your storage to save files.',
-      permissionRequest: () async {
-        return await _permissionService.requestPermissionWithMessage(
-          Permission.storage,
-          'Storage',
-        );
-      },
+      permissionName: 'Storage',
     );
   }
 
   Future<bool> requestMicrophoneWithDialog(BuildContext context) async {
-    return await PermissionDialog.requestPermissionWithDialog(
+    return await requestPermissionWithDialog(
       context,
-      _permissionService,
+      permission: Permission.microphone,
       title: 'Microphone Permission',
       message: 'This app needs access to your microphone to record audio.',
-      permissionRequest: () async {
-        return await _permissionService.requestPermissionWithMessage(
-          Permission.microphone,
-          'Microphone',
-        );
-      },
+      permissionName: 'Microphone',
     );
   }
 
   Future<bool> requestLocationWithDialog(BuildContext context) async {
-    return await PermissionDialog.requestPermissionWithDialog(
+    return await requestPermissionWithDialog(
       context,
-      _permissionService,
+      permission: Permission.location,
       title: 'Location Permission',
       message: 'This app needs access to your location.',
-      permissionRequest: () async {
-        return await _permissionService.requestPermissionWithMessage(
-          Permission.location,
-          'Location',
-        );
-      },
+      permissionName: 'Location',
     );
   }
 
   Future<bool> requestContactsWithDialog(BuildContext context) async {
-    return await PermissionDialog.requestPermissionWithDialog(
+    return await requestPermissionWithDialog(
       context,
-      _permissionService,
+      permission: Permission.contacts,
       title: 'Contacts Permission',
       message: 'This app needs access to your contacts.',
-      permissionRequest: () async {
-        return await _permissionService.requestPermissionWithMessage(
-          Permission.contacts,
-          'Contacts',
-        );
-      },
+      permissionName: 'Contacts',
     );
   }
 
@@ -112,7 +82,31 @@ class PermissionController {
     required String message,
     String permissionName = 'Permission',
   }) async {
-    return await PermissionDialog.requestPermissionWithDialog(
+    final status = await _permissionService.getPermissionStatus(permission);
+
+    if (status.isGranted) {
+      return true;
+    }
+
+    if (status.isPermanentlyDenied) {
+      if (context.mounted) {
+        await PermissionDialog.showPermissionResult(
+          context,
+          PermissionResult(
+            isGranted: false,
+            message:
+                '$permissionName permission permanently denied. Open app settings to enable it.',
+            isPermanentlyDenied: true,
+          ),
+          onOpenSettings: () async {
+            await _permissionService.openAppSettings();
+          },
+        );
+      }
+      return false;
+    }
+
+    final result = await PermissionDialog.requestPermissionWithDialog(
       context,
       _permissionService,
       title: title,
@@ -124,6 +118,8 @@ class PermissionController {
         );
       },
     );
+
+    return result;
   }
 
   Future<bool> isPermissionGranted(Permission permission) async {

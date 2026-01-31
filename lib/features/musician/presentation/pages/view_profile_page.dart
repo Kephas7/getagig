@@ -25,6 +25,89 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
     );
   }
 
+  void _showImageSourcePicker() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _imageSourceTile(
+                icon: Icons.photo_library,
+                title: 'Choose from Gallery',
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickFromGallery();
+                },
+              ),
+              _imageSourceTile(
+                icon: Icons.camera_alt,
+                title: 'Take a Photo',
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickFromCamera();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _imageSourceTile({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(leading: Icon(icon), title: Text(title), onTap: onTap);
+  }
+
+  Future<void> _pickFromGallery() async {
+    try {
+      final picker = ref.read(filePickerServiceProvider);
+      final file = await picker.pickImageFromGallery();
+
+      if (file != null) {
+        await ref
+            .read(musicianProfileViewModelProvider.notifier)
+            .uploadProfilePicture(file);
+      }
+    } on FilePickerException catch (e) {
+      _showError(e.message);
+    } catch (e) {
+      _showError('Error uploading image: $e');
+    }
+  }
+
+  Future<void> _pickFromCamera() async {
+    try {
+      final picker = ref.read(filePickerServiceProvider);
+      final file = await picker.takePhotoWithCamera();
+
+      if (file != null) {
+        await ref
+            .read(musicianProfileViewModelProvider.notifier)
+            .uploadProfilePicture(file);
+      }
+    } on FilePickerException catch (e) {
+      _showError(e.message);
+    } catch (e) {
+      _showError('Error uploading image: $e');
+    }
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   String _getLocationValue(
     Map<String, dynamic>? location,
     String key, [
@@ -36,31 +119,6 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
       return value?.toString() ?? defaultValue;
     } catch (e) {
       return defaultValue;
-    }
-  }
-
-  Future<void> _uploadProfilePicture() async {
-    try {
-      final filePickerService = ref.read(filePickerServiceProvider);
-      final pickedFile = await filePickerService.pickImageFromGallery();
-
-      if (pickedFile != null) {
-        await ref
-            .read(musicianProfileViewModelProvider.notifier)
-            .uploadProfilePicture(pickedFile);
-      }
-    } on FilePickerException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error uploading image: $e')));
-      }
     }
   }
 
@@ -217,7 +275,7 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                         bottom: 0,
                         right: 0,
                         child: InkWell(
-                          onTap: _uploadProfilePicture,
+                          onTap: _showImageSourcePicker,
                           child: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
@@ -408,7 +466,7 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                               MaterialPageRoute(
                                 builder: (context) => ManageMediaPage(
                                   mediaType: MediaType.photos,
-                                  mediaUrls: musician.photos,
+                                  mediaUrls: musician.photos.cast<String>(),
                                 ),
                               ),
                             );
@@ -425,7 +483,7 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                               MaterialPageRoute(
                                 builder: (context) => ManageMediaPage(
                                   mediaType: MediaType.videos,
-                                  mediaUrls: musician.videos,
+                                  mediaUrls: musician.videos.cast<String>(),
                                 ),
                               ),
                             );
@@ -442,7 +500,8 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                               MaterialPageRoute(
                                 builder: (context) => ManageMediaPage(
                                   mediaType: MediaType.audio,
-                                  mediaUrls: musician.audioSamples,
+                                  mediaUrls: musician.audioSamples
+                                      .cast<String>(),
                                 ),
                               ),
                             );

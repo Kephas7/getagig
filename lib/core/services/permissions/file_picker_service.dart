@@ -1,6 +1,9 @@
 import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
+
 import 'permission_service.dart';
 
 final filePickerServiceProvider = Provider<FilePickerService>((ref) {
@@ -30,17 +33,14 @@ class FilePickerService {
         imageQuality: 80,
       );
 
-      if (pickedFile != null) {
-        return File(pickedFile.path);
-      }
-      return null;
+      return pickedFile != null ? File(pickedFile.path) : null;
     } catch (e) {
       if (e is FilePickerException) rethrow;
       throw FilePickerException('Failed to pick image: $e');
     }
   }
 
-  /// Pick multiple images from gallery with permission check
+  /// Pick multiple images from gallery
   Future<List<File>> pickMultipleImagesFromGallery() async {
     try {
       final hasPermission = await _permissionService.requestGalleryPermission();
@@ -60,7 +60,7 @@ class FilePickerService {
     }
   }
 
-  /// Take photo using camera with permission check
+  /// Take photo using camera
   Future<File?> takePhotoWithCamera() async {
     try {
       final hasPermission = await _permissionService.requestCameraPermission();
@@ -76,17 +76,14 @@ class FilePickerService {
         imageQuality: 80,
       );
 
-      if (pickedFile != null) {
-        return File(pickedFile.path);
-      }
-      return null;
+      return pickedFile != null ? File(pickedFile.path) : null;
     } catch (e) {
       if (e is FilePickerException) rethrow;
       throw FilePickerException('Failed to capture photo: $e');
     }
   }
 
-  /// Pick video from gallery with permission check
+  /// Pick video from gallery
   Future<File?> pickVideoFromGallery() async {
     try {
       final hasPermission = await _permissionService.requestGalleryPermission();
@@ -99,17 +96,14 @@ class FilePickerService {
 
       final pickedFile = await _picker.pickVideo(source: ImageSource.gallery);
 
-      if (pickedFile != null) {
-        return File(pickedFile.path);
-      }
-      return null;
+      return pickedFile != null ? File(pickedFile.path) : null;
     } catch (e) {
       if (e is FilePickerException) rethrow;
       throw FilePickerException('Failed to pick video: $e');
     }
   }
 
-  /// Record video using camera with permission check
+  /// Record video using camera
   Future<File?> recordVideoWithCamera() async {
     try {
       final hasPermission = await _permissionService.requestMediaPermissions();
@@ -122,20 +116,86 @@ class FilePickerService {
 
       final pickedFile = await _picker.pickVideo(source: ImageSource.camera);
 
-      if (pickedFile != null) {
-        return File(pickedFile.path);
-      }
-      return null;
+      return pickedFile != null ? File(pickedFile.path) : null;
     } catch (e) {
       if (e is FilePickerException) rethrow;
       throw FilePickerException('Failed to record video: $e');
     }
   }
 
-  /// Show image source selection dialog
+  // ---------------------------------------------------------------------------
+  // 🎵 AUDIO PICKER METHODS
+  // ---------------------------------------------------------------------------
+
+  Future<File?> pickAudioFile() async {
+    try {
+      final hasPermission = await _permissionService.requestStoragePermission();
+
+      if (!hasPermission) {
+        throw FilePickerException(
+          'Storage permission denied. Please enable it in app settings.',
+        );
+      }
+
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.audio,
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.single.path != null) {
+        return File(result.files.single.path!);
+      }
+
+      return null;
+    } catch (e) {
+      if (e is FilePickerException) rethrow;
+      throw FilePickerException('Failed to pick audio file: $e');
+    }
+  }
+
+  /// Pick multiple audio files
+  Future<List<File>> pickMultipleAudioFiles() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.audio,
+        allowMultiple: true,
+      );
+
+      if (result != null) {
+        return result.paths
+            .where((path) => path != null)
+            .map((path) => File(path!))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      throw FilePickerException('Failed to pick audio files: $e');
+    }
+  }
+
+  /// Pick audio with specific extensions (mp3, wav, m4a, etc.)
+  Future<File?> pickAudioFileWithExtensions({
+    List<String>? allowedExtensions,
+  }) async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions:
+            allowedExtensions ?? ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.single.path != null) {
+        return File(result.files.single.path!);
+      }
+      return null;
+    } catch (e) {
+      throw FilePickerException('Failed to pick audio file: $e');
+    }
+  }
+
+  /// Optional: let UI handle camera/gallery selection
   Future<File?> pickImageWithSourceSelection() async {
-    // Return null to let the UI handle the selection dialog
-    // This should be called from a dialog that shows camera/gallery options
     return null;
   }
 }
