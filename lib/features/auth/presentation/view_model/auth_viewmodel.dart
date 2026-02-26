@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/features/auth/domain/usecases/get_current_user_usecase.dart';
 import 'package:getagig/features/auth/domain/usecases/login_usecase.dart';
 import 'package:getagig/features/auth/domain/usecases/logout_usecase.dart';
@@ -99,3 +99,4 @@ class AuthViewModel extends Notifier<AuthState> {
     );
   }
 }
+

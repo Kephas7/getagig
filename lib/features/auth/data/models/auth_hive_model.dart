@@ -1,4 +1,4 @@
-import 'package:getagig/core/constants/hive_table_constant.dart';
+﻿import 'package:getagig/core/constants/hive_table_constant.dart';
 import 'package:getagig/features/auth/domain/entities/auth_entity.dart';
 import 'package:hive/hive.dart';
 import 'package:uuid/uuid.dart';
@@ -29,7 +29,7 @@ class AuthHiveModel extends HiveObject {
     this.password,
     String? role,
   }) : userId = userId ?? const Uuid().v4(),
-       role = role ?? 'musician';
+       role = (role == null || role.isEmpty) ? 'musician' : role;
 
   factory AuthHiveModel.fromEntity(AuthEntity entity) {
     return AuthHiveModel(
@@ -54,3 +54,4 @@ class AuthHiveModel extends HiveObject {
     return models.map((model) => model.toEntity()).toList();
   }
 }
+

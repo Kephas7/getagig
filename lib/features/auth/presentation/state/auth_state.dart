@@ -1,5 +1,7 @@
-import 'package:equatable/equatable.dart';
+﻿import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:getagig/features/auth/domain/entities/auth_entity.dart';
+
+part 'auth_state.freezed.dart';
 
 enum AuthStatus {
   initial,
@@ -10,29 +12,12 @@ enum AuthStatus {
   error,
 }
 
-class AuthState extends Equatable {
-  final AuthStatus status;
-  final AuthEntity? user;
-  final String? errorMessage;
-
-  const AuthState({
-    this.status = AuthStatus.initial,
-    this.user,
-    this.errorMessage,
-  });
-
-  AuthState copyWith({
-    AuthStatus? status,
+@freezed
+class AuthState with _$AuthState {
+  const factory AuthState({
+    @Default(AuthStatus.initial) AuthStatus status,
     AuthEntity? user,
     String? errorMessage,
-  }) {
-    return AuthState(
-      status: status ?? this.status,
-      user: user ?? this.user,
-      errorMessage: errorMessage ?? this.errorMessage,
-    );
-  }
-
-  @override
-  List<Object?> get props => [status, user, errorMessage];
+  }) = _AuthState;
 }
+

@@ -1,4 +1,4 @@
-import 'package:dartz/dartz.dart';
+﻿import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/core/error/failures.dart';
@@ -36,7 +36,7 @@ class RegisterUsecase implements UsecaseWithParms<bool, RegisterParams> {
     : _authRepository = authRepository;
 
   @override
-  Future<Either<Failures, bool>> call(RegisterParams params) {
+  Future<Either<Failure, bool>> call(RegisterParams params) {
     final authEntity = AuthEntity(
       username: params.username,
       email: params.email,
@@ -47,3 +47,4 @@ class RegisterUsecase implements UsecaseWithParms<bool, RegisterParams> {
     return _authRepository.register(authEntity);
   }
 }
+

@@ -1,4 +1,4 @@
-import 'package:dartz/dartz.dart';
+﻿import 'package:dartz/dartz.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/core/error/failures.dart';
 import 'package:getagig/core/usecases/app_usecase.dart';
@@ -16,7 +16,8 @@ class LogoutUsecase implements UsecaseWithoutParms {
   LogoutUsecase({required IAuthRepository authRepository})
     : _authRepository = authRepository;
   @override
-  Future<Either<Failures, bool>> call() {
+  Future<Either<Failure, bool>> call() {
     return _authRepository.logout();
   }
 }
+

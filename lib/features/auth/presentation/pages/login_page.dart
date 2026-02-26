@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:getagig/app/routes/app_routes.dart';
-import 'package:getagig/features/auth/presentation/pages/signup_page.dart';
+import 'package:go_router/go_router.dart';
+import 'package:getagig/app/routes/route_constants.dart';
 import 'package:getagig/features/auth/presentation/state/auth_state.dart';
 import 'package:getagig/features/auth/presentation/view_model/auth_viewmodel.dart';
-import 'package:getagig/features/musician/presentation/pages/musician_dashboard_page.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -38,7 +37,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   void _navigateToSignup() {
-    AppRoutes.push(context, const SignupPage());
+    context.pushNamed(RouteNames.signup);
   }
 
   @override
@@ -46,9 +45,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final authState = ref.watch(authViewModelProvider);
 
     ref.listen<AuthState>(authViewModelProvider, (previous, next) {
-      if (next.status == AuthStatus.authenticated) {
-        AppRoutes.pushReplacement(context, const DashboardPage());
-      } else if (next.status == AuthStatus.error && next.errorMessage != null) {
+      if (next.status == AuthStatus.error && next.errorMessage != null) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(next.errorMessage!)));
@@ -153,3 +150,4 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 }
+

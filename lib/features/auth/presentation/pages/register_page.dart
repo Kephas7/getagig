@@ -1,17 +1,18 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:getagig/core/utils/snackbar_untils.dart';
 import 'package:getagig/features/auth/presentation/state/auth_state.dart';
 import 'package:getagig/features/auth/presentation/view_model/auth_viewmodel.dart';
 
-class SignupPage extends ConsumerStatefulWidget {
-  const SignupPage({super.key});
+class RegisterPage extends ConsumerStatefulWidget {
+  const RegisterPage({super.key});
 
   @override
-  ConsumerState<SignupPage> createState() => _SignupPageState();
+  ConsumerState<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _SignupPageState extends ConsumerState<SignupPage> {
+class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -54,7 +55,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
   }
 
   void _navigateToLogin() {
-    Navigator.of(context).pop();
+    context.pop();
   }
 
   @override
@@ -68,7 +69,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
           context,
           'Registration successful! Please login.',
         );
-        Navigator.of(context).pop();
+        context.pop();
       } else if (next.status == AuthStatus.error && next.errorMessage != null) {
         SnackbarUtils.showError(context, next.errorMessage!);
       }
@@ -359,3 +360,4 @@ class _SignupPageState extends ConsumerState<SignupPage> {
     );
   }
 }
+

@@ -1,4 +1,4 @@
-import 'package:dartz/dartz.dart';
+﻿import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/core/error/failures.dart';
@@ -29,7 +29,8 @@ class LoginUsecase implements UsecaseWithParms<AuthEntity, LoginParams> {
     : _authRepository = authRepository;
 
   @override
-  Future<Either<Failures, AuthEntity>> call(LoginParams params) {
+  Future<Either<Failure, AuthEntity>> call(LoginParams params) {
     return _authRepository.login(params.email, params.password);
   }
 }
+

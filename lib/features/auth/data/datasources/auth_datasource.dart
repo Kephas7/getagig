@@ -1,4 +1,4 @@
-import 'package:getagig/features/auth/data/models/auth_api_model.dart';
+﻿import 'package:getagig/features/auth/data/models/auth_api_model.dart';
 import 'package:getagig/features/auth/data/models/auth_hive_model.dart';
 
 abstract interface class IAuthLocalDataSource {
@@ -18,3 +18,4 @@ abstract interface class IAuthRemoteDataSource {
   Future<AuthApiModel?> getCurrentUser();
   Future<bool> logout();
 }
+

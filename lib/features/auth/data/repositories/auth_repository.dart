@@ -1,7 +1,6 @@
-import 'package:dartz/dartz.dart';
+﻿import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:getagig/core/error/failures.dart';
 import 'package:getagig/core/services/connectivity/network_info.dart';
 import 'package:getagig/features/auth/data/datasources/auth_datasource.dart';
@@ -29,7 +28,6 @@ class AuthRepository implements IAuthRepository {
   final IAuthLocalDataSource _authLocalDataSource;
   final IAuthRemoteDataSource _authRemoteDataSource;
   final NetworkInfo _networkInfo;
-  final _secureStorage = const FlutterSecureStorage();
 
   AuthRepository({
     required IAuthLocalDataSource authLocalDataSource,
@@ -40,7 +38,7 @@ class AuthRepository implements IAuthRepository {
        _networkInfo = networkInfo;
 
   @override
-  Future<Either<Failures, AuthEntity>> login(
+  Future<Either<Failure, AuthEntity>> login(
     String email,
     String password,
   ) async {
@@ -48,18 +46,13 @@ class AuthRepository implements IAuthRepository {
       try {
         final apiModel = await _authRemoteDataSource.login(email, password);
         if (apiModel != null) {
-          await _secureStorage.write(key: 'auth_token', value: apiModel.token);
+          // Token is automatically saved by ApiClient interceptor
           final entity = apiModel.toEntity();
           return Right(entity);
         }
         return const Left(ApiFailure(message: "Invalid credentials."));
       } on DioException catch (e) {
-        return Left(
-          ApiFailure(
-            statusCode: e.response?.statusCode,
-            message: e.response?.data['messsage'] ?? 'Login failed.',
-          ),
-        );
+        return Left(ApiFailure.fromDioException(e, fallback: 'Login failed.'));
       } catch (e) {
         return Left(ApiFailure(message: e.toString()));
       }
@@ -81,24 +74,14 @@ class AuthRepository implements IAuthRepository {
   }
 
   @override
-  Future<Either<Failures, bool>> register(AuthEntity user) async {
+  Future<Either<Failure, bool>> register(AuthEntity user) async {
     if (await _networkInfo.isConnected) {
       try {
         final apiModel = AuthApiModel.fromEntity(user);
         await _authRemoteDataSource.register(apiModel);
         return const Right(true);
       } on DioException catch (e) {
-        final responseData = e.response?.data;
-        String? message;
-        if (responseData is Map<String, dynamic>) {
-          message = responseData['messsage'] as String?;
-        }
-        return Left(
-          ApiFailure(
-            statusCode: e.response?.statusCode,
-            message: message ?? 'Login failed.',
-          ),
-        );
+        return Left(ApiFailure.fromDioException(e, fallback: 'Registration failed.'));
       } catch (e) {
         return Left(ApiFailure(message: e.toString()));
       }
@@ -132,7 +115,7 @@ class AuthRepository implements IAuthRepository {
   }
 
   @override
-  Future<Either<Failures, AuthEntity>> getCurrentUser() async {
+  Future<Either<Failure, AuthEntity>> getCurrentUser() async {
     if (await _networkInfo.isConnected) {
       try {
         final apiModel = await _authRemoteDataSource.getCurrentUser();
@@ -143,17 +126,7 @@ class AuthRepository implements IAuthRepository {
 
         return Right(apiModel.toEntity());
       } on DioException catch (e) {
-        final responseData = e.response?.data;
-        String? message;
-        if (responseData is Map<String, dynamic>) {
-          message = responseData['message'] as String?;
-        }
-        return Left(
-          ApiFailure(
-            statusCode: e.response?.statusCode,
-            message: message ?? 'Failed to fetch user.',
-          ),
-        );
+        return Left(ApiFailure.fromDioException(e, fallback: 'Failed to fetch user.'));
       } catch (e) {
         return Left(ApiFailure(message: e.toString()));
       }
@@ -173,7 +146,7 @@ class AuthRepository implements IAuthRepository {
   }
 
   @override
-  Future<Either<Failures, bool>> logout() async {
+  Future<Either<Failure, bool>> logout() async {
     try {
       final result = await _authLocalDataSource.logout();
       return Right(result);
@@ -182,3 +155,5 @@ class AuthRepository implements IAuthRepository {
     }
   }
 }
+
+

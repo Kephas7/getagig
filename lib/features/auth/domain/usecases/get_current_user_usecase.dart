@@ -1,4 +1,4 @@
-import 'package:dartz/dartz.dart';
+﻿import 'package:dartz/dartz.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/core/error/failures.dart';
 import 'package:getagig/core/usecases/app_usecase.dart';
@@ -17,7 +17,9 @@ class GetCurrentUserUsecase implements UsecaseWithoutParms<AuthEntity> {
   GetCurrentUserUsecase({required IAuthRepository authRepository})
     : _authRepository = authRepository;
   @override
-  Future<Either<Failures, AuthEntity>> call() {
+  Future<Either<Failure, AuthEntity>> call() {
     return _authRepository.getCurrentUser();
   }
 }
+
+
