@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class AppRoutes {
   AppRoutes._();
@@ -8,7 +8,10 @@ class AppRoutes {
   }
 
   static void pushReplacement(BuildContext context, Widget page) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => page));
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => page),
+    );
   }
 
   static void pushAndRemoveUntil(BuildContext context, Widget page) {
@@ -27,3 +30,4 @@ class AppRoutes {
     Navigator.popUntil(context, (route) => route.isFirst);
   }
 }
+

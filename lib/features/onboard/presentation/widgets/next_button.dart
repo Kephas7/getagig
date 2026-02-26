@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class OnboardingNextButton extends StatelessWidget {
   final bool isLastPage;
@@ -73,3 +73,4 @@ class OnboardingNextButton extends StatelessWidget {
     );
   }
 }
+

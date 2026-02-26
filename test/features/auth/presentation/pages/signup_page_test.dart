@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +8,7 @@ import 'package:getagig/features/auth/domain/usecases/get_current_user_usecase.d
 import 'package:getagig/features/auth/domain/usecases/login_usecase.dart';
 import 'package:getagig/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:getagig/features/auth/domain/usecases/register_usecase.dart';
-import 'package:getagig/features/auth/presentation/pages/signup_page.dart';
+import 'package:getagig/features/auth/presentation/pages/register_page.dart';
 import 'package:getagig/core/error/failures.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -62,7 +62,7 @@ void main() {
         logoutUsecaseProvider.overrideWithValue(mockLogoutUsecase),
       ],
       child: MaterialApp(
-        home: const SignupPage(),
+        home: const RegisterPage(),
         navigatorObservers: withObserver ? [mockNavigatorObserver] : [],
       ),
     );
@@ -193,7 +193,7 @@ void main() {
     testWidgets('should call register usecase when form is valid', (
       tester,
     ) async {
-      final completer = Completer<Either<Failures, bool>>();
+      final completer = Completer<Either<Failure, bool>>();
       when(
         () => mockRegisterUsecase(any()),
       ).thenAnswer((_) => completer.future);
@@ -216,7 +216,7 @@ void main() {
     });
 
     testWidgets('should call register with correct params', (tester) async {
-      final completer = Completer<Either<Failures, bool>>();
+      final completer = Completer<Either<Failure, bool>>();
 
       RegisterParams? capturedParams;
       when(() => mockRegisterUsecase(any())).thenAnswer((invocation) {
@@ -255,7 +255,7 @@ void main() {
     testWidgets('should show loading indicator while registering', (
       tester,
     ) async {
-      final completer = Completer<Either<Failures, bool>>();
+      final completer = Completer<Either<Failure, bool>>();
       when(
         () => mockRegisterUsecase(any()),
       ).thenAnswer((_) => completer.future);

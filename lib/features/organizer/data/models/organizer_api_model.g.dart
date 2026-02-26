@@ -8,31 +8,38 @@ part of 'organizer_api_model.dart';
 
 OrganizerApiModel _$OrganizerApiModelFromJson(Map<String, dynamic> json) =>
     OrganizerApiModel(
-      id: json['id'] as String,
-      userId: json['userId'] as String,
-      organizationName: json['organizationName'] as String,
+      id: json['id'] as String? ?? '',
+      userId: json['userId'] as String? ?? '',
+      organizationName: json['organizationName'] as String? ?? '',
       profilePicture: json['profilePicture'] as String?,
       bio: json['bio'] as String?,
-      contactPerson: json['contactPerson'] as String,
-      phone: json['phone'] as String,
-      email: json['email'] as String,
-      location: json['location'] as Map<String, dynamic>,
-      organizationType: json['organizationType'] as String,
-      eventTypes: (json['eventTypes'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
-      verificationDocuments: (json['verificationDocuments'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
+      contactPerson: json['contactPerson'] as String? ?? '',
+      phone: json['phone'] as String? ?? '',
+      email: json['email'] as String? ?? '',
+      location: json['location'] as Map<String, dynamic>? ??
+          {'city': '', 'state': '', 'country': ''},
+      organizationType: json['organizationType'] as String? ?? '',
+      eventTypes: (json['eventTypes'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
+      verificationDocuments: (json['verificationDocuments'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
       website: json['website'] as String?,
-      photos:
-          (json['photos'] as List<dynamic>).map((e) => e as String).toList(),
-      videos:
-          (json['videos'] as List<dynamic>).map((e) => e as String).toList(),
-      isVerified: json['isVerified'] as bool,
-      isActive: json['isActive'] as bool,
-      createdAt: json['createdAt'] as String,
-      updatedAt: json['updatedAt'] as String,
+      photos: (json['photos'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
+      videos: (json['videos'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
+      isVerified: json['isVerified'] as bool? ?? false,
+      isActive: json['isActive'] as bool? ?? true,
+      createdAt: json['createdAt'] as String? ?? '',
+      updatedAt: json['updatedAt'] as String? ?? '',
     );
 
 Map<String, dynamic> _$OrganizerApiModelToJson(OrganizerApiModel instance) =>

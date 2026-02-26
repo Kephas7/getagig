@@ -1,9 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:getagig/features/auth/presentation/state/auth_state.dart';
 import 'package:getagig/features/auth/presentation/view_model/auth_viewmodel.dart';
-import 'package:getagig/features/musician/presentation/pages/musician_dashboard_page.dart';
-import 'package:getagig/features/onboard/presentation/pages/onboard_page.dart';
 
 class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
@@ -25,17 +22,9 @@ class _SplashPageState extends ConsumerState<SplashPage> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<AuthState>(authViewModelProvider, (previous, next) {
-      if (next.status == AuthStatus.authenticated) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const DashboardPage()),
-        );
-      } else if (next.status == AuthStatus.unauthenticated) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const OnboardPage()),
-        );
-      }
-    });
+    // Navigation is handled automatically by RouterNotifier and GoRouter
+    // based on the authViewModelProvider state.
+
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -48,15 +37,21 @@ class _SplashPageState extends ConsumerState<SplashPage> {
               height: 150,
               width: 150,
               errorBuilder: (context, error, stackTrace) {
-                return const Icon(Icons.error, size: 100);
+                return const Icon(Icons.music_note, size: 100, color: Colors.blue);
               },
             ),
             const SizedBox(height: 20),
-            const CircularProgressIndicator(),
+            const CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+            ),
             const SizedBox(height: 10),
             const Text(
-              'Loading...',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+              'Get-a-Gig',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue,
+              ),
             ),
           ],
         ),
@@ -64,3 +59,4 @@ class _SplashPageState extends ConsumerState<SplashPage> {
     );
   }
 }
+

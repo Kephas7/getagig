@@ -1,13 +1,19 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/app/app.dart';
 import 'package:getagig/core/services/hive_service.dart';
+import 'package:getagig/core/services/push_service.dart';
 import 'package:getagig/core/services/storage/user_session_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Set system UI overlay style
+
+  // Initialize Firebase and register background message handler
+  await Firebase.initializeApp();
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
   // initialize Hive or other services if needed
   await HiveService().init();
@@ -25,3 +31,4 @@ void main() async {
     ),
   );
 }
+

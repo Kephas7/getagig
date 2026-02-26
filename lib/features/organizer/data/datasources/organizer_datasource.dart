@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import '../models/organizer_api_model.dart';
 
 abstract class IOrganizerRemoteDataSource {
@@ -16,3 +16,4 @@ abstract class IOrganizerRemoteDataSource {
   Future<OrganizerApiModel> removeVerificationDocument(String documentUrl);
   Future<OrganizerApiModel> updateActiveStatus(bool isActive);
 }
+

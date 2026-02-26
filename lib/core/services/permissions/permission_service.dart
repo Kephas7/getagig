@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart' as ph;
 
 final permissionServiceProvider = Provider<PermissionService>((ref) {
@@ -119,3 +119,4 @@ class PermissionResult {
     this.isPermanentlyDenied = false,
   });
 }
+

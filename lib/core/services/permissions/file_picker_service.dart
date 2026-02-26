@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -17,7 +17,6 @@ class FilePickerService {
 
   FilePickerService(this._permissionService);
 
-  /// Pick image from gallery with permission check
   Future<File?> pickImageFromGallery() async {
     try {
       final hasPermission = await _permissionService.requestGalleryPermission();
@@ -40,7 +39,6 @@ class FilePickerService {
     }
   }
 
-  /// Pick multiple images from gallery
   Future<List<File>> pickMultipleImagesFromGallery() async {
     try {
       final hasPermission = await _permissionService.requestGalleryPermission();
@@ -60,7 +58,6 @@ class FilePickerService {
     }
   }
 
-  /// Take photo using camera
   Future<File?> takePhotoWithCamera() async {
     try {
       final hasPermission = await _permissionService.requestCameraPermission();
@@ -83,7 +80,6 @@ class FilePickerService {
     }
   }
 
-  /// Pick video from gallery
   Future<File?> pickVideoFromGallery() async {
     try {
       final hasPermission = await _permissionService.requestGalleryPermission();
@@ -103,7 +99,6 @@ class FilePickerService {
     }
   }
 
-  /// Record video using camera
   Future<File?> recordVideoWithCamera() async {
     try {
       final hasPermission = await _permissionService.requestMediaPermissions();
@@ -122,10 +117,6 @@ class FilePickerService {
       throw FilePickerException('Failed to record video: $e');
     }
   }
-
-  // ---------------------------------------------------------------------------
-  // 🎵 AUDIO PICKER METHODS
-  // ---------------------------------------------------------------------------
 
   Future<File?> pickAudioFile() async {
     try {
@@ -153,7 +144,6 @@ class FilePickerService {
     }
   }
 
-  /// Pick multiple audio files
   Future<List<File>> pickMultipleAudioFiles() async {
     try {
       final result = await FilePicker.platform.pickFiles(
@@ -173,7 +163,6 @@ class FilePickerService {
     }
   }
 
-  /// Pick audio with specific extensions (mp3, wav, m4a, etc.)
   Future<File?> pickAudioFileWithExtensions({
     List<String>? allowedExtensions,
   }) async {
@@ -194,7 +183,6 @@ class FilePickerService {
     }
   }
 
-  /// Optional: let UI handle camera/gallery selection
   Future<File?> pickImageWithSourceSelection() async {
     return null;
   }

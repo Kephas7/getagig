@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:getagig/app/routes/app_routes.dart';
 import 'package:getagig/features/auth/presentation/pages/login_page.dart';
 import 'package:getagig/features/onboard/domain/entities/onboarding_items.dart';
@@ -58,7 +58,7 @@ class _OnboardPageState extends State<OnboardPage> {
   }
 
   void _navigateToLogin() {
-    AppRoutes.pushReplacement(context,LoginPage());
+    AppRoutes.pushReplacement(context, const LoginPage());
   }
 
   @override
@@ -160,3 +160,4 @@ class _OnboardPageState extends State<OnboardPage> {
     );
   }
 }
+

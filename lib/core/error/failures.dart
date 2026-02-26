@@ -1,27 +1,64 @@
+﻿import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 
-abstract class Failures extends Equatable {
+abstract class Failure extends Equatable {
   final String message;
-  const Failures(this.message);
+  const Failure(this.message);
+
   @override
   List<Object?> get props => [message];
 }
 
-class LocalDatabaseFailure extends Failures {
+class LocalDatabaseFailure extends Failure {
   const LocalDatabaseFailure({
     String message = 'Local database operations failed.',
   }) : super(message);
 }
 
-class ApiFailure extends Failures {
+class ApiFailure extends Failure {
   final int? statusCode;
   const ApiFailure({required String message, this.statusCode}) : super(message);
+
+  factory ApiFailure.fromDioException(DioException e,
+      {String fallback = 'Something went wrong'}) {
+    if (e.response != null) {
+      final data = e.response?.data;
+      String? serverMessage;
+      if (data is Map<String, dynamic>) {
+        serverMessage = data['message'] as String?;
+      }
+      return ApiFailure(
+        message: serverMessage ?? fallback,
+        statusCode: e.response?.statusCode,
+      );
+    }
+
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+        return const ApiFailure(
+            message: 'Connection timed out. Is the server running?');
+      case DioExceptionType.sendTimeout:
+        return const ApiFailure(message: 'Request timed out. Please try again.');
+      case DioExceptionType.receiveTimeout:
+        return const ApiFailure(
+            message: 'Server took too long to respond. Please try again.');
+      case DioExceptionType.connectionError:
+        return const ApiFailure(
+            message:
+                'Cannot connect to server. Please make sure the backend is running.');
+      case DioExceptionType.cancel:
+        return const ApiFailure(message: 'Request was cancelled.');
+      default:
+        return ApiFailure(message: fallback);
+    }
+  }
 
   @override
   List<Object?> get props => [message, statusCode];
 }
 
-class NetworkFailure extends Failures {
+class NetworkFailure extends Failure {
   const NetworkFailure({String message = "No internet connection"})
-    : super(message);
+      : super(message);
 }
+

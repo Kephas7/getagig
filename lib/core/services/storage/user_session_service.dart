@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -25,17 +25,29 @@ class UserSessionService {
   UserSessionService(this._prefs);
 
 
+  static const String _keyAuthToken = 'auth_token';
+
   Future<void> saveUserSession({
     required String userId,
     required String email,
     required String username,
     required String role,
+    String? token,
   }) async {
     await _prefs.setString(_keyUserId, userId);
     await _prefs.setString(_keyUserEmail, email);
     await _prefs.setString(_keyUserName, username);
     await _prefs.setString(_keyUserRole, role);
+    // Persist the JWT so ApiClient interceptor can attach it to requests
+    if (token != null && token.isNotEmpty) {
+      await _secureStorage.write(key: _keyAuthToken, value: token);
+    }
   }
+
+  Future<String?> getToken() => _secureStorage.read(key: _keyAuthToken);
+
+  Future<void> saveToken(String token) =>
+      _secureStorage.write(key: _keyAuthToken, value: token);
 
 
   bool hasSession() {
@@ -66,3 +78,4 @@ class UserSessionService {
     await _secureStorage.delete(key:'auth_token');
   }
 }
+

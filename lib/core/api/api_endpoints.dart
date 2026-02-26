@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
@@ -51,6 +51,15 @@ class ApiEndpoints {
   static const String organizerPhotos = '/organizers/photos';
   static const String organizerVideos = '/organizers/videos';
   static const String organizerDocuments = '/organizers/verification-documents';
+
+  // ============ Gigs & Applications Endpoints ============
+  static const String gigs = '/gigs';
+  static String gigById(String id) => '/gigs/$id';
+  
+  static const String applications = '/applications';
+  static const String myApplications = '/applications/my-applications';
+  static String gigApplications(String gigId) => '/applications/gig/$gigId';
+  static String updateApplicationStatus(String id) => '/applications/$id/status';
 
   // ============ Image URL Constructors ============
   static String buildImageUrl(String? imageUrl) {
@@ -129,3 +138,4 @@ class ApiEndpoints {
     return '$mediaServerUrl/uploads/musicians/audio/$audioUrl';
   }
 }
+

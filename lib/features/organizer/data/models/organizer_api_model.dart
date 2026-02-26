@@ -1,28 +1,44 @@
-import 'package:json_annotation/json_annotation.dart';
+﻿import 'package:json_annotation/json_annotation.dart';
 import '../../domain/entities/organizer_entity.dart';
 
 part 'organizer_api_model.g.dart';
 
 @JsonSerializable()
 class OrganizerApiModel {
+  @JsonKey(defaultValue: '')
   final String id;
+  @JsonKey(defaultValue: '')
   final String userId;
+  @JsonKey(defaultValue: '')
   final String organizationName;
   final String? profilePicture;
   final String? bio;
+  @JsonKey(defaultValue: '')
   final String contactPerson;
+  @JsonKey(defaultValue: '')
   final String phone;
+  @JsonKey(defaultValue: '')
   final String email;
+  @JsonKey(defaultValue: {'city': '', 'state': '', 'country': ''})
   final Map<String, dynamic> location;
+  @JsonKey(defaultValue: '')
   final String organizationType;
+  @JsonKey(defaultValue: [])
   final List<String> eventTypes;
+  @JsonKey(defaultValue: [])
   final List<String> verificationDocuments;
   final String? website;
+  @JsonKey(defaultValue: [])
   final List<String> photos;
+  @JsonKey(defaultValue: [])
   final List<String> videos;
+  @JsonKey(defaultValue: false)
   final bool isVerified;
+  @JsonKey(defaultValue: true)
   final bool isActive;
+  @JsonKey(defaultValue: '')
   final String createdAt;
+  @JsonKey(defaultValue: '')
   final String updatedAt;
 
   OrganizerApiModel({
@@ -100,3 +116,4 @@ class OrganizerApiModel {
     );
   }
 }
+

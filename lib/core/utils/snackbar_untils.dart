@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class SnackbarUtils {
   static void showError(BuildContext context, String message) {
@@ -70,3 +70,4 @@ class SnackbarUtils {
     );
   }
 }
+

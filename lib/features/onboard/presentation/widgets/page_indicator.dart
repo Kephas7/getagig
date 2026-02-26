@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class PageIndicator extends StatelessWidget {
   final int itemCount;
@@ -60,3 +60,4 @@ class PageIndicator extends StatelessWidget {
     );
   }
 }
+

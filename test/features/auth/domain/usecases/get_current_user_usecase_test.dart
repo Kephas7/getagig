@@ -104,7 +104,6 @@ void main() {
 
       // Assert
       result.fold((failure) => fail('Should return user'), (user) {
-        ;
 
         expect(user.username, 'testuser');
         expect(user.email, 'test@example.com');

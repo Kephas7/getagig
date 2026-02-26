@@ -1,10 +1,11 @@
-import 'package:dartz/dartz.dart';
+﻿import 'package:dartz/dartz.dart';
 import 'package:getagig/core/error/failures.dart';
 
 abstract interface class UsecaseWithParms<SucessType, Params> {
-  Future<Either<Failures, SucessType>> call(Params params);
+  Future<Either<Failure, SucessType>> call(Params params);
 }
 
 abstract interface class UsecaseWithoutParms<SucessType> {
-  Future<Either<Failures, SucessType>> call();
+  Future<Either<Failure, SucessType>> call();
 }
+

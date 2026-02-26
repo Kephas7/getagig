@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:getagig/core/services/permissions/permission_service.dart';
 
 class PermissionDialog {
@@ -107,3 +107,4 @@ class PermissionDialog {
     return result.isGranted;
   }
 }
+

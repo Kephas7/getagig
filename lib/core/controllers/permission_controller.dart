@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/core/services/permissions/permission_service.dart';
 import 'package:getagig/core/widgets/permission_dialog.dart';
@@ -132,3 +132,4 @@ class PermissionController {
     return await _permissionService.openAppSettings();
   }
 }
+

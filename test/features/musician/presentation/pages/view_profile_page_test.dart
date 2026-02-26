@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
@@ -74,7 +74,7 @@ void main() {
   });
 
   testWidgets('shows loading indicator while fetching profile', (tester) async {
-    final completer = Completer<Either<Failures, MusicianEntity>>();
+    final completer = Completer<Either<Failure, MusicianEntity>>();
     when(() => mockGetProfileUseCase()).thenAnswer((_) => completer.future);
 
     await tester.pumpWidget(createTestWidget());

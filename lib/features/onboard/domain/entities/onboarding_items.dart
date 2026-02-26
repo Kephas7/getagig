@@ -1,4 +1,4 @@
-class OnboardingItem {
+﻿class OnboardingItem {
   final String imagePath;
   final String title;
   final String subtitle;
@@ -10,3 +10,4 @@ class OnboardingItem {
   });
 
 }
+

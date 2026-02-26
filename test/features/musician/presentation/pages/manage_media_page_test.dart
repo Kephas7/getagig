@@ -19,26 +19,6 @@ void main() {
     registerFallbackValue(FakeFile());
   });
 
-  const tMusician = MusicianEntity(
-    id: 'id1',
-    userId: 'user1',
-    stageName: 'Stage One',
-    profilePicture: null,
-    bio: null,
-    phone: '1234567890',
-    location: {'city': 'Kathmandu', 'country': 'Nepal'},
-    genres: [],
-    instruments: [],
-    experienceYears: 2,
-    hourlyRate: null,
-    photos: [],
-    videos: [],
-    audioSamples: [],
-    isAvailable: true,
-    createdAt: '2024-01-01',
-    updatedAt: '2024-01-02',
-  );
-
   testWidgets('shows empty state and upload sheet for photos', (tester) async {
     final mockGetProfile = MockGetProfileUseCase();
     when(

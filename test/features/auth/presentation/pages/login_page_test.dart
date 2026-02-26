@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
@@ -163,7 +163,7 @@ void main() {
   });
   group('LoginPage Form Submission', () {
     testWidgets('should call login usecase when form is valid', (tester) async {
-      final completer = Completer<Either<Failures, AuthEntity>>();
+      final completer = Completer<Either<Failure, AuthEntity>>();
 
       when(() => mockLoginUsecase(any())).thenAnswer((_) => completer.future);
 
@@ -183,7 +183,7 @@ void main() {
     testWidgets('should call login with correct email and password', (
       tester,
     ) async {
-      final completer = Completer<Either<Failures, AuthEntity>>();
+      final completer = Completer<Either<Failure, AuthEntity>>();
 
       LoginParams? capturedParams;
       when(() => mockLoginUsecase(any())).thenAnswer((invocation) {
@@ -220,7 +220,7 @@ void main() {
     testWidgets('should show loading indicator while logging in', (
       tester,
     ) async {
-      final completer = Completer<Either<Failures, AuthEntity>>();
+      final completer = Completer<Either<Failure, AuthEntity>>();
 
       when(() => mockLoginUsecase(any())).thenAnswer((_) => completer.future);
 

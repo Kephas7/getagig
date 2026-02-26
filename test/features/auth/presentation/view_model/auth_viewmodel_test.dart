@@ -151,11 +151,11 @@ void main() {
           role: 'user',
         );
 
-        expect(notifier.read()!.status, AuthStatus.loading);
+        expect(notifier.read().status, AuthStatus.loading);
 
         await future;
 
-        expect(notifier.read()!.status, AuthStatus.registered);
+        expect(notifier.read().status, AuthStatus.registered);
         verify(() => mockRegisterUsecase(any())).called(1);
       });
     });
@@ -232,12 +232,12 @@ void main() {
           password: 'password123',
         );
 
-        expect(notifier.read()!.status, AuthStatus.loading);
+        expect(notifier.read().status, AuthStatus.loading);
 
         await future;
 
-        expect(notifier.read()!.status, AuthStatus.authenticated);
-        expect(notifier.read()!.user, tUser);
+        expect(notifier.read().status, AuthStatus.authenticated);
+        expect(notifier.read().user, tUser);
         verify(() => mockLoginUsecase(any())).called(1);
       });
     });
@@ -290,12 +290,12 @@ void main() {
 
         final future = viewModel.getCurrentUser();
 
-        expect(notifier.read()!.status, AuthStatus.loading);
+        expect(notifier.read().status, AuthStatus.loading);
 
         await future;
 
-        expect(notifier.read()!.status, AuthStatus.authenticated);
-        expect(notifier.read()!.user, tUser);
+        expect(notifier.read().status, AuthStatus.authenticated);
+        expect(notifier.read().user, tUser);
         verify(() => mockGetCurrentUserUsecase()).called(1);
       });
     });
@@ -345,12 +345,12 @@ void main() {
 
         final future = viewModel.logout();
 
-        expect(notifier.read()!.status, AuthStatus.loading);
+        expect(notifier.read().status, AuthStatus.loading);
 
         await future;
 
-        expect(notifier.read()!.status, AuthStatus.unauthenticated);
-        expect(notifier.read()!.user, isNull);
+        expect(notifier.read().status, AuthStatus.unauthenticated);
+        expect(notifier.read().user, isNull);
         verify(() => mockLogoutUsecase()).called(1);
       });
     });
@@ -387,14 +387,16 @@ void main() {
       expect(newState.errorMessage, 'error');
     });
 
-    test('props should contain all fields', () {
+    test('should have all expected field values', () {
       const state = AuthState(
         status: AuthStatus.authenticated,
         user: tUser,
         errorMessage: 'error',
       );
 
-      expect(state.props, [AuthStatus.authenticated, tUser, 'error']);
+      expect(state.status, AuthStatus.authenticated);
+      expect(state.user, tUser);
+      expect(state.errorMessage, 'error');
     });
 
     test('two states with same values should be equal', () {

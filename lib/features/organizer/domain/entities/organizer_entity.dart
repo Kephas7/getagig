@@ -1,4 +1,4 @@
-import 'package:equatable/equatable.dart';
+﻿import 'package:equatable/equatable.dart';
 
 class OrganizerEntity extends Equatable {
   final String id;
@@ -75,3 +75,4 @@ class OrganizerEntity extends Equatable {
         updatedAt,
       ];
 }
+
