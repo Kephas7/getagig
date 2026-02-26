@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/features/musician/domain/usecases/get_profile_byId_usecase.dart';
 import 'package:getagig/features/musician/presentation/state/musician_state.dart';
@@ -95,7 +95,7 @@ class MusicianProfileViewModel extends Notifier<MusicianProfileState> {
         state = state.copyWith(
           status: MusicianProfileStatus.created,
           profile: profile,
-          resetErrorMessage: true,
+          errorMessage: null,
         );
       },
     );
@@ -115,7 +115,7 @@ class MusicianProfileViewModel extends Notifier<MusicianProfileState> {
           state = state.copyWith(
             status: MusicianProfileStatus.initial,
             profile: null,
-            resetErrorMessage: true,
+            errorMessage: null,
           );
         } else {
           state = state.copyWith(
@@ -127,7 +127,7 @@ class MusicianProfileViewModel extends Notifier<MusicianProfileState> {
       (profile) => state = state.copyWith(
         status: MusicianProfileStatus.loaded,
         profile: profile,
-        resetErrorMessage: true,
+        errorMessage: null,
       ),
     );
   }
@@ -146,7 +146,7 @@ class MusicianProfileViewModel extends Notifier<MusicianProfileState> {
           state = state.copyWith(
             status: MusicianProfileStatus.initial,
             profile: null,
-            resetErrorMessage: true,
+            errorMessage: null,
           );
         } else {
           state = state.copyWith(
@@ -158,7 +158,7 @@ class MusicianProfileViewModel extends Notifier<MusicianProfileState> {
       (profile) => state = state.copyWith(
         status: MusicianProfileStatus.loaded,
         profile: profile,
-        resetErrorMessage: true,
+        errorMessage: null,
       ),
     );
   }
@@ -203,7 +203,7 @@ class MusicianProfileViewModel extends Notifier<MusicianProfileState> {
         state = state.copyWith(
           status: MusicianProfileStatus.updated,
           profile: profile,
-          resetErrorMessage: true,
+          errorMessage: null,
         );
         getProfile();
       },
@@ -223,8 +223,8 @@ class MusicianProfileViewModel extends Notifier<MusicianProfileState> {
       (_) {
         state = state.copyWith(
           status: MusicianProfileStatus.deleted,
-          resetProfile: true,
-          resetErrorMessage: true,
+          profile: null,
+          errorMessage: null,
         );
       },
     );
@@ -244,7 +244,7 @@ class MusicianProfileViewModel extends Notifier<MusicianProfileState> {
         state = state.copyWith(
           status: MusicianProfileStatus.updated,
           profile: profile,
-          resetErrorMessage: true,
+          errorMessage: null,
         );
       },
     );
@@ -264,7 +264,7 @@ class MusicianProfileViewModel extends Notifier<MusicianProfileState> {
         state = state.copyWith(
           status: MusicianProfileStatus.updated,
           profile: profile,
-          resetErrorMessage: true,
+          errorMessage: null,
         );
       },
     );
@@ -286,7 +286,7 @@ class MusicianProfileViewModel extends Notifier<MusicianProfileState> {
         state = state.copyWith(
           status: MusicianProfileStatus.updated,
           profile: profile,
-          resetErrorMessage: true,
+          errorMessage: null,
         );
       },
     );
@@ -306,7 +306,7 @@ class MusicianProfileViewModel extends Notifier<MusicianProfileState> {
         state = state.copyWith(
           status: MusicianProfileStatus.updated,
           profile: profile,
-          resetErrorMessage: true,
+          errorMessage: null,
         );
       },
     );
@@ -328,7 +328,7 @@ class MusicianProfileViewModel extends Notifier<MusicianProfileState> {
         state = state.copyWith(
           status: MusicianProfileStatus.updated,
           profile: profile,
-          resetErrorMessage: true,
+          errorMessage: null,
         );
       },
     );
@@ -348,7 +348,7 @@ class MusicianProfileViewModel extends Notifier<MusicianProfileState> {
         state = state.copyWith(
           status: MusicianProfileStatus.updated,
           profile: profile,
-          resetErrorMessage: true,
+          errorMessage: null,
         );
       },
     );
@@ -370,7 +370,7 @@ class MusicianProfileViewModel extends Notifier<MusicianProfileState> {
         state = state.copyWith(
           status: MusicianProfileStatus.updated,
           profile: profile,
-          resetErrorMessage: true,
+          errorMessage: null,
         );
       },
     );
@@ -392,25 +392,26 @@ class MusicianProfileViewModel extends Notifier<MusicianProfileState> {
         state = state.copyWith(
           status: MusicianProfileStatus.updated,
           profile: profile,
-          resetErrorMessage: true,
+          errorMessage: null,
         );
       },
     );
   }
 
   void clearError() {
-    state = state.copyWith(resetErrorMessage: true);
+    state = state.copyWith(errorMessage: null);
   }
 
   void clearProfile() {
-    state = state.copyWith(resetProfile: true);
+    state = state.copyWith(profile: null);
   }
 
   void resetState() {
     state = state.copyWith(
       status: MusicianProfileStatus.initial,
-      resetProfile: true,
-      resetErrorMessage: true,
+      profile: null,
+      errorMessage: null,
     );
   }
 }
+

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:getagig/core/api/api_endpoints.dart';
 
@@ -297,3 +297,4 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
     );
   }
 }
+

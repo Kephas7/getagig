@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/core/services/permissions/file_picker_service.dart';
@@ -731,3 +731,4 @@ class _ManageMediaPageState extends ConsumerState<ManageMediaPage> {
     }).toList();
   }
 }
+

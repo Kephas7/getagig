@@ -1,8 +1,8 @@
-import 'package:dartz/dartz.dart';
+﻿import 'package:dartz/dartz.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/core/error/failures.dart';
 import 'package:getagig/core/usecases/app_usecase.dart';
-import 'package:getagig/features/musician/data/musicain_repository.dart';
+import 'package:getagig/features/musician/data/musician_repository.dart';
 import 'package:getagig/features/musician/domain/repositories/musician_repository.dart';
 
 final deleteProfileUseCaseProvider = Provider<DeleteProfileUseCase>((ref) {
@@ -17,7 +17,8 @@ class DeleteProfileUseCase implements UsecaseWithoutParms<void> {
     : _repository = repository;
 
   @override
-  Future<Either<Failures, void>> call() {
+  Future<Either<Failure, void>> call() {
     return _repository.deleteProfile();
   }
 }
+

@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:getagig/features/musician/data/models/musician_api_model.dart';
 
@@ -17,3 +17,4 @@ abstract interface class IMusicianRemoteDataSource {
   Future<MusicianApiModel> removeAudio(String audioUrl);
   Future<MusicianApiModel> updateAvailability(bool isAvailable);
 }
+

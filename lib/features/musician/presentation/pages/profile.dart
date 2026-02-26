@@ -1,4 +1,4 @@
-import 'package:cached_network_image/cached_network_image.dart';
+﻿import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/app/routes/app_routes.dart';
@@ -10,6 +10,10 @@ import 'package:getagig/features/musician/presentation/pages/create_profile_page
 import 'package:getagig/features/musician/presentation/pages/view_profile_page.dart';
 import 'package:getagig/features/musician/presentation/state/musician_state.dart';
 import 'package:getagig/features/musician/presentation/view_model/musician_viewmodel.dart';
+import 'package:getagig/features/organizer/presentation/pages/create_organizer_profile_page.dart';
+import 'package:getagig/features/organizer/presentation/state/organizer_state.dart';
+import 'package:getagig/features/organizer/presentation/view_model/organizer_view_model.dart';
+import 'package:getagig/features/organizer/presentation/pages/view_organizer_profile_page.dart';
 
 class Profile extends ConsumerStatefulWidget {
   const Profile({super.key});
@@ -27,6 +31,8 @@ class _ProfileState extends ConsumerState<Profile> {
       final authState = ref.read(authViewModelProvider);
       if (authState.user?.role == 'musician') {
         ref.read(musicianProfileViewModelProvider.notifier).getProfile();
+      } else if (authState.user?.role == 'organizer') {
+        ref.read(organizerProfileViewModelProvider.notifier).getProfile();
       }
     });
   }
@@ -35,6 +41,7 @@ class _ProfileState extends ConsumerState<Profile> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authViewModelProvider);
     final musicianState = ref.watch(musicianProfileViewModelProvider);
+    final organizerState = ref.watch(organizerProfileViewModelProvider);
     final user = authState.user;
 
     ref.listen<AuthState>(authViewModelProvider, (previous, next) {
@@ -57,6 +64,20 @@ class _ProfileState extends ConsumerState<Profile> {
       }
     });
 
+    ref.listen<OrganizerProfileState>(organizerProfileViewModelProvider, (
+      previous,
+      next,
+    ) {
+      if (previous?.status == OrganizerProfileStatus.loading &&
+          next.status == OrganizerProfileStatus.created) {
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            ref.read(organizerProfileViewModelProvider.notifier).getProfile();
+          }
+        });
+      }
+    });
+
     if (user == null) {
       return const Center(child: Text('No user data available'));
     }
@@ -68,20 +89,7 @@ class _ProfileState extends ConsumerState<Profile> {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 35,
-                backgroundColor: Colors.grey,
-                backgroundImage: musicianState.profile?.profilePicture != null
-                    ? CachedNetworkImageProvider(
-                        ApiEndpoints.buildProfilePictureUrl(
-                          musicianState.profile!.profilePicture!,
-                        ),
-                      )
-                    : null,
-                child: musicianState.profile?.profilePicture == null
-                    ? const Icon(Icons.person, size: 40, color: Colors.black)
-                    : null,
-              ),
+              _buildProfileAvatar(user, musicianState, organizerState),
 
               const SizedBox(width: 16),
               Expanded(
@@ -137,6 +145,13 @@ class _ProfileState extends ConsumerState<Profile> {
             _buildMusicianProfileSection(musicianState),
           ],
 
+          if (user.role == 'organizer') ...[
+            const SizedBox(height: 30),
+            const Divider(),
+            const SizedBox(height: 20),
+            _buildOrganizerProfileSection(organizerState),
+          ],
+
           const SizedBox(height: 40),
 
           SizedBox(
@@ -155,6 +170,32 @@ class _ProfileState extends ConsumerState<Profile> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildProfileAvatar(
+    dynamic user,
+    MusicianProfileState musicianState,
+    OrganizerProfileState organizerState,
+  ) {
+    String? profilePic;
+    if (user.role == 'musician') {
+      profilePic = musicianState.profile?.profilePicture;
+    } else if (user.role == 'organizer') {
+      profilePic = organizerState.profile?.profilePicture;
+    }
+
+    return CircleAvatar(
+      radius: 35,
+      backgroundColor: Colors.grey[200],
+      backgroundImage: profilePic != null
+          ? CachedNetworkImageProvider(
+              ApiEndpoints.buildProfilePictureUrl(profilePic),
+            )
+          : null,
+      child: profilePic == null
+          ? const Icon(Icons.person, size: 40, color: Colors.grey)
+          : null,
     );
   }
 
@@ -187,36 +228,49 @@ class _ProfileState extends ConsumerState<Profile> {
         ),
         const SizedBox(height: 12),
 
-        _buildProfileStatusCard(musicianState),
+        _buildMusicianProfileStatusCard(musicianState),
       ],
     );
   }
 
-  Widget _buildProfileStatusCard(MusicianProfileState musicianState) {
+  Widget _buildOrganizerProfileSection(OrganizerProfileState organizerState) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Organizer Profile',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            if (organizerState.status == OrganizerProfileStatus.loaded &&
+                organizerState.profile != null)
+              TextButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ViewOrganizerProfilePage(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.arrow_forward, size: 16),
+                label: const Text('View'),
+              ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        _buildOrganizerProfileStatusCard(organizerState),
+      ],
+    );
+  }
+
+  Widget _buildMusicianProfileStatusCard(MusicianProfileState musicianState) {
     switch (musicianState.status) {
       case MusicianProfileStatus.loading:
-        return Card(
-          elevation: 2,
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            child: Center(
-              child: Column(
-                children: [
-                  const SizedBox(
-                    height: 30,
-                    width: 30,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Loading profile...',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
+        return _buildLoadingCard('Loading musician profile...');
 
       case MusicianProfileStatus.loaded:
       case MusicianProfileStatus.updated:
@@ -241,42 +295,9 @@ class _ProfileState extends ConsumerState<Profile> {
                   children: [
                     Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(
-                            Icons.check_circle,
-                            color: Colors.green,
-                            size: 28,
-                          ),
-                        ),
+                        _buildStatusIcon(Colors.green),
                         const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Profile Complete',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                profile.stageName,
-                                style: TextStyle(
-                                  color: Colors.grey[700],
-                                  fontSize: 14,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
+                        _buildStatusInfo('Profile Complete', profile.stageName),
                         const Icon(Icons.arrow_forward_ios, size: 16),
                       ],
                     ),
@@ -292,22 +313,14 @@ class _ProfileState extends ConsumerState<Profile> {
                           value: '${profile.genres.length}',
                           color: Colors.purple,
                         ),
-                        Container(
-                          height: 40,
-                          width: 1,
-                          color: Colors.grey[300],
-                        ),
+                        _buildDivider(),
                         _buildQuickStat(
                           icon: Icons.piano,
                           label: 'Instruments',
                           value: '${profile.instruments.length}',
                           color: Colors.orange,
                         ),
-                        Container(
-                          height: 40,
-                          width: 1,
-                          color: Colors.grey[300],
-                        ),
+                        _buildDivider(),
                         _buildQuickStat(
                           icon: Icons.collections,
                           label: 'Media',
@@ -323,54 +336,250 @@ class _ProfileState extends ConsumerState<Profile> {
             ),
           );
         }
-        return _buildNoProfileCard();
+        return _buildNoMusicianProfileCard();
 
       case MusicianProfileStatus.error:
-        final errorMsg = musicianState.errorMessage?.toLowerCase() ?? '';
-        final isNotFoundError =
-            errorMsg.contains('not found') ||
-            errorMsg.contains('404') ||
-            errorMsg.contains('does not exist');
-
-        if (isNotFoundError) {
-          return _buildNoProfileCard();
+        if (_isNotFound(musicianState.errorMessage)) {
+          return _buildNoMusicianProfileCard();
         }
-
-        return Card(
-          elevation: 2,
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                Icon(Icons.error_outline, size: 48, color: Colors.orange[700]),
-                const SizedBox(height: 12),
-                Text(
-                  musicianState.errorMessage ?? 'Failed to load profile',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey[700], fontSize: 14),
-                ),
-                const SizedBox(height: 16),
-                OutlinedButton.icon(
-                  onPressed: () {
-                    ref
-                        .read(musicianProfileViewModelProvider.notifier)
-                        .getProfile();
-                  },
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Retry'),
-                ),
-              ],
-            ),
-          ),
-        );
+        return _buildErrorCard(musicianState.errorMessage, () {
+          ref.read(musicianProfileViewModelProvider.notifier).getProfile();
+        });
 
       case MusicianProfileStatus.initial:
       default:
-        return _buildNoProfileCard();
+        return _buildNoMusicianProfileCard();
     }
   }
 
-  Widget _buildNoProfileCard() {
+  Widget _buildOrganizerProfileStatusCard(OrganizerProfileState organizerState) {
+    switch (organizerState.status) {
+      case OrganizerProfileStatus.loading:
+        return _buildLoadingCard('Loading organizer profile...');
+
+      case OrganizerProfileStatus.loaded:
+      case OrganizerProfileStatus.updated:
+        if (organizerState.profile != null) {
+          final profile = organizerState.profile!;
+          return Card(
+            elevation: 2,
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ViewOrganizerProfilePage(),
+                  ),
+                );
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        _buildStatusIcon(Colors.blue),
+                        const SizedBox(width: 14),
+                        _buildStatusInfo(
+                          'Profile Complete',
+                          profile.organizationName,
+                        ),
+                        const Icon(Icons.arrow_forward_ios, size: 16),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    const Divider(height: 1),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildQuickStat(
+                          icon: Icons.business_center,
+                          label: 'Type',
+                          value: profile.organizationType,
+                          color: Colors.blue,
+                        ),
+                        _buildDivider(),
+                        _buildQuickStat(
+                          icon: Icons.event,
+                          label: 'Events',
+                          value: '${profile.eventTypes.length}',
+                          color: Colors.green,
+                        ),
+                        _buildDivider(),
+                        _buildQuickStat(
+                          icon: Icons.collections,
+                          label: 'Media',
+                          value:
+                              '${profile.photos.length + profile.videos.length}',
+                          color: Colors.orange,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+        return _buildNoOrganizerProfileCard();
+
+      case OrganizerProfileStatus.error:
+        if (_isNotFound(organizerState.errorMessage)) {
+          return _buildNoOrganizerProfileCard();
+        }
+        return _buildErrorCard(organizerState.errorMessage, () {
+          ref.read(organizerProfileViewModelProvider.notifier).getProfile();
+        });
+
+      case OrganizerProfileStatus.initial:
+      default:
+        return _buildNoOrganizerProfileCard();
+    }
+  }
+
+  Widget _buildLoadingCard(String message) {
+    return Card(
+      elevation: 2,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        child: Center(
+          child: Column(
+            children: [
+              const SizedBox(
+                height: 30,
+                width: 30,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                message,
+                style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusIcon(Color color) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Icon(Icons.check_circle, color: color, size: 28),
+    );
+  }
+
+  Widget _buildStatusInfo(String title, String subtitle) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: TextStyle(color: Colors.grey[700], fontSize: 14),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Container(height: 40, width: 1, color: Colors.grey[300]);
+  }
+
+  bool _isNotFound(String? errorMessage) {
+    final msg = errorMessage?.toLowerCase() ?? '';
+    return msg.contains('not found') ||
+        msg.contains('404') ||
+        msg.contains('does not exist');
+  }
+
+  Widget _buildErrorCard(String? message, VoidCallback onRetry) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            Icon(Icons.error_outline, size: 48, color: Colors.orange[700]),
+            const SizedBox(height: 12),
+            Text(
+              message ?? 'Failed to load profile',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey[700], fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNoMusicianProfileCard() {
+    return _buildNoProfileBase(
+      title: 'No Musician Profile',
+      description:
+          'Create your profile to start getting gigs and showcase your talent',
+      buttonLabel: 'Create Musician Profile',
+      icon: Icons.person_add,
+      onPressed: () async {
+        final result = await Navigator.push<bool>(
+          context,
+          MaterialPageRoute(builder: (context) => const CreateProfilePage()),
+        );
+        if (result == true && mounted) {
+          ref.read(musicianProfileViewModelProvider.notifier).getProfile();
+        }
+      },
+    );
+  }
+
+  Widget _buildNoOrganizerProfileCard() {
+    return _buildNoProfileBase(
+      title: 'No Organizer Profile',
+      description:
+          'Create your profile to start posting events and hiring talent',
+      buttonLabel: 'Create Organizer Profile',
+      icon: Icons.business,
+      onPressed: () async {
+        final result = await Navigator.push<bool>(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const CreateOrganizerProfilePage(),
+          ),
+        );
+        if (result == true && mounted) {
+          ref.read(organizerProfileViewModelProvider.notifier).getProfile();
+        }
+      },
+    );
+  }
+
+  Widget _buildNoProfileBase({
+    required String title,
+    required String description,
+    required String buttonLabel,
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
     return Card(
       elevation: 2,
       child: Padding(
@@ -383,16 +592,16 @@ class _ProfileState extends ConsumerState<Profile> {
                 color: Colors.blue.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.person_add, size: 50, color: Colors.blue),
+              child: Icon(icon, size: 50, color: Colors.blue),
             ),
             const SizedBox(height: 20),
-            const Text(
-              'No Musician Profile',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             Text(
-              'Create your profile to start getting gigs and showcase your talent',
+              description,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.grey[600],
@@ -404,22 +613,9 @@ class _ProfileState extends ConsumerState<Profile> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () async {
-                  final result = await Navigator.push<bool>(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const CreateProfilePage(),
-                    ),
-                  );
-
-                  if (result == true && mounted) {
-                    ref
-                        .read(musicianProfileViewModelProvider.notifier)
-                        .getProfile();
-                  }
-                },
+                onPressed: onPressed,
                 icon: const Icon(Icons.add_circle_outline),
-                label: const Text('Create Musician Profile'),
+                label: Text(buttonLabel),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   backgroundColor: Colors.blue,
@@ -514,3 +710,4 @@ class _ProfileState extends ConsumerState<Profile> {
     );
   }
 }
+

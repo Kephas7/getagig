@@ -1,9 +1,9 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/core/error/failures.dart';
 import 'package:getagig/core/usecases/app_usecase.dart';
-import 'package:getagig/features/musician/data/musicain_repository.dart';
+import 'package:getagig/features/musician/data/musician_repository.dart';
 import 'package:getagig/features/musician/domain/entities/musician_entity.dart';
 import 'package:getagig/features/musician/domain/repositories/musician_repository.dart';
 
@@ -21,7 +21,8 @@ class UploadProfilePictureUseCase
     : _repository = repository;
 
   @override
-  Future<Either<Failures, MusicianEntity>> call(File file) {
+  Future<Either<Failure, MusicianEntity>> call(File file) {
     return _repository.uploadProfilePicture(file);
   }
 }
+

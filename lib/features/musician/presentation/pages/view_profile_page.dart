@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:getagig/features/musician/presentation/pages/manage_media_page.dart';
@@ -7,10 +7,12 @@ import 'package:getagig/features/musician/presentation/view_model/musician_viewm
 import 'package:getagig/core/services/permissions/file_picker_service.dart';
 import 'package:getagig/core/api/api_endpoints.dart';
 import '../../domain/entities/musician_entity.dart';
+import 'create_profile_page.dart';
 import 'edit_profile_page.dart';
 
 class ViewProfilePage extends ConsumerStatefulWidget {
-  const ViewProfilePage({super.key});
+  final String? musicianId;
+  const ViewProfilePage({super.key, this.musicianId});
 
   @override
   ConsumerState<ViewProfilePage> createState() => _ViewProfilePageState();
@@ -20,9 +22,15 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-      () => ref.read(musicianProfileViewModelProvider.notifier).getProfile(),
-    );
+    Future.microtask(() {
+      if (widget.musicianId != null) {
+        ref
+            .read(musicianProfileViewModelProvider.notifier)
+            .getProfileById(widget.musicianId!);
+      } else {
+        ref.read(musicianProfileViewModelProvider.notifier).getProfile();
+      }
+    });
   }
 
   void _showImageSourcePicker() {
@@ -108,20 +116,6 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  String _getLocationValue(
-    Map<String, dynamic>? location,
-    String key, [
-    String defaultValue = 'N/A',
-  ]) {
-    if (location == null) return defaultValue;
-    try {
-      final value = location[key];
-      return value?.toString() ?? defaultValue;
-    } catch (e) {
-      return defaultValue;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final profileState = ref.watch(musicianProfileViewModelProvider);
@@ -138,23 +132,38 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
     });
 
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('My Profile'),
+        title: const Text(
+          'Musician Profile',
+          style: TextStyle(
+            color: Color(0xFF1A1B61),
+            fontWeight: FontWeight.w900,
+            fontSize: 22,
+          ),
+        ),
         elevation: 0,
+        centerTitle: true,
+        backgroundColor: Colors.white,
         actions: [
-          if (profileState.status == MusicianProfileStatus.loaded &&
+          if (widget.musicianId == null &&
+              profileState.status == MusicianProfileStatus.loaded &&
               profileState.profile != null)
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        EditProfilePage(musician: profileState.profile!),
-                  ),
-                );
-              },
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: IconButton(
+                icon: const Icon(Icons.edit_note_rounded,
+                    color: Color(0xFF1A1B61), size: 28),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          EditProfilePage(musician: profileState.profile!),
+                    ),
+                  );
+                },
+              ),
             ),
         ],
       ),
@@ -180,7 +189,13 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
               const SizedBox(height: 24),
               ElevatedButton.icon(
                 onPressed: () {
-                  Navigator.pushNamed(context, '/create-profile');
+                  // Using push instead of pushNamed to avoid potential route mapping issues
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CreateProfilePage(),
+                    ),
+                  );
                 },
                 icon: const Icon(Icons.add),
                 label: const Text('Create Profile'),
@@ -234,121 +249,164 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
     final country = musician.getLocationValue('country', 'N/A');
     return RefreshIndicator(
       onRefresh: () async {
-        await ref.read(musicianProfileViewModelProvider.notifier).getProfile();
+        if (widget.musicianId != null) {
+          await ref
+              .read(musicianProfileViewModelProvider.notifier)
+              .getProfileById(widget.musicianId!);
+        } else {
+          await ref
+              .read(musicianProfileViewModelProvider.notifier)
+              .getProfile();
+        }
       },
       child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
+        physics: const BouncingScrollPhysics(),
         child: Column(
           children: [
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Theme.of(context).primaryColor,
-                    Theme.of(context).primaryColor.withOpacity(0.7),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+              padding: const EdgeInsets.fromLTRB(24, 32, 24, 40),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(40),
+                  bottomRight: Radius.circular(40),
                 ),
               ),
               child: Column(
                 children: [
-                  Stack(
-                    children: [
-                      CircleAvatar(
-                        radius: 60,
-                        backgroundColor: Colors.white,
-                        backgroundImage: musician.profilePicture != null
-                            ? CachedNetworkImageProvider(
-                                ApiEndpoints.buildProfilePictureUrl(
-                                  musician.profilePicture,
-                                ),
-                              )
-                            : null,
-                        child: musician.profilePicture == null
-                            ? const Icon(Icons.person, size: 60)
-                            : null,
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: InkWell(
-                          onTap: _showImageSourcePicker,
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).primaryColor,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 2),
-                            ),
-                            child: const Icon(
-                              Icons.camera_alt,
-                              color: Colors.white,
-                              size: 20,
+                  Hero(
+                    tag: 'profile_${widget.musicianId ?? "my_profile"}',
+                    child: Stack(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [
+                                const Color(0xFF6366F1),
+                                const Color(0xFF1A1B61).withOpacity(0.5)
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
                           ),
+                          child: CircleAvatar(
+                            radius: 70,
+                            backgroundColor: Colors.white,
+                            backgroundImage: musician.profilePicture != null
+                                ? CachedNetworkImageProvider(
+                                    ApiEndpoints.buildProfilePictureUrl(
+                                      musician.profilePicture,
+                                    ),
+                                  )
+                                : null,
+                            child: musician.profilePicture == null
+                                ? const Icon(Icons.person_rounded,
+                                    size: 70, color: Color(0xFF1A1B61))
+                                : null,
+                          ),
                         ),
-                      ),
-                    ],
+                        if (widget.musicianId == null)
+                          Positioned(
+                            bottom: 4,
+                            right: 4,
+                            child: InkWell(
+                              onTap: _showImageSourcePicker,
+                              child: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF1A1B61),
+                                  shape: BoxShape.circle,
+                                  border:
+                                      Border.all(color: Colors.white, width: 3),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.1),
+                                      blurRadius: 10,
+                                    )
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.camera_alt_rounded,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 16),
-
+                  const SizedBox(height: 24),
                   Text(
                     musician.stageName,
                     style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      fontSize: 34,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF1A1B61),
+                      letterSpacing: -1,
                     ),
                   ),
                   const SizedBox(height: 8),
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
-                        Icons.location_on,
-                        color: Colors.white70,
-                        size: 16,
+                      Icon(
+                        Icons.location_on_rounded,
+                        color: Colors.indigo[300],
+                        size: 18,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         '$city, $country',
-                        style: const TextStyle(color: Colors.white70),
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-
+                  const SizedBox(height: 24),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
+                      horizontal: 18,
+                      vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: musician.isAvailable ? Colors.green : Colors.grey,
-                      borderRadius: BorderRadius.circular(20),
+                      color: (musician.isAvailable
+                              ? const Color(0xFF10B981)
+                              : Colors.grey[400]!)
+                          .withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          musician.isAvailable
-                              ? Icons.check_circle
-                              : Icons.cancel,
-                          color: Colors.white,
-                          size: 18,
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: musician.isAvailable
+                                ? const Color(0xFF10B981)
+                                : Colors.grey[400],
+                            shape: BoxShape.circle,
+                          ),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 10),
                         Text(
                           musician.isAvailable
-                              ? 'Available for Gigs'
-                              : 'Currently Unavailable',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                              ? 'AVAILABLE FOR GIGS'
+                              : 'CURRENTLY UNAVAILABLE',
+                          style: TextStyle(
+                            color: musician.isAvailable
+                                ? const Color(0xFF10B981)
+                                : Colors.grey[600],
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1,
+                            fontSize: 11,
                           ),
                         ),
                       ],
@@ -364,102 +422,133 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (musician.bio != null && musician.bio!.isNotEmpty) ...[
-                    _buildSectionTitle('About'),
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Text(
-                          musician.bio!,
-                          style: const TextStyle(fontSize: 15, height: 1.5),
+                    _buildSectionTitle('BIO'),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: Colors.grey[100]!, width: 1.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.02),
+                            blurRadius: 10,
+                          )
+                        ],
+                      ),
+                      child: Text(
+                        musician.bio!,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          height: 1.6,
+                          color: Color(0xFF1A1B61),
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 32),
                   ],
 
-                  _buildSectionTitle('Contact'),
-                  Card(
-                    child: Column(
-                      children: [
-                        ListTile(
-                          leading: const Icon(Icons.phone),
-                          title: const Text('Phone'),
-                          subtitle: Text(musician.phone),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
+                  _buildSectionTitle('STATS'),
                   Row(
                     children: [
                       Expanded(
                         child: _buildStatCard(
-                          icon: Icons.work,
-                          label: 'Experience',
-                          value: '${musician.experienceYears} Years',
+                          icon: Icons.history_rounded,
+                          label: 'EXPERIENCE',
+                          value: '${musician.experienceYears}Y',
+                          color: Colors.indigo[400]!,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 16),
                       if (musician.hourlyRate != null)
                         Expanded(
                           child: _buildStatCard(
-                            icon: Icons.attach_money,
-                            label: 'Hourly Rate',
-                            value:
-                                'NPR ${musician.hourlyRate!.toStringAsFixed(0)}',
+                            icon: Icons.payments_rounded,
+                            label: 'HOURLY RATE',
+                            value: 'N${musician.hourlyRate!.toStringAsFixed(0)}',
+                            color: const Color(0xFF10B981),
                           ),
                         ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 32),
 
-                  _buildSectionTitle('Genres'),
-                  const SizedBox(height: 8),
+                  _buildSectionTitle('GENRES'),
                   Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
+                    spacing: 10,
+                    runSpacing: 10,
                     children: musician.genres.map((genre) {
-                      return Chip(
-                        label: Text(genre),
-                        backgroundColor: Theme.of(
-                          context,
-                        ).primaryColor.withOpacity(0.1),
-                        labelStyle: TextStyle(
-                          color: Theme.of(context).primaryColor,
-                          fontWeight: FontWeight.w500,
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF6366F1).withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                              color: const Color(0xFF6366F1).withOpacity(0.1)),
+                        ),
+                        child: Text(
+                          genre,
+                          style: const TextStyle(
+                            color: Color(0xFF6366F1),
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13,
+                          ),
                         ),
                       );
                     }).toList(),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 32),
 
-                  _buildSectionTitle('Instruments'),
-                  const SizedBox(height: 8),
+                  _buildSectionTitle('INSTRUMENTS'),
                   Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
+                    spacing: 10,
+                    runSpacing: 10,
                     children: musician.instruments.map((instrument) {
-                      return Chip(
-                        label: Text(instrument),
-                        backgroundColor: Colors.orange.withOpacity(0.1),
-                        labelStyle: const TextStyle(
-                          color: Colors.orange,
-                          fontWeight: FontWeight.w500,
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.orange[400]!.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                              color: Colors.orange[400]!.withOpacity(0.1)),
+                        ),
+                        child: Text(
+                          instrument,
+                          style: TextStyle(
+                            color: Colors.orange[800],
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13,
+                          ),
                         ),
                       );
                     }).toList(),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 32),
 
-                  _buildSectionTitle('Portfolio'),
-                  Card(
+                  _buildSectionTitle('PORTFOLIO'),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(color: Colors.grey[100]!, width: 1.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.03),
+                          blurRadius: 15,
+                        )
+                      ],
+                    ),
                     child: Column(
                       children: [
                         _buildMediaTile(
-                          icon: Icons.photo_library,
+                          icon: Icons.photo_library_rounded,
                           title: 'Photos',
                           count: musician.photos.length,
+                          color: Colors.indigo[400]!,
                           onTap: () {
                             Navigator.push(
                               context,
@@ -472,11 +561,11 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                             );
                           },
                         ),
-                        const Divider(height: 1),
                         _buildMediaTile(
-                          icon: Icons.videocam,
+                          icon: Icons.videocam_rounded,
                           title: 'Videos',
                           count: musician.videos.length,
+                          color: const Color(0xFF10B981),
                           onTap: () {
                             Navigator.push(
                               context,
@@ -489,11 +578,12 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                             );
                           },
                         ),
-                        const Divider(height: 1),
                         _buildMediaTile(
-                          icon: Icons.audiotrack,
+                          icon: Icons.audiotrack_rounded,
                           title: 'Audio Samples',
                           count: musician.audioSamples.length,
+                          color: Colors.orange[400]!,
+                          isLast: true,
                           onTap: () {
                             Navigator.push(
                               context,
@@ -512,32 +602,35 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                   ),
                   const SizedBox(height: 24),
 
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        ref
-                            .read(musicianProfileViewModelProvider.notifier)
-                            .updateAvailability(!musician.isAvailable);
-                      },
-                      icon: Icon(
-                        musician.isAvailable
-                            ? Icons.cancel
-                            : Icons.check_circle,
-                      ),
-                      label: Text(
-                        musician.isAvailable
-                            ? 'Mark as Unavailable'
-                            : 'Mark as Available',
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: musician.isAvailable
-                            ? Colors.grey[700]
-                            : Colors.green,
+                  if (widget.musicianId == null) ...[
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          ref
+                              .read(musicianProfileViewModelProvider.notifier)
+                              .updateAvailability(!musician.isAvailable);
+                        },
+                        icon: Icon(
+                          musician.isAvailable
+                              ? Icons.cancel
+                              : Icons.check_circle,
+                        ),
+                        label: Text(
+                          musician.isAvailable
+                              ? 'Mark as Unavailable'
+                              : 'Mark as Available',
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor: musician.isAvailable
+                              ? Colors.grey[700]
+                              : Colors.green,
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -549,10 +642,15 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
 
   Widget _buildSectionTitle(String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 16, left: 4),
       child: Text(
         title,
-        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w900,
+          color: Colors.black26,
+          letterSpacing: 1.5,
+        ),
       ),
     );
   }
@@ -561,25 +659,52 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
     required IconData icon,
     required String label,
     required String value,
+    required Color color,
   }) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Icon(icon, size: 32, color: Theme.of(context).primaryColor),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey[100]!, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+            child: Icon(icon, size: 20, color: color),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF1A1B61),
+              letterSpacing: -0.5,
             ),
-          ],
-        ),
+          ),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              color: Colors.black26,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -588,33 +713,58 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
     required IconData icon,
     required String title,
     required int count,
+    required Color color,
+    bool isLast = false,
     required VoidCallback onTap,
   }) {
-    return ListTile(
-      leading: Icon(icon, color: Theme.of(context).primaryColor),
-      title: Text(title),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+    return Column(
+      children: [
+        ListTile(
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          leading: Container(
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Theme.of(context).primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: Text(
-              '$count',
-              style: TextStyle(
-                color: Theme.of(context).primaryColor,
-                fontWeight: FontWeight.bold,
-              ),
+            child: Icon(icon, color: color, size: 22),
+          ),
+          title: Text(
+            title,
+            style: const TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+              color: Color(0xFF1A1B61),
             ),
           ),
-          const SizedBox(width: 8),
-          const Icon(Icons.arrow_forward_ios, size: 16),
-        ],
-      ),
-      onTap: onTap,
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '$count items',
+                style: TextStyle(
+                  color: Colors.grey[400],
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(Icons.arrow_forward_ios_rounded,
+                  size: 14, color: Colors.indigo[100]),
+            ],
+          ),
+          onTap: onTap,
+        ),
+        if (!isLast)
+          Divider(
+            height: 1,
+            indent: 72,
+            endIndent: 20,
+            color: Colors.grey[100],
+          ),
+      ],
     );
   }
 }
+

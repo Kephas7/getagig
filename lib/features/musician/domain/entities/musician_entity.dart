@@ -1,4 +1,4 @@
-import 'package:equatable/equatable.dart';
+﻿import 'package:equatable/equatable.dart';
 
 class MusicianEntity extends Equatable {
   final String id;
@@ -69,3 +69,4 @@ class MusicianEntity extends Equatable {
     updatedAt,
   ];
 }
+

@@ -1,5 +1,7 @@
-import 'package:equatable/equatable.dart';
+﻿import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../domain/entities/musician_entity.dart';
+
+part 'musician_state.freezed.dart';
 
 enum MusicianProfileStatus {
   initial,
@@ -11,33 +13,12 @@ enum MusicianProfileStatus {
   deleted,
 }
 
-class MusicianProfileState extends Equatable {
-  final MusicianProfileStatus status;
-  final MusicianEntity? profile;
-  final String? errorMessage;
-
-  const MusicianProfileState({
-    this.status = MusicianProfileStatus.initial,
-    this.profile,
-    this.errorMessage,
-  });
-
-  MusicianProfileState copyWith({
-    MusicianProfileStatus? status,
+@freezed
+class MusicianProfileState with _$MusicianProfileState {
+  const factory MusicianProfileState({
+    @Default(MusicianProfileStatus.initial) MusicianProfileStatus status,
     MusicianEntity? profile,
-    bool resetProfile = false,
     String? errorMessage,
-    bool resetErrorMessage = false,
-  }) {
-    return MusicianProfileState(
-      status: status ?? this.status,
-      profile: resetProfile ? null : (profile ?? this.profile),
-      errorMessage: resetErrorMessage
-          ? null
-          : (errorMessage ?? this.errorMessage),
-    );
-  }
-
-  @override
-  List<Object?> get props => [status, profile, errorMessage];
+  }) = _MusicianProfileState;
 }
+

@@ -1,26 +1,40 @@
-import 'package:json_annotation/json_annotation.dart';
+﻿import 'package:json_annotation/json_annotation.dart';
 import '../../domain/entities/musician_entity.dart';
 
 part 'musician_api_model.g.dart';
 
-@JsonSerializable(createToJson: true, createFactory: false)
+@JsonSerializable()
 class MusicianApiModel {
+  @JsonKey(defaultValue: '')
   final String id;
+  @JsonKey(defaultValue: '')
   final String userId;
+  @JsonKey(defaultValue: '')
   final String stageName;
   final String? profilePicture;
   final String? bio;
+  @JsonKey(defaultValue: '')
   final String phone;
-  final Map<String, dynamic> location; 
+  @JsonKey(defaultValue: {'city': '', 'state': '', 'country': ''})
+  final Map<String, dynamic> location;
+  @JsonKey(defaultValue: [])
   final List<String> genres;
+  @JsonKey(defaultValue: [])
   final List<String> instruments;
+  @JsonKey(defaultValue: 0)
   final int experienceYears;
   final double? hourlyRate;
+  @JsonKey(defaultValue: [])
   final List<String> photos;
+  @JsonKey(defaultValue: [])
   final List<String> videos;
+  @JsonKey(defaultValue: [])
   final List<String> audioSamples;
+  @JsonKey(defaultValue: true)
   final bool isAvailable;
+  @JsonKey(defaultValue: '')
   final String createdAt;
+  @JsonKey(defaultValue: '')
   final String updatedAt;
 
   MusicianApiModel({
@@ -43,74 +57,8 @@ class MusicianApiModel {
     required this.updatedAt,
   });
 
-  factory MusicianApiModel.fromJson(Map<String, dynamic> json) {
-    try {
-      
-      return MusicianApiModel(
-        id: json['id'] as String? ?? '',
-        userId: json['userId'] as String? ?? '',
-        stageName: json['stageName'] as String? ?? '',
-        profilePicture: json['profilePicture'] as String?,
-        bio: json['bio'] as String?,
-        phone: json['phone'] as String? ?? '',
-        location: _parseLocation(json['location']),
-        genres: _parseStringList(json['genres']),
-        instruments: _parseStringList(json['instruments']),
-        experienceYears: json['experienceYears'] != null
-            ? (json['experienceYears'] as num).toInt()
-            : 0,
-        hourlyRate: json['hourlyRate'] != null
-            ? (json['hourlyRate'] as num).toDouble()
-            : null,
-        photos: _parseStringList(json['photos']),
-        videos: _parseStringList(json['videos']),
-        audioSamples: _parseStringList(json['audioSamples']),
-        isAvailable: json['isAvailable'] as bool? ?? true,
-        createdAt: json['createdAt'] as String? ?? '',
-        updatedAt: json['updatedAt'] as String? ?? '',
-      );
-    } catch (e) {
-      throw FormatException('Failed to parse MusicianApiModel: $e');
-    }
-  }
-
-  
-  static Map<String, dynamic> _parseLocation(dynamic location) {
-    try {
-      if (location == null) {
-        return {'city': '', 'state': '', 'country': ''};
-      }
-      if (location is Map) {
-        final map = Map<String, dynamic>.from(location);
-        
-        map.putIfAbsent('city', () => '');
-        map.putIfAbsent('state', () => '');
-        map.putIfAbsent('country', () => '');
-        return map;
-      }
-      
-      return {'city': '', 'state': '', 'country': ''};
-    } catch (e) {
-      return {'city': '', 'state': '', 'country': ''};
-    }
-  }
-
-  
-  static List<String> _parseStringList(dynamic list) {
-    try {
-      if (list == null) return [];
-      if (list is List) {
-        return list.map((e) {
-          if (e == null) return '';
-          return e.toString();
-        }).toList();
-      }
-      
-      return [];
-    } catch (e) {
-      return [];
-    }
-  }
+  factory MusicianApiModel.fromJson(Map<String, dynamic> json) =>
+      _$MusicianApiModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$MusicianApiModelToJson(this);
 
@@ -168,3 +116,4 @@ class MusicianApiModel {
         .toList();
   }
 }
+

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/features/musician/presentation/state/musician_state.dart';
 import 'package:getagig/features/musician/presentation/view_model/musician_viewmodel.dart';
@@ -419,3 +419,4 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
     );
   }
 }
+

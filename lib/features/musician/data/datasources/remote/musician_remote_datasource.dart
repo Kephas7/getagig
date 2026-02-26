@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/core/api/api_client.dart';
@@ -329,3 +329,4 @@ class MusicianRemoteDataSource implements IMusicianRemoteDataSource {
     }
   }
 }
+
