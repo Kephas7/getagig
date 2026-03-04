@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:getagig/features/dashboard/presentation/view_model/notifications_provider.dart';
+import 'package:getagig/features/dashboard/presentation/view_model/notifications_viewmodel.dart';
 import 'package:getagig/features/dashboard/presentation/pages/chat_page.dart';
-import 'package:getagig/features/dashboard/presentation/view_model/conversation_initiator_provider.dart';
+import 'package:getagig/features/dashboard/presentation/view_model/conversation_initiator_viewmodel.dart';
 
 class NotificationsPage extends ConsumerWidget {
   const NotificationsPage({super.key});
