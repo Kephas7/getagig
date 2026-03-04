@@ -6,17 +6,17 @@ part of 'message_model.dart';
 // TypeAdapterGenerator
 // **************************************************************************
 
-class MessageModelAdapter extends TypeAdapter<_$MessageModelImpl> {
+class MessageModelAdapter extends TypeAdapter<MessageModel> {
   @override
   final int typeId = 2;
 
   @override
-  _$MessageModelImpl read(BinaryReader reader) {
+  MessageModel read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return _$MessageModelImpl(
+    return MessageModel(
       id: fields[0] as String?,
       conversationId: fields[1] as String?,
       senderId: fields[2] as String?,
@@ -27,7 +27,7 @@ class MessageModelAdapter extends TypeAdapter<_$MessageModelImpl> {
   }
 
   @override
-  void write(BinaryWriter writer, _$MessageModelImpl obj) {
+  void write(BinaryWriter writer, MessageModel obj) {
     writer
       ..writeByte(6)
       ..writeByte(0)
@@ -59,8 +59,7 @@ class MessageModelAdapter extends TypeAdapter<_$MessageModelImpl> {
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$MessageModelImpl _$$MessageModelImplFromJson(Map<String, dynamic> json) =>
-    _$MessageModelImpl(
+MessageModel _$MessageModelFromJson(Map<String, dynamic> json) => MessageModel(
       id: _readId(json, '_id') as String?,
       conversationId: json['conversationId'] as String?,
       senderId: json['senderId'] as String?,
@@ -71,7 +70,7 @@ _$MessageModelImpl _$$MessageModelImplFromJson(Map<String, dynamic> json) =>
           : DateTime.parse(json['createdAt'] as String),
     );
 
-Map<String, dynamic> _$$MessageModelImplToJson(_$MessageModelImpl instance) =>
+Map<String, dynamic> _$MessageModelToJson(MessageModel instance) =>
     <String, dynamic>{
       '_id': instance.id,
       'conversationId': instance.conversationId,
