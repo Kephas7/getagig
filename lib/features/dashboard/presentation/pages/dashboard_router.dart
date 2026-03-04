@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:getagig/features/admin/presentation/pages/admin_dashboard_page.dart';
 import 'package:getagig/features/auth/presentation/view_model/auth_viewmodel.dart';
 import 'package:getagig/features/dashboard/presentation/pages/musician_dashboard_page.dart';
 import 'package:getagig/features/dashboard/presentation/pages/organizer_dashboard_page.dart';
@@ -18,6 +19,10 @@ class DashboardRouter extends ConsumerWidget {
 
     final userRole = authState.user!.role.toLowerCase();
 
+    if (userRole == 'admin') {
+      return const AdminDashboardPage();
+    }
+
     if (userRole == 'organizer') {
       return const OrganizerDashboardPage();
     }
@@ -26,4 +31,3 @@ class DashboardRouter extends ConsumerWidget {
     return const MusicianDashboardPage();
   }
 }
-
