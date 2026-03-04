@@ -9,10 +9,12 @@ class EditOrganizerProfilePage extends ConsumerStatefulWidget {
   const EditOrganizerProfilePage({super.key, required this.organizer});
 
   @override
-  ConsumerState<EditOrganizerProfilePage> createState() => _EditOrganizerProfilePageState();
+  ConsumerState<EditOrganizerProfilePage> createState() =>
+      _EditOrganizerProfilePageState();
 }
 
-class _EditOrganizerProfilePageState extends ConsumerState<EditOrganizerProfilePage> {
+class _EditOrganizerProfilePageState
+    extends ConsumerState<EditOrganizerProfilePage> {
   final _formKey = GlobalKey<FormState>();
 
   late final TextEditingController _organizationNameController;
@@ -20,9 +22,7 @@ class _EditOrganizerProfilePageState extends ConsumerState<EditOrganizerProfileP
   late final TextEditingController _contactPersonController;
   late final TextEditingController _phoneController;
   late final TextEditingController _emailController;
-  late final TextEditingController _cityController;
-  late final TextEditingController _stateController;
-  late final TextEditingController _countryController;
+  late final TextEditingController _locationController;
   late final TextEditingController _websiteController;
 
   String? _selectedOrgType;
@@ -53,14 +53,18 @@ class _EditOrganizerProfilePageState extends ConsumerState<EditOrganizerProfileP
   @override
   void initState() {
     super.initState();
-    _organizationNameController = TextEditingController(text: widget.organizer.organizationName);
+    _organizationNameController = TextEditingController(
+      text: widget.organizer.organizationName,
+    );
     _bioController = TextEditingController(text: widget.organizer.bio);
-    _contactPersonController = TextEditingController(text: widget.organizer.contactPerson);
+    _contactPersonController = TextEditingController(
+      text: widget.organizer.contactPerson,
+    );
     _phoneController = TextEditingController(text: widget.organizer.phone);
     _emailController = TextEditingController(text: widget.organizer.email);
-    _cityController = TextEditingController(text: widget.organizer.location['city']);
-    _stateController = TextEditingController(text: widget.organizer.location['state']);
-    _countryController = TextEditingController(text: widget.organizer.location['country']);
+    _locationController = TextEditingController(
+      text: widget.organizer.location,
+    );
     _websiteController = TextEditingController(text: widget.organizer.website);
 
     _selectedOrgType = widget.organizer.organizationType;
@@ -74,24 +78,22 @@ class _EditOrganizerProfilePageState extends ConsumerState<EditOrganizerProfileP
     _contactPersonController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
-    _cityController.dispose();
-    _stateController.dispose();
-    _countryController.dispose();
+    _locationController.dispose();
     _websiteController.dispose();
     super.dispose();
   }
 
   void _updateProfile() {
     if (_formKey.currentState!.validate()) {
-      ref.read(organizerProfileViewModelProvider.notifier).updateProfile(
+      ref
+          .read(organizerProfileViewModelProvider.notifier)
+          .updateProfile(
             organizationName: _organizationNameController.text.trim(),
             bio: _bioController.text.trim(),
             contactPerson: _contactPersonController.text.trim(),
             phone: _phoneController.text.trim(),
             email: _emailController.text.trim(),
-            city: _cityController.text.trim(),
-            stateProvince: _stateController.text.trim(),
-            country: _countryController.text.trim(),
+            location: _locationController.text.trim(),
             organizationType: _selectedOrgType,
             eventTypes: _selectedEventTypes,
             website: _websiteController.text.trim(),
@@ -192,37 +194,49 @@ class _EditOrganizerProfilePageState extends ConsumerState<EditOrganizerProfileP
 
                     const Text(
                       'Location',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
-                      controller: _cityController,
-                      decoration: const InputDecoration(labelText: 'City'),
-                    ),
-                    TextFormField(
-                      controller: _stateController,
-                      decoration: const InputDecoration(labelText: 'State'),
-                    ),
-                    TextFormField(
-                      controller: _countryController,
-                      decoration: const InputDecoration(labelText: 'Country'),
+                      controller: _locationController,
+                      decoration: const InputDecoration(
+                        labelText: 'Location',
+                        hintText: 'Kathmandu, Bagmati, Nepal',
+                      ),
+                      validator: (value) =>
+                          value == null || value.trim().isEmpty
+                          ? 'Required'
+                          : null,
                     ),
                     const SizedBox(height: 24),
 
                     const Text(
                       'Organization Type',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     DropdownButtonFormField<String>(
                       initialValue: _selectedOrgType,
-                      items: _orgTypes.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+                      items: _orgTypes
+                          .map(
+                            (t) => DropdownMenuItem(value: t, child: Text(t)),
+                          )
+                          .toList(),
                       onChanged: (v) => setState(() => _selectedOrgType = v),
                     ),
                     const SizedBox(height: 24),
 
                     const Text(
                       'Event Types',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     Wrap(
                       spacing: 8,
@@ -269,4 +283,3 @@ class _EditOrganizerProfilePageState extends ConsumerState<EditOrganizerProfileP
     );
   }
 }
-
