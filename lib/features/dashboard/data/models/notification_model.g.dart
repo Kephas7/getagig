@@ -6,17 +6,17 @@ part of 'notification_model.dart';
 // TypeAdapterGenerator
 // **************************************************************************
 
-class NotificationModelAdapter extends TypeAdapter<_$NotificationModelImpl> {
+class NotificationModelAdapter extends TypeAdapter<NotificationModel> {
   @override
   final int typeId = 3;
 
   @override
-  _$NotificationModelImpl read(BinaryReader reader) {
+  NotificationModel read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return _$NotificationModelImpl(
+    return NotificationModel(
       id: fields[0] as String?,
       userId: fields[1] as String?,
       type: fields[2] as String,
@@ -29,7 +29,7 @@ class NotificationModelAdapter extends TypeAdapter<_$NotificationModelImpl> {
   }
 
   @override
-  void write(BinaryWriter writer, _$NotificationModelImpl obj) {
+  void write(BinaryWriter writer, NotificationModel obj) {
     writer
       ..writeByte(8)
       ..writeByte(0)
@@ -65,9 +65,8 @@ class NotificationModelAdapter extends TypeAdapter<_$NotificationModelImpl> {
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$NotificationModelImpl _$$NotificationModelImplFromJson(
-        Map<String, dynamic> json) =>
-    _$NotificationModelImpl(
+NotificationModel _$NotificationModelFromJson(Map<String, dynamic> json) =>
+    NotificationModel(
       id: _readId(json, '_id') as String?,
       userId: json['userId'] as String?,
       type: json['type'] as String,
@@ -80,8 +79,7 @@ _$NotificationModelImpl _$$NotificationModelImplFromJson(
           : DateTime.parse(json['createdAt'] as String),
     );
 
-Map<String, dynamic> _$$NotificationModelImplToJson(
-        _$NotificationModelImpl instance) =>
+Map<String, dynamic> _$NotificationModelToJson(NotificationModel instance) =>
     <String, dynamic>{
       '_id': instance.id,
       'userId': instance.userId,
