@@ -116,6 +116,25 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  Future<void> _requestVerification() async {
+    if (widget.musicianId != null) return;
+
+    await ref
+        .read(musicianProfileViewModelProvider.notifier)
+        .requestVerification();
+
+    if (!mounted) return;
+    final nextState = ref.read(musicianProfileViewModelProvider);
+    if (nextState.status == MusicianProfileStatus.error) {
+      _showError(nextState.errorMessage ?? 'Failed to request verification');
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Verification request sent to admin')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final profileState = ref.watch(musicianProfileViewModelProvider);
@@ -152,8 +171,11 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
             Padding(
               padding: const EdgeInsets.only(right: 8.0),
               child: IconButton(
-                icon: const Icon(Icons.edit_note_rounded,
-                    color: Color(0xFF1A1B61), size: 28),
+                icon: const Icon(
+                  Icons.edit_note_rounded,
+                  color: Color(0xFF1A1B61),
+                  size: 28,
+                ),
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -245,8 +267,9 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
   }
 
   Widget _buildProfileContent(MusicianEntity musician) {
-    final city = musician.getLocationValue('city', 'N/A');
-    final country = musician.getLocationValue('country', 'N/A');
+    final locationText = musician.location.trim().isEmpty
+        ? 'N/A'
+        : musician.location.trim();
     return RefreshIndicator(
       onRefresh: () async {
         if (widget.musicianId != null) {
@@ -286,7 +309,7 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                             gradient: LinearGradient(
                               colors: [
                                 const Color(0xFF6366F1),
-                                const Color(0xFF1A1B61).withOpacity(0.5)
+                                const Color(0xFF1A1B61).withOpacity(0.5),
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -303,8 +326,11 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                                   )
                                 : null,
                             child: musician.profilePicture == null
-                                ? const Icon(Icons.person_rounded,
-                                    size: 70, color: Color(0xFF1A1B61))
+                                ? const Icon(
+                                    Icons.person_rounded,
+                                    size: 70,
+                                    color: Color(0xFF1A1B61),
+                                  )
                                 : null,
                           ),
                         ),
@@ -319,13 +345,15 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                                 decoration: BoxDecoration(
                                   color: const Color(0xFF1A1B61),
                                   shape: BoxShape.circle,
-                                  border:
-                                      Border.all(color: Colors.white, width: 3),
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 3,
+                                  ),
                                   boxShadow: [
                                     BoxShadow(
                                       color: Colors.black.withOpacity(0.1),
                                       blurRadius: 10,
-                                    )
+                                    ),
                                   ],
                                 ),
                                 child: const Icon(
@@ -360,7 +388,7 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '$city, $country',
+                        locationText,
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontWeight: FontWeight.w600,
@@ -376,10 +404,11 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                       vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: (musician.isAvailable
-                              ? const Color(0xFF10B981)
-                              : Colors.grey[400]!)
-                          .withOpacity(0.12),
+                      color:
+                          (musician.isAvailable
+                                  ? const Color(0xFF10B981)
+                                  : Colors.grey[400]!)
+                              .withOpacity(0.12),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Row(
@@ -412,6 +441,68 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                       ],
                     ),
                   ),
+                  if (musician.isVerified ||
+                      musician.verificationRequested) ...[
+                    const SizedBox(height: 14),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color:
+                            (musician.isVerified
+                                    ? const Color(0xFF10B981)
+                                    : const Color(0xFF6366F1))
+                                .withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.verified_rounded,
+                            size: 16,
+                            color: musician.isVerified
+                                ? const Color(0xFF10B981)
+                                : const Color(0xFF6366F1),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            musician.isVerified
+                                ? 'VERIFIED ARTIST'
+                                : 'VERIFICATION PENDING',
+                            style: TextStyle(
+                              color: musician.isVerified
+                                  ? const Color(0xFF10B981)
+                                  : const Color(0xFF6366F1),
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.7,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  if (widget.musicianId == null &&
+                      !musician.isVerified &&
+                      !musician.verificationRequested) ...[
+                    const SizedBox(height: 14),
+                    OutlinedButton.icon(
+                      onPressed: _requestVerification,
+                      icon: const Icon(Icons.verified_user_outlined, size: 18),
+                      label: const Text('Request Verification'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF6366F1),
+                        side: const BorderSide(color: Color(0xFF6366F1)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -429,12 +520,15 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: Colors.grey[100]!, width: 1.5),
+                        border: Border.all(
+                          color: Colors.grey[100]!,
+                          width: 1.5,
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.02),
                             blurRadius: 10,
-                          )
+                          ),
                         ],
                       ),
                       child: Text(
@@ -467,7 +561,8 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                           child: _buildStatCard(
                             icon: Icons.payments_rounded,
                             label: 'HOURLY RATE',
-                            value: 'N${musician.hourlyRate!.toStringAsFixed(0)}',
+                            value:
+                                'N${musician.hourlyRate!.toStringAsFixed(0)}',
                             color: const Color(0xFF10B981),
                           ),
                         ),
@@ -482,12 +577,15 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                     children: musician.genres.map((genre) {
                       return Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF6366F1).withOpacity(0.08),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                              color: const Color(0xFF6366F1).withOpacity(0.1)),
+                            color: const Color(0xFF6366F1).withOpacity(0.1),
+                          ),
                         ),
                         child: Text(
                           genre,
@@ -509,12 +607,15 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                     children: musician.instruments.map((instrument) {
                       return Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.orange[400]!.withOpacity(0.08),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                              color: Colors.orange[400]!.withOpacity(0.1)),
+                            color: Colors.orange[400]!.withOpacity(0.1),
+                          ),
                         ),
                         child: Text(
                           instrument,
@@ -539,7 +640,7 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                         BoxShadow(
                           color: Colors.black.withOpacity(0.03),
                           blurRadius: 15,
-                        )
+                        ),
                       ],
                     ),
                     child: Column(
@@ -668,10 +769,7 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: Colors.grey[100]!, width: 1.5),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-          )
+          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10),
         ],
       ),
       child: Column(
@@ -720,8 +818,10 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
     return Column(
       children: [
         ListTile(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 8,
+          ),
           leading: Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
@@ -750,8 +850,11 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                 ),
               ),
               const SizedBox(width: 8),
-              Icon(Icons.arrow_forward_ios_rounded,
-                  size: 14, color: Colors.indigo[100]),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 14,
+                color: Colors.indigo[100],
+              ),
             ],
           ),
           onTap: onTap,
@@ -767,4 +870,3 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
     );
   }
 }
-
