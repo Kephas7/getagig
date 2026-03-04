@@ -7,10 +7,12 @@ class CreateOrganizerProfilePage extends ConsumerStatefulWidget {
   const CreateOrganizerProfilePage({super.key});
 
   @override
-  ConsumerState<CreateOrganizerProfilePage> createState() => _CreateOrganizerProfilePageState();
+  ConsumerState<CreateOrganizerProfilePage> createState() =>
+      _CreateOrganizerProfilePageState();
 }
 
-class _CreateOrganizerProfilePageState extends ConsumerState<CreateOrganizerProfilePage> {
+class _CreateOrganizerProfilePageState
+    extends ConsumerState<CreateOrganizerProfilePage> {
   final _formKey = GlobalKey<FormState>();
 
   final _organizationNameController = TextEditingController();
@@ -18,9 +20,7 @@ class _CreateOrganizerProfilePageState extends ConsumerState<CreateOrganizerProf
   final _contactPersonController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
-  final _cityController = TextEditingController();
-  final _stateController = TextEditingController();
-  final _countryController = TextEditingController();
+  final _locationController = TextEditingController();
   final _websiteController = TextEditingController();
 
   String? _selectedOrgType;
@@ -55,9 +55,7 @@ class _CreateOrganizerProfilePageState extends ConsumerState<CreateOrganizerProf
     _contactPersonController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
-    _cityController.dispose();
-    _stateController.dispose();
-    _countryController.dispose();
+    _locationController.dispose();
     _websiteController.dispose();
     super.dispose();
   }
@@ -73,7 +71,9 @@ class _CreateOrganizerProfilePageState extends ConsumerState<CreateOrganizerProf
 
       if (_selectedEventTypes.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select at least one event type')),
+          const SnackBar(
+            content: Text('Please select at least one event type'),
+          ),
         );
         return;
       }
@@ -86,9 +86,7 @@ class _CreateOrganizerProfilePageState extends ConsumerState<CreateOrganizerProf
             contactPerson: _contactPersonController.text.trim(),
             phone: _phoneController.text.trim(),
             email: _emailController.text.trim(),
-            city: _cityController.text.trim(),
-            stateProvince: _stateController.text.trim(),
-            country: _countryController.text.trim(),
+            location: _locationController.text.trim(),
             organizationType: _selectedOrgType!,
             eventTypes: _selectedEventTypes,
             website: _websiteController.text.trim(),
@@ -125,7 +123,10 @@ class _CreateOrganizerProfilePageState extends ConsumerState<CreateOrganizerProf
     });
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Organizer Profile'), elevation: 0),
+      appBar: AppBar(
+        title: const Text('Create Organizer Profile'),
+        elevation: 0,
+      ),
       body: profileState.status == OrganizerProfileStatus.loading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -250,50 +251,16 @@ class _CreateOrganizerProfilePageState extends ConsumerState<CreateOrganizerProf
                     const SizedBox(height: 12),
 
                     TextFormField(
-                      controller: _cityController,
+                      controller: _locationController,
                       decoration: const InputDecoration(
-                        labelText: 'City *',
-                        hintText: 'Kathmandu',
+                        labelText: 'Location *',
+                        hintText: 'Kathmandu, Bagmati, Nepal',
                         border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.location_city),
+                        prefixIcon: Icon(Icons.location_on),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter city';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    TextFormField(
-                      controller: _stateController,
-                      decoration: const InputDecoration(
-                        labelText: 'State/Province *',
-                        hintText: 'Bagmati',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.map),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter state/province';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    TextFormField(
-                      controller: _countryController,
-                      decoration: const InputDecoration(
-                        labelText: 'Country *',
-                        hintText: 'Nepal',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.flag),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter country';
+                          return 'Please enter location';
                         }
                         return null;
                       },
@@ -317,17 +284,15 @@ class _CreateOrganizerProfilePageState extends ConsumerState<CreateOrganizerProf
                       ),
                       hint: const Text('Select organization type'),
                       items: _orgTypes.map((type) {
-                        return DropdownMenuItem(
-                          value: type,
-                          child: Text(type),
-                        );
+                        return DropdownMenuItem(value: type, child: Text(type));
                       }).toList(),
                       onChanged: (value) {
                         setState(() {
                           _selectedOrgType = value;
                         });
                       },
-                      validator: (value) => value == null ? 'Please select a type' : null,
+                      validator: (value) =>
+                          value == null ? 'Please select a type' : null,
                     ),
                     const SizedBox(height: 24),
 
@@ -377,7 +342,8 @@ class _CreateOrganizerProfilePageState extends ConsumerState<CreateOrganizerProf
                     const SizedBox(height: 32),
 
                     ElevatedButton(
-                      onPressed: profileState.status == OrganizerProfileStatus.loading
+                      onPressed:
+                          profileState.status == OrganizerProfileStatus.loading
                           ? null
                           : _createProfile,
                       style: ElevatedButton.styleFrom(
@@ -388,7 +354,8 @@ class _CreateOrganizerProfilePageState extends ConsumerState<CreateOrganizerProf
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: profileState.status == OrganizerProfileStatus.loading
+                      child:
+                          profileState.status == OrganizerProfileStatus.loading
                           ? const SizedBox(
                               height: 20,
                               width: 20,
@@ -415,4 +382,3 @@ class _CreateOrganizerProfilePageState extends ConsumerState<CreateOrganizerProf
     );
   }
 }
-
