@@ -19,8 +19,8 @@ class OrganizerApiModel {
   final String phone;
   @JsonKey(defaultValue: '')
   final String email;
-  @JsonKey(defaultValue: {'city': '', 'state': '', 'country': ''})
-  final Map<String, dynamic> location;
+  @JsonKey(defaultValue: '')
+  final String location;
   @JsonKey(defaultValue: '')
   final String organizationType;
   @JsonKey(defaultValue: [])
@@ -34,6 +34,8 @@ class OrganizerApiModel {
   final List<String> videos;
   @JsonKey(defaultValue: false)
   final bool isVerified;
+  @JsonKey(defaultValue: false)
+  final bool verificationRequested;
   @JsonKey(defaultValue: true)
   final bool isActive;
   @JsonKey(defaultValue: '')
@@ -58,6 +60,7 @@ class OrganizerApiModel {
     required this.photos,
     required this.videos,
     required this.isVerified,
+    required this.verificationRequested,
     required this.isActive,
     required this.createdAt,
     required this.updatedAt,
@@ -86,6 +89,7 @@ class OrganizerApiModel {
       photos: photos,
       videos: videos,
       isVerified: isVerified,
+      verificationRequested: verificationRequested,
       isActive: isActive,
       createdAt: createdAt,
       updatedAt: updatedAt,
@@ -102,7 +106,7 @@ class OrganizerApiModel {
       contactPerson: entity.contactPerson,
       phone: entity.phone,
       email: entity.email,
-      location: Map<String, dynamic>.from(entity.location),
+      location: entity.location,
       organizationType: entity.organizationType,
       eventTypes: entity.eventTypes,
       verificationDocuments: entity.verificationDocuments,
@@ -110,10 +114,10 @@ class OrganizerApiModel {
       photos: entity.photos,
       videos: entity.videos,
       isVerified: entity.isVerified,
+      verificationRequested: entity.verificationRequested,
       isActive: entity.isActive,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     );
   }
 }
-
