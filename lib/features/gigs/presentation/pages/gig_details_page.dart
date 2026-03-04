@@ -1,10 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/features/gigs/domain/entities/gig_entity.dart';
-import 'package:getagig/features/gigs/presentation/view_model/my_applications_provider.dart';
+import 'package:getagig/features/gigs/presentation/view_model/my_applications_viewmodel.dart';
 import 'package:getagig/features/organizer/presentation/pages/view_organizer_profile_page.dart';
+import 'package:getagig/features/organizer/domain/usecases/get_organizer_profile_by_id_usecase.dart';
 import 'package:getagig/features/dashboard/presentation/pages/chat_page.dart';
-import 'package:getagig/features/dashboard/presentation/view_model/conversation_initiator_provider.dart';
+import 'package:getagig/features/dashboard/presentation/view_model/conversation_initiator_viewmodel.dart';
 
 class GigDetailsPage extends ConsumerStatefulWidget {
   final GigEntity gig;
@@ -88,7 +89,7 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '${gig.city}, ${gig.country}',
+                        gig.location,
                         style: TextStyle(fontSize: 16, color: Colors.grey[800]),
                       ),
                     ],
@@ -228,7 +229,7 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
                       Icon(Icons.event_available, color: Colors.grey[600]),
                       const SizedBox(width: 8),
                       Text(
-                        'Deadline: ${gig.deadline?.toLocal().toString().split(' ')[0] ?? 'â€”'}',
+                        'Deadline: ${gig.deadline?.toLocal().toString().split(' ')[0] ?? '—'}',
                         style: TextStyle(fontSize: 16, color: Colors.grey[800]),
                       ),
                     ],
@@ -348,11 +349,23 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
   void _messageOrganizer(
     BuildContext context,
     WidgetRef ref,
-    String organizerId,
+    String organizerProfileId,
   ) async {
     final conversationInitiator = ref.read(
       conversationInitiatorProvider.notifier,
     );
+
+    String recipientUserId = organizerProfileId;
+    final getOrganizerProfileById = ref.read(
+      getOrganizerProfileByIdUseCaseProvider,
+    );
+
+    final organizerResult = await getOrganizerProfileById(organizerProfileId);
+    organizerResult.fold((_) {}, (organizerProfile) {
+      if (organizerProfile.userId.isNotEmpty) {
+        recipientUserId = organizerProfile.userId;
+      }
+    });
 
     // Start loading
     ScaffoldMessenger.of(context).showSnackBar(
@@ -362,7 +375,9 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
       ),
     );
 
-    final result = await conversationInitiator.startConversation(organizerId);
+    final result = await conversationInitiator.startConversation(
+      recipientUserId,
+    );
 
     if (!context.mounted) return;
 
@@ -377,18 +392,19 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
         );
       },
       (conversation) {
+        final participant = conversation.participants.firstWhere(
+          (p) => p.id == recipientUserId,
+          orElse: () => conversation.participants.first,
+        );
+
         // Navigate to chat page
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => ChatPage(
               conversationId: conversation.id ?? '',
-              receiverId: organizerId,
-              receiverName: conversation.participants.isNotEmpty
-                  ? (conversation.participants.first.username ??
-                        conversation.participants.first.email ??
-                        '')
-                  : '',
+              receiverId: recipientUserId,
+              receiverName: participant.username ?? participant.email ?? '',
             ),
           ),
         );
