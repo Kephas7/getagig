@@ -6,14 +6,11 @@ part of 'gig_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$GigModelImpl _$$GigModelImplFromJson(Map<String, dynamic> json) =>
-    _$GigModelImpl(
+GigModel _$GigModelFromJson(Map<String, dynamic> json) => GigModel(
       id: _readId(json, '_id') as String?,
       title: json['title'] as String,
       description: json['description'] as String? ?? '',
-      location: json['location'] == null
-          ? const LocationModel()
-          : LocationModel.fromJson(json['location'] as Map<String, dynamic>),
+      location: json['location'] as String? ?? '',
       genres: (json['genres'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
@@ -39,8 +36,7 @@ _$GigModelImpl _$$GigModelImplFromJson(Map<String, dynamic> json) =>
           : DateTime.parse(json['updatedAt'] as String),
     );
 
-Map<String, dynamic> _$$GigModelImplToJson(_$GigModelImpl instance) =>
-    <String, dynamic>{
+Map<String, dynamic> _$GigModelToJson(GigModel instance) => <String, dynamic>{
       '_id': instance.id,
       'title': instance.title,
       'description': instance.description,
