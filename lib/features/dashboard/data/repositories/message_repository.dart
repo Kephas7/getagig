@@ -1,5 +1,4 @@
 import 'package:dartz/dartz.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/core/api/api_client.dart';
 import 'package:getagig/core/api/api_endpoints.dart';
@@ -22,20 +21,23 @@ class MessageRepository {
   MessageRepository({
     required ApiClient apiClient,
     required HiveService hiveService,
-  })  : _apiClient = apiClient,
-        _hiveService = hiveService;
+  }) : _apiClient = apiClient,
+       _hiveService = hiveService;
 
   Future<Either<Failure, List<ConversationModel>>> getConversations() async {
     final cached = _hiveService.getConversations();
 
     try {
-      final response = await _apiClient.get(
-        '${ApiEndpoints.baseUrl}/messages/conversations',
-      );
+      final response = await _apiClient.get(ApiEndpoints.conversations);
       if (response.data['success'] == true) {
         final List<dynamic> data = response.data['data'] ?? [];
-        final conversations =
-            data.map((e) => ConversationModel.fromJson(e)).toList();
+        final conversations = data
+            .map(
+              (e) => ConversationModel.fromJson(
+                Map<String, dynamic>.from(e as Map),
+              ),
+            )
+            .toList();
 
         await _hiveService.saveConversations(conversations);
         return Right(conversations);
@@ -56,11 +58,20 @@ class MessageRepository {
 
     try {
       final response = await _apiClient.get(
-        '${ApiEndpoints.baseUrl}/messages/conversations/$conversationId',
+        ApiEndpoints.conversationMessages(conversationId),
       );
+
       if (response.data['success'] == true) {
-        final List<dynamic> data = response.data['data'] ?? [];
-        final messages = data.map((e) => MessageModel.fromJson(e)).toList();
+        final dynamic payload = response.data['data'];
+        final List<dynamic> data = payload is Map<String, dynamic>
+            ? (payload['messages'] as List<dynamic>? ?? [])
+            : (payload as List<dynamic>? ?? []);
+
+        final messages = data
+            .map(
+              (e) => MessageModel.fromJson(Map<String, dynamic>.from(e as Map)),
+            )
+            .toList();
 
         await _hiveService.saveMessages(messages);
         return Right(messages);
@@ -81,7 +92,7 @@ class MessageRepository {
   }) async {
     try {
       final response = await _apiClient.post(
-        '${ApiEndpoints.baseUrl}/messages/send',
+        ApiEndpoints.sendMessage,
         data: {
           'content': content,
           'conversationId': conversationId,
@@ -89,7 +100,9 @@ class MessageRepository {
         },
       );
       if (response.data['success'] == true) {
-        final message = MessageModel.fromJson(response.data['data']);
+        final message = MessageModel.fromJson(
+          Map<String, dynamic>.from(response.data['data'] as Map),
+        );
         await _hiveService.saveMessages([message]);
         return Right(message);
       }
@@ -104,11 +117,13 @@ class MessageRepository {
   }) async {
     try {
       final response = await _apiClient.post(
-        '${ApiEndpoints.baseUrl}/messages/conversations/start',
+        ApiEndpoints.startConversation,
         data: {'recipientId': recipientId},
       );
       if (response.data['success'] == true) {
-        final conversation = ConversationModel.fromJson(response.data['data']);
+        final conversation = ConversationModel.fromJson(
+          Map<String, dynamic>.from(response.data['data'] as Map),
+        );
         await _hiveService.saveConversations([conversation]);
         return Right(conversation);
       }
