@@ -10,6 +10,7 @@ import 'package:getagig/features/organizer/domain/usecases/get_organizer_profile
 import 'package:getagig/features/organizer/domain/usecases/remove_organizer_photo_usecase.dart';
 import 'package:getagig/features/organizer/domain/usecases/remove_organizer_verification_document_usecase.dart';
 import 'package:getagig/features/organizer/domain/usecases/remove_organizer_video_usecase.dart';
+import 'package:getagig/features/organizer/domain/usecases/request_organizer_verification_usecase.dart';
 import 'package:getagig/features/organizer/domain/usecases/update_organizer_active_status_usecase.dart';
 import 'package:getagig/features/organizer/domain/usecases/update_organizer_profile_usecase.dart';
 import 'package:getagig/features/organizer/domain/usecases/upload_organizer_profile_picture_usecase.dart';
@@ -31,9 +32,12 @@ class OrganizerProfileViewModel extends Notifier<OrganizerProfileState> {
   late final RemoveOrganizerPhotoUseCase _removePhotoUseCase;
   late final AddOrganizerVideosUseCase _addVideosUseCase;
   late final RemoveOrganizerVideoUseCase _removeVideoUseCase;
-  late final AddOrganizerVerificationDocumentsUseCase _addVerificationDocumentsUseCase;
-  late final RemoveOrganizerVerificationDocumentUseCase _removeVerificationDocumentUseCase;
+  late final AddOrganizerVerificationDocumentsUseCase
+  _addVerificationDocumentsUseCase;
+  late final RemoveOrganizerVerificationDocumentUseCase
+  _removeVerificationDocumentUseCase;
   late final UpdateOrganizerActiveStatusUseCase _updateActiveStatusUseCase;
+  late final RequestOrganizerVerificationUseCase _requestVerificationUseCase;
 
   @override
   OrganizerProfileState build() {
@@ -49,9 +53,18 @@ class OrganizerProfileViewModel extends Notifier<OrganizerProfileState> {
     _removePhotoUseCase = ref.read(removeOrganizerPhotoUseCaseProvider);
     _addVideosUseCase = ref.read(addOrganizerVideosUseCaseProvider);
     _removeVideoUseCase = ref.read(removeOrganizerVideoUseCaseProvider);
-    _addVerificationDocumentsUseCase = ref.read(addOrganizerVerificationDocumentsUseCaseProvider);
-    _removeVerificationDocumentUseCase = ref.read(removeOrganizerVerificationDocumentUseCaseProvider);
-    _updateActiveStatusUseCase = ref.read(updateOrganizerActiveStatusUseCaseProvider);
+    _addVerificationDocumentsUseCase = ref.read(
+      addOrganizerVerificationDocumentsUseCaseProvider,
+    );
+    _removeVerificationDocumentUseCase = ref.read(
+      removeOrganizerVerificationDocumentUseCaseProvider,
+    );
+    _updateActiveStatusUseCase = ref.read(
+      updateOrganizerActiveStatusUseCaseProvider,
+    );
+    _requestVerificationUseCase = ref.read(
+      requestOrganizerVerificationUseCaseProvider,
+    );
     return const OrganizerProfileState();
   }
 
@@ -61,9 +74,7 @@ class OrganizerProfileViewModel extends Notifier<OrganizerProfileState> {
     required String contactPerson,
     required String phone,
     required String email,
-    required String city,
-    required String stateProvince,
-    required String country,
+    required String location,
     required String organizationType,
     required List<String> eventTypes,
     String? website,
@@ -77,9 +88,7 @@ class OrganizerProfileViewModel extends Notifier<OrganizerProfileState> {
         contactPerson: contactPerson,
         phone: phone,
         email: email,
-        city: city,
-        state: stateProvince,
-        country: country,
+        location: location,
         organizationType: organizationType,
         eventTypes: eventTypes,
         website: website,
@@ -169,9 +178,7 @@ class OrganizerProfileViewModel extends Notifier<OrganizerProfileState> {
     String? contactPerson,
     String? phone,
     String? email,
-    String? city,
-    String? stateProvince,
-    String? country,
+    String? location,
     String? organizationType,
     List<String>? eventTypes,
     String? website,
@@ -185,9 +192,7 @@ class OrganizerProfileViewModel extends Notifier<OrganizerProfileState> {
         contactPerson: contactPerson,
         phone: phone,
         email: email,
-        city: city,
-        state: stateProvince,
-        country: country,
+        location: location,
         organizationType: organizationType,
         eventTypes: eventTypes,
         website: website,
@@ -396,6 +401,26 @@ class OrganizerProfileViewModel extends Notifier<OrganizerProfileState> {
     );
   }
 
+  Future<void> requestVerification() async {
+    state = state.copyWith(status: OrganizerProfileStatus.loading);
+
+    final result = await _requestVerificationUseCase();
+
+    result.fold(
+      (failure) => state = state.copyWith(
+        status: OrganizerProfileStatus.error,
+        errorMessage: failure.message,
+      ),
+      (profile) {
+        state = state.copyWith(
+          status: OrganizerProfileStatus.updated,
+          profile: profile,
+          errorMessage: null,
+        );
+      },
+    );
+  }
+
   void clearError() {
     state = state.copyWith(errorMessage: null);
   }
@@ -412,4 +437,3 @@ class OrganizerProfileViewModel extends Notifier<OrganizerProfileState> {
     );
   }
 }
-
