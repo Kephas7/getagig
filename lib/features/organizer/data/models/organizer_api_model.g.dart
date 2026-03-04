@@ -16,8 +16,7 @@ OrganizerApiModel _$OrganizerApiModelFromJson(Map<String, dynamic> json) =>
       contactPerson: json['contactPerson'] as String? ?? '',
       phone: json['phone'] as String? ?? '',
       email: json['email'] as String? ?? '',
-      location: json['location'] as Map<String, dynamic>? ??
-          {'city': '', 'state': '', 'country': ''},
+      location: json['location'] as String? ?? '',
       organizationType: json['organizationType'] as String? ?? '',
       eventTypes: (json['eventTypes'] as List<dynamic>?)
               ?.map((e) => e as String)
@@ -37,6 +36,7 @@ OrganizerApiModel _$OrganizerApiModelFromJson(Map<String, dynamic> json) =>
               .toList() ??
           [],
       isVerified: json['isVerified'] as bool? ?? false,
+      verificationRequested: json['verificationRequested'] as bool? ?? false,
       isActive: json['isActive'] as bool? ?? true,
       createdAt: json['createdAt'] as String? ?? '',
       updatedAt: json['updatedAt'] as String? ?? '',
@@ -60,6 +60,7 @@ Map<String, dynamic> _$OrganizerApiModelToJson(OrganizerApiModel instance) =>
       'photos': instance.photos,
       'videos': instance.videos,
       'isVerified': instance.isVerified,
+      'verificationRequested': instance.verificationRequested,
       'isActive': instance.isActive,
       'createdAt': instance.createdAt,
       'updatedAt': instance.updatedAt,
