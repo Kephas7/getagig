@@ -15,8 +15,8 @@ class MusicianApiModel {
   final String? bio;
   @JsonKey(defaultValue: '')
   final String phone;
-  @JsonKey(defaultValue: {'city': '', 'state': '', 'country': ''})
-  final Map<String, dynamic> location;
+  @JsonKey(defaultValue: '')
+  final String location;
   @JsonKey(defaultValue: [])
   final List<String> genres;
   @JsonKey(defaultValue: [])
@@ -30,6 +30,10 @@ class MusicianApiModel {
   final List<String> videos;
   @JsonKey(defaultValue: [])
   final List<String> audioSamples;
+  @JsonKey(defaultValue: false)
+  final bool isVerified;
+  @JsonKey(defaultValue: false)
+  final bool verificationRequested;
   @JsonKey(defaultValue: true)
   final bool isAvailable;
   @JsonKey(defaultValue: '')
@@ -52,6 +56,8 @@ class MusicianApiModel {
     required this.photos,
     required this.videos,
     required this.audioSamples,
+    required this.isVerified,
+    required this.verificationRequested,
     required this.isAvailable,
     required this.createdAt,
     required this.updatedAt,
@@ -78,6 +84,8 @@ class MusicianApiModel {
       photos: photos,
       videos: videos,
       audioSamples: audioSamples,
+      isVerified: isVerified,
+      verificationRequested: verificationRequested,
       isAvailable: isAvailable,
       createdAt: createdAt,
       updatedAt: updatedAt,
@@ -92,7 +100,7 @@ class MusicianApiModel {
       profilePicture: entity.profilePicture,
       bio: entity.bio,
       phone: entity.phone,
-      location: Map<String, dynamic>.from(entity.location),
+      location: entity.location,
       genres: entity.genres,
       instruments: entity.instruments,
       experienceYears: entity.experienceYears,
@@ -100,6 +108,8 @@ class MusicianApiModel {
       photos: entity.photos,
       videos: entity.videos,
       audioSamples: entity.audioSamples,
+      isVerified: entity.isVerified,
+      verificationRequested: entity.verificationRequested,
       isAvailable: entity.isAvailable,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
@@ -116,4 +126,3 @@ class MusicianApiModel {
         .toList();
   }
 }
-
