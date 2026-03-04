@@ -4,9 +4,7 @@ class GigEntity extends Equatable {
   final String id;
   final String title;
   final String description;
-  final String city;
-  final String state;
-  final String country;
+  final String location;
   final List<String> genres;
   final List<String> instruments;
   final double payRate;
@@ -21,9 +19,7 @@ class GigEntity extends Equatable {
     required this.id,
     required this.title,
     required this.description,
-    required this.city,
-    required this.state,
-    required this.country,
+    required this.location,
     required this.genres,
     required this.instruments,
     required this.payRate,
@@ -37,21 +33,18 @@ class GigEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        title,
-        description,
-        city,
-        state,
-        country,
-        genres,
-        instruments,
-        payRate,
-        eventType,
-        deadline,
-        status,
-        organizerName,
-        organizerId,
-        createdAt,
-      ];
+    id,
+    title,
+    description,
+    location,
+    genres,
+    instruments,
+    payRate,
+    eventType,
+    deadline,
+    status,
+    organizerName,
+    organizerId,
+    createdAt,
+  ];
 }
-
