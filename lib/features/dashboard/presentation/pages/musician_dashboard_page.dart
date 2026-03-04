@@ -1,11 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/features/gigs/presentation/pages/gigs_explore_page.dart';
 import 'package:getagig/features/dashboard/presentation/pages/musician_home_page.dart';
 import 'package:getagig/features/dashboard/presentation/pages/messages_page.dart';
 import 'package:getagig/features/musician/presentation/pages/profile.dart';
 import 'package:getagig/features/dashboard/presentation/pages/notifications_page.dart';
-import 'package:getagig/features/dashboard/presentation/view_model/notifications_provider.dart';
+import 'package:getagig/features/dashboard/presentation/view_model/notifications_viewmodel.dart';
 
 class MusicianDashboardPage extends StatefulWidget {
   const MusicianDashboardPage({super.key});
@@ -16,7 +16,12 @@ class MusicianDashboardPage extends StatefulWidget {
 
 class _MusicianDashboardPageState extends State<MusicianDashboardPage> {
   int _selectedIndex = 0;
-  final List<Widget> _pages = const [MusicianHomePage(), GigsExplorePage(), MessagesPage(), Profile()];
+  final List<Widget> _pages = const [
+    MusicianHomePage(),
+    GigsExplorePage(),
+    MessagesPage(),
+    Profile(),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -52,10 +57,14 @@ class _MusicianDashboardPageState extends State<MusicianDashboardPage> {
           selectedItemColor: Colors.black,
           unselectedItemColor: Colors.black26,
           showUnselectedLabels: true,
-          selectedLabelStyle:
-              const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-          unselectedLabelStyle:
-              const TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
+          selectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.w500,
+            fontSize: 12,
+          ),
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.home_outlined),
@@ -65,7 +74,7 @@ class _MusicianDashboardPageState extends State<MusicianDashboardPage> {
             BottomNavigationBarItem(
               icon: Icon(Icons.explore_outlined),
               activeIcon: Icon(Icons.explore_rounded),
-              label: "Explore",
+              label: "Gigs",
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.chat_bubble_outline_rounded),
@@ -111,7 +120,9 @@ class _NotificationIconButtonWithBadge extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final unreadCount = ref.watch(notificationsProvider).maybeWhen(
+    final unreadCount = ref
+        .watch(notificationsProvider)
+        .maybeWhen(
           data: (notifications) => notifications.where((n) => !n.isRead).length,
           orElse: () => 0,
         );
@@ -140,10 +151,7 @@ class _NotificationIconButtonWithBadge extends ConsumerWidget {
                 color: Colors.redAccent,
                 borderRadius: BorderRadius.circular(10),
               ),
-              constraints: const BoxConstraints(
-                minWidth: 18,
-                minHeight: 18,
-              ),
+              constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
               child: Text(
                 unreadCount > 9 ? '9+' : unreadCount.toString(),
                 textAlign: TextAlign.center,
@@ -159,4 +167,3 @@ class _NotificationIconButtonWithBadge extends ConsumerWidget {
     );
   }
 }
-
