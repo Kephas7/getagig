@@ -6,17 +6,17 @@ part of 'auth_api_model.dart';
 // TypeAdapterGenerator
 // **************************************************************************
 
-class AuthApiModelAdapter extends TypeAdapter<_$AuthApiModelImpl> {
+class AuthApiModelAdapter extends TypeAdapter<AuthApiModel> {
   @override
   final int typeId = 4;
 
   @override
-  _$AuthApiModelImpl read(BinaryReader reader) {
+  AuthApiModel read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return _$AuthApiModelImpl(
+    return AuthApiModel(
       id: fields[0] as String?,
       username: fields[1] as String,
       email: fields[2] as String,
@@ -27,7 +27,7 @@ class AuthApiModelAdapter extends TypeAdapter<_$AuthApiModelImpl> {
   }
 
   @override
-  void write(BinaryWriter writer, _$AuthApiModelImpl obj) {
+  void write(BinaryWriter writer, AuthApiModel obj) {
     writer
       ..writeByte(6)
       ..writeByte(0)
@@ -59,8 +59,7 @@ class AuthApiModelAdapter extends TypeAdapter<_$AuthApiModelImpl> {
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$AuthApiModelImpl _$$AuthApiModelImplFromJson(Map<String, dynamic> json) =>
-    _$AuthApiModelImpl(
+AuthApiModel _$AuthApiModelFromJson(Map<String, dynamic> json) => AuthApiModel(
       id: json['_id'] as String?,
       username: json['username'] as String,
       email: json['email'] as String,
@@ -69,7 +68,7 @@ _$AuthApiModelImpl _$$AuthApiModelImplFromJson(Map<String, dynamic> json) =>
       token: json['token'] as String?,
     );
 
-Map<String, dynamic> _$$AuthApiModelImplToJson(_$AuthApiModelImpl instance) =>
+Map<String, dynamic> _$AuthApiModelToJson(AuthApiModel instance) =>
     <String, dynamic>{
       '_id': instance.id,
       'username': instance.username,
