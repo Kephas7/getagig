@@ -20,19 +20,23 @@ class NotificationRepository {
   NotificationRepository({
     required ApiClient apiClient,
     required HiveService hiveService,
-  })  : _apiClient = apiClient,
-        _hiveService = hiveService;
+  }) : _apiClient = apiClient,
+       _hiveService = hiveService;
 
   Future<Either<Failure, List<NotificationModel>>> getNotifications() async {
     final cached = _hiveService.getNotifications();
 
     try {
-      final response =
-          await _apiClient.get('${ApiEndpoints.baseUrl}/notifications');
+      final response = await _apiClient.get(ApiEndpoints.notifications);
       if (response.data['success'] == true) {
         final List<dynamic> data = response.data['data'] ?? [];
-        final notifications =
-            data.map((e) => NotificationModel.fromJson(e)).toList();
+        final notifications = data
+            .map(
+              (e) => NotificationModel.fromJson(
+                Map<String, dynamic>.from(e as Map),
+              ),
+            )
+            .toList();
 
         await _hiveService.saveNotifications(notifications);
         return Right(notifications);
@@ -48,8 +52,9 @@ class NotificationRepository {
 
   Future<Either<Failure, bool>> markAsRead(String notificationId) async {
     try {
-      final response = await _apiClient
-          .put('${ApiEndpoints.baseUrl}/notifications/$notificationId/read');
+      final response = await _apiClient.put(
+        ApiEndpoints.markNotificationRead(notificationId),
+      );
       return Right(response.data['success'] == true);
     } catch (e) {
       return Left(ApiFailure(message: e.toString()));
