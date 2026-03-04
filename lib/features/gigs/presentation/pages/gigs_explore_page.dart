@@ -1,7 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/features/gigs/domain/entities/gig_entity.dart';
-import 'package:getagig/features/gigs/presentation/view_model/gigs_feed_provider.dart';
+import 'package:getagig/features/gigs/presentation/view_model/gigs_feed_viewmodel.dart';
 import 'package:getagig/features/gigs/presentation/pages/gig_details_page.dart';
 import 'package:getagig/features/gigs/presentation/pages/my_applications_page.dart';
 
@@ -18,11 +18,10 @@ class _GigsExplorePageState extends ConsumerState<GigsExplorePage> {
 
   final List<String> _filters = [
     "All",
-    "Live Band",
-    "Acoustic",
-    "DJ",
     "Wedding",
-    "Concert",
+    "Club",
+    "Private",
+    "Corporate",
   ];
 
   @override
@@ -112,7 +111,9 @@ class _GigsExplorePageState extends ConsumerState<GigsExplorePage> {
                     selectedColor: Colors.black87,
                     labelStyle: TextStyle(
                       color: isSelected ? Colors.white : Colors.black87,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
                     ),
                     backgroundColor: Colors.grey[100],
                     shape: RoundedRectangleBorder(
@@ -131,30 +132,81 @@ class _GigsExplorePageState extends ConsumerState<GigsExplorePage> {
             child: gigsAsyncValue.when(
               data: (gigs) {
                 var filteredGigs = gigs.where((gig) {
-                  final matchesSearch = gig.title.toLowerCase().contains(_searchQuery);
-                  final matchesFilter = _selectedFilter == "All" ||
-                      gig.eventType.toLowerCase().contains(_selectedFilter.toLowerCase());
+                  final normalizedQuery = _searchQuery.trim().toLowerCase();
+                  final searchable = [
+                    gig.title,
+                    gig.description,
+                    gig.eventType,
+                    gig.location,
+                    gig.organizerName,
+                    ...gig.genres,
+                    ...gig.instruments,
+                  ].join(' ').toLowerCase();
+
+                  final matchesSearch =
+                      normalizedQuery.isEmpty ||
+                      searchable.contains(normalizedQuery);
+                  final matchesFilter =
+                      _selectedFilter == "All" ||
+                      gig.eventType.toLowerCase().contains(
+                        _selectedFilter.toLowerCase(),
+                      );
                   return matchesSearch && matchesFilter;
                 }).toList();
 
+                final hasActiveFilters =
+                    _searchQuery.trim().isNotEmpty || _selectedFilter != 'All';
+
                 if (filteredGigs.isEmpty) {
-                  return const _EmptyState();
+                  return _EmptyState(
+                    onClearFilters: hasActiveFilters
+                        ? () {
+                            setState(() {
+                              _searchQuery = '';
+                              _selectedFilter = 'All';
+                            });
+                          }
+                        : null,
+                  );
                 }
 
                 return RefreshIndicator(
                   color: Colors.black87,
-                  onRefresh: () => ref.read(gigsFeedProvider.notifier).refresh(),
-                  child: ListView.builder(
+                  onRefresh: () =>
+                      ref.read(gigsFeedProvider.notifier).refresh(),
+                  child: ListView(
                     padding: const EdgeInsets.all(16),
-                    itemCount: filteredGigs.length,
-                    itemBuilder: (context, index) {
-                      final gig = filteredGigs[index];
-                      return _GigCard(gig: gig);
-                    },
+                    children: [
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            '${filteredGigs.length} Gigs Found',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ...filteredGigs.map((gig) => _GigCard(gig: gig)),
+                    ],
                   ),
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator(color: Colors.black87)),
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: Colors.black87),
+              ),
               error: (err, stack) => Center(child: Text('Error: $err')),
             ),
           ),
@@ -179,7 +231,10 @@ class _GigCard extends StatelessWidget {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => GigDetailsPage(gig: gig))),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => GigDetailsPage(gig: gig)),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -191,40 +246,67 @@ class _GigCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       gig.title,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black87),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: Colors.black87,
+                      ),
                     ),
                   ),
                   Text(
                     "Rs. ${gig.payRate}",
-                    style: TextStyle(color: Colors.green[700], fontWeight: FontWeight.w800, fontSize: 16),
+                    style: TextStyle(
+                      color: Colors.green[700],
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
-                  const Icon(Icons.location_on_outlined, size: 16, color: Colors.black45),
-                  const SizedBox(width: 4),
-                  Text(gig.city, style: const TextStyle(color: Colors.black54)),
-                  const SizedBox(width: 16),
-                  const Icon(Icons.calendar_today_outlined, size: 16, color: Colors.black45),
+                  const Icon(
+                    Icons.location_on_outlined,
+                    size: 16,
+                    color: Colors.black45,
+                  ),
                   const SizedBox(width: 4),
                   Text(
-                    gig.deadline?.toLocal().toString().split(' ')[0] ?? 'No deadline',
+                    gig.location,
+                    style: const TextStyle(color: Colors.black54),
+                  ),
+                  const SizedBox(width: 16),
+                  const Icon(
+                    Icons.calendar_today_outlined,
+                    size: 16,
+                    color: Colors.black45,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    gig.deadline?.toLocal().toString().split(' ')[0] ??
+                        'No deadline',
                     style: const TextStyle(color: Colors.black54),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.grey[100],
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   gig.eventType,
-                  style: const TextStyle(color: Colors.black54, fontSize: 12, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: Colors.black54,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -236,7 +318,10 @@ class _GigCard extends StatelessWidget {
 }
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+  final VoidCallback? onClearFilters;
+
+  const _EmptyState({this.onClearFilters});
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -245,10 +330,23 @@ class _EmptyState extends StatelessWidget {
         children: [
           Icon(Icons.search_off_rounded, size: 64, color: Colors.grey[300]),
           const SizedBox(height: 16),
-          const Text("No gigs found", style: TextStyle(color: Colors.black38, fontSize: 18)),
+          const Text(
+            "No gigs found",
+            style: TextStyle(color: Colors.black38, fontSize: 18),
+          ),
+          if (onClearFilters != null) ...[
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: onClearFilters,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black87,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Clear Filters'),
+            ),
+          ],
         ],
       ),
     );
   }
 }
-
