@@ -27,7 +27,9 @@ class MusicianRemoteDataSource implements IMusicianRemoteDataSource {
       );
 
       if (response.data['success'] == true && response.data['data'] != null) {
-        return MusicianApiModel.fromJson(response.data['data']);
+        return MusicianApiModel.fromJson(
+          _normalizeResponseData(response.data['data']),
+        );
       }
 
       throw Exception(response.data['message'] ?? 'Failed to create profile');
@@ -42,7 +44,9 @@ class MusicianRemoteDataSource implements IMusicianRemoteDataSource {
       final response = await apiClient.get(ApiEndpoints.musicianProfile);
 
       if (response.data['success'] == true && response.data['data'] != null) {
-        return MusicianApiModel.fromJson(response.data['data']);
+        return MusicianApiModel.fromJson(
+          _normalizeResponseData(response.data['data']),
+        );
       }
 
       throw Exception(response.data['message'] ?? 'Failed to get profile');
@@ -59,7 +63,9 @@ class MusicianRemoteDataSource implements IMusicianRemoteDataSource {
       );
 
       if (response.data['success'] == true && response.data['data'] != null) {
-        return MusicianApiModel.fromJson(response.data['data']);
+        return MusicianApiModel.fromJson(
+          _normalizeResponseData(response.data['data']),
+        );
       }
 
       throw Exception(response.data['message'] ?? 'Failed to get profile');
@@ -77,7 +83,9 @@ class MusicianRemoteDataSource implements IMusicianRemoteDataSource {
       );
 
       if (response.data['success'] == true && response.data['data'] != null) {
-        return MusicianApiModel.fromJson(response.data['data']);
+        return MusicianApiModel.fromJson(
+          _normalizeResponseData(response.data['data']),
+        );
       }
 
       throw Exception(response.data['message'] ?? 'Failed to update profile');
@@ -115,7 +123,9 @@ class MusicianRemoteDataSource implements IMusicianRemoteDataSource {
       );
 
       if (response.data['success'] == true && response.data['data'] != null) {
-        return MusicianApiModel.fromJson(response.data['data']);
+        return MusicianApiModel.fromJson(
+          _normalizeResponseData(response.data['data']),
+        );
       }
 
       throw Exception(
@@ -148,7 +158,9 @@ class MusicianRemoteDataSource implements IMusicianRemoteDataSource {
       print('Add Photos Response: ${response.data}');
 
       if (response.data['success'] == true && response.data['data'] != null) {
-        final model = MusicianApiModel.fromJson(response.data['data']);
+        final model = MusicianApiModel.fromJson(
+          _normalizeResponseData(response.data['data']),
+        );
         print('Parsed Photos: ${model.photos}');
         return model;
       }
@@ -172,7 +184,9 @@ class MusicianRemoteDataSource implements IMusicianRemoteDataSource {
       );
 
       if (response.data['success'] == true && response.data['data'] != null) {
-        return MusicianApiModel.fromJson(response.data['data']);
+        return MusicianApiModel.fromJson(
+          _normalizeResponseData(response.data['data']),
+        );
       }
 
       throw Exception(response.data['message'] ?? 'Failed to remove photo');
@@ -201,7 +215,9 @@ class MusicianRemoteDataSource implements IMusicianRemoteDataSource {
       );
 
       if (response.data['success'] == true && response.data['data'] != null) {
-        return MusicianApiModel.fromJson(response.data['data']);
+        return MusicianApiModel.fromJson(
+          _normalizeResponseData(response.data['data']),
+        );
       }
 
       throw Exception(response.data['message'] ?? 'Failed to add videos');
@@ -219,7 +235,9 @@ class MusicianRemoteDataSource implements IMusicianRemoteDataSource {
       );
 
       if (response.data['success'] == true && response.data['data'] != null) {
-        return MusicianApiModel.fromJson(response.data['data']);
+        return MusicianApiModel.fromJson(
+          _normalizeResponseData(response.data['data']),
+        );
       }
 
       throw Exception(response.data['message'] ?? 'Failed to remove video');
@@ -248,7 +266,9 @@ class MusicianRemoteDataSource implements IMusicianRemoteDataSource {
       );
 
       if (response.data['success'] == true && response.data['data'] != null) {
-        return MusicianApiModel.fromJson(response.data['data']);
+        return MusicianApiModel.fromJson(
+          _normalizeResponseData(response.data['data']),
+        );
       }
 
       throw Exception(response.data['message'] ?? 'Failed to add audio');
@@ -266,7 +286,9 @@ class MusicianRemoteDataSource implements IMusicianRemoteDataSource {
       );
 
       if (response.data['success'] == true && response.data['data'] != null) {
-        return MusicianApiModel.fromJson(response.data['data']);
+        return MusicianApiModel.fromJson(
+          _normalizeResponseData(response.data['data']),
+        );
       }
 
       throw Exception(response.data['message'] ?? 'Failed to remove audio');
@@ -284,11 +306,34 @@ class MusicianRemoteDataSource implements IMusicianRemoteDataSource {
       );
 
       if (response.data['success'] == true && response.data['data'] != null) {
-        return MusicianApiModel.fromJson(response.data['data']);
+        return MusicianApiModel.fromJson(
+          _normalizeResponseData(response.data['data']),
+        );
       }
 
       throw Exception(
         response.data['message'] ?? 'Failed to update availability',
+      );
+    } on DioException catch (e) {
+      throw Exception(_handleError(e));
+    }
+  }
+
+  @override
+  Future<MusicianApiModel> requestVerification() async {
+    try {
+      final response = await apiClient.patch(
+        ApiEndpoints.musicianRequestVerification,
+      );
+
+      if (response.data['success'] == true && response.data['data'] != null) {
+        return MusicianApiModel.fromJson(
+          _normalizeResponseData(response.data['data']),
+        );
+      }
+
+      throw Exception(
+        response.data['message'] ?? 'Failed to request verification',
       );
     } on DioException catch (e) {
       throw Exception(_handleError(e));
@@ -328,5 +373,26 @@ class MusicianRemoteDataSource implements IMusicianRemoteDataSource {
         return 'An unexpected error occurred. Please try again.';
     }
   }
-}
 
+  Map<String, dynamic> _normalizeResponseData(dynamic data) {
+    final json = Map<String, dynamic>.from(data as Map);
+    json['location'] = _normalizeLocation(json['location']);
+    return json;
+  }
+
+  String _normalizeLocation(dynamic rawLocation) {
+    if (rawLocation is String) {
+      return rawLocation.trim();
+    }
+
+    if (rawLocation is Map) {
+      final city = (rawLocation['city'] ?? '').toString().trim();
+      final state = (rawLocation['state'] ?? '').toString().trim();
+      final country = (rawLocation['country'] ?? '').toString().trim();
+
+      return [city, state, country].where((part) => part.isNotEmpty).join(', ');
+    }
+
+    return '';
+  }
+}
