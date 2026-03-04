@@ -16,9 +16,7 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
   final _stageNameController = TextEditingController();
   final _bioController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _cityController = TextEditingController();
-  final _stateController = TextEditingController();
-  final _countryController = TextEditingController();
+  final _locationController = TextEditingController();
   final _experienceYearsController = TextEditingController();
   final _hourlyRateController = TextEditingController();
 
@@ -56,9 +54,7 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
     _stageNameController.dispose();
     _bioController.dispose();
     _phoneController.dispose();
-    _cityController.dispose();
-    _stateController.dispose();
-    _countryController.dispose();
+    _locationController.dispose();
     _experienceYearsController.dispose();
     _hourlyRateController.dispose();
     super.dispose();
@@ -90,9 +86,7 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
                 ? null
                 : _bioController.text.trim(),
             phone: _phoneController.text.trim(),
-            city: _cityController.text.trim(),
-            stateProvince: _stateController.text.trim(),
-            country: _countryController.text.trim(),
+            location: _locationController.text.trim(),
             genres: _selectedGenres,
             instruments: _selectedInstruments,
             experienceYears: int.parse(_experienceYearsController.text.trim()),
@@ -217,50 +211,16 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
                     const SizedBox(height: 12),
 
                     TextFormField(
-                      controller: _cityController,
+                      controller: _locationController,
                       decoration: const InputDecoration(
-                        labelText: 'City *',
-                        hintText: 'Kathmandu',
+                        labelText: 'Location *',
+                        hintText: 'Kathmandu, Bagmati, Nepal',
                         border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.location_city),
+                        prefixIcon: Icon(Icons.location_on),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter your city';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    TextFormField(
-                      controller: _stateController,
-                      decoration: const InputDecoration(
-                        labelText: 'State/Province *',
-                        hintText: 'Bagmati',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.map),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your state/province';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    TextFormField(
-                      controller: _countryController,
-                      decoration: const InputDecoration(
-                        labelText: 'Country *',
-                        hintText: 'Nepal',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.flag),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your country';
+                          return 'Please enter your location';
                         }
                         return null;
                       },
@@ -419,4 +379,3 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
     );
   }
 }
-
