@@ -11,9 +11,7 @@ class UpdateProfileParams extends Equatable {
   final String? stageName;
   final String? bio;
   final String? phone;
-  final String? city;
-  final String? state;
-  final String? country;
+  final String? location;
   final List<String>? genres;
   final List<String>? instruments;
   final int? experienceYears;
@@ -24,9 +22,7 @@ class UpdateProfileParams extends Equatable {
     this.stageName,
     this.bio,
     this.phone,
-    this.city,
-    this.state,
-    this.country,
+    this.location,
     this.genres,
     this.instruments,
     this.experienceYears,
@@ -40,13 +36,7 @@ class UpdateProfileParams extends Equatable {
     if (stageName != null) data['stageName'] = stageName;
     if (bio != null) data['bio'] = bio;
     if (phone != null) data['phone'] = phone;
-
-    if (city != null || state != null || country != null) {
-      data['location'] = {};
-      if (city != null) data['location']['city'] = city;
-      if (state != null) data['location']['state'] = state;
-      if (country != null) data['location']['country'] = country;
-    }
+    if (location != null) data['location'] = location;
 
     if (genres != null) data['genres'] = genres;
     if (instruments != null) data['instruments'] = instruments;
@@ -62,9 +52,7 @@ class UpdateProfileParams extends Equatable {
     stageName,
     bio,
     phone,
-    city,
-    state,
-    country,
+    location,
     genres,
     instruments,
     experienceYears,
@@ -90,4 +78,3 @@ class UpdateProfileUseCase
     return _repository.updateProfile(params.toJson());
   }
 }
-
