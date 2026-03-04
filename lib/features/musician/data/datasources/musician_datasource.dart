@@ -16,5 +16,5 @@ abstract interface class IMusicianRemoteDataSource {
   Future<MusicianApiModel> addAudio(List<File> files);
   Future<MusicianApiModel> removeAudio(String audioUrl);
   Future<MusicianApiModel> updateAvailability(bool isAvailable);
+  Future<MusicianApiModel> requestVerification();
 }
-
