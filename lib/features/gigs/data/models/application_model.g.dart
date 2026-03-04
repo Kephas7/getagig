@@ -6,9 +6,8 @@ part of 'application_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$ApplicationModelImpl _$$ApplicationModelImplFromJson(
-        Map<String, dynamic> json) =>
-    _$ApplicationModelImpl(
+ApplicationModel _$ApplicationModelFromJson(Map<String, dynamic> json) =>
+    ApplicationModel(
       id: _readId(json, '_id') as String?,
       gigId: json['gigId'] as String?,
       musicianId: json['musicianId'] as String?,
@@ -25,8 +24,7 @@ _$ApplicationModelImpl _$$ApplicationModelImplFromJson(
           : DateTime.parse(json['createdAt'] as String),
     );
 
-Map<String, dynamic> _$$ApplicationModelImplToJson(
-        _$ApplicationModelImpl instance) =>
+Map<String, dynamic> _$ApplicationModelToJson(ApplicationModel instance) =>
     <String, dynamic>{
       '_id': instance.id,
       'gigId': instance.gigId,
