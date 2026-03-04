@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/core/api/api_client.dart';
 import 'package:getagig/core/api/api_endpoints.dart';
@@ -52,9 +55,52 @@ class AuthRemoteDatasource implements IAuthRemoteDataSource {
         token: token,
       );
 
+      try {
+        final deviceToken = await FirebaseMessaging.instance.getToken();
+        if (deviceToken != null && deviceToken.isNotEmpty) {
+          await _apiClient.post(
+            '/auth/me/device-token',
+            data: {'token': deviceToken, 'platform': Platform.operatingSystem},
+          );
+        }
+      } catch (_) {}
+
       return user;
     }
     return null;
+  }
+
+  @override
+  Future<String> forgotPassword(String email) async {
+    final response = await _apiClient.post(
+      ApiEndpoints.forgotPassword,
+      data: {'email': email},
+    );
+
+    if (response.data['success'] == true) {
+      return (response.data['message'] ??
+              'If the email is registered, a reset link has been sent.')
+          .toString();
+    }
+
+    throw Exception(
+      response.data['message'] ?? 'Failed to send password reset link.',
+    );
+  }
+
+  @override
+  Future<String> resetPassword(String token, String password) async {
+    final response = await _apiClient.post(
+      ApiEndpoints.resetPassword(token),
+      data: {'password': password},
+    );
+
+    if (response.data['success'] == true) {
+      return (response.data['message'] ?? 'Password reset successful')
+          .toString();
+    }
+
+    throw Exception(response.data['message'] ?? 'Failed to reset password.');
   }
 
   @override
@@ -74,17 +120,20 @@ class AuthRemoteDatasource implements IAuthRemoteDataSource {
   @override
   Future<AuthApiModel?> getCurrentUser() async {
     try {
-      final response = await _apiClient.get(ApiEndpoints.getCurrentUser);
+      final response = await _apiClient.get(
+        ApiEndpoints.getCurrentUser,
+        options: Options(
+          receiveTimeout: const Duration(seconds: 8),
+          extra: {'disableRetry': true},
+        ),
+      );
 
       if (response.data['success'] == true) {
         final jsonResponse = response.data as Map<String, dynamic>;
         final data = jsonResponse['data'] as Map<String, dynamic>? ?? {};
 
         // Normalize id/_id for current user as well
-        final normalizedData = {
-          ...data,
-          '_id': data['_id'] ?? data['id'],
-        };
+        final normalizedData = {...data, '_id': data['_id'] ?? data['id']};
         final user = AuthApiModel.fromJson(normalizedData);
 
         await _userSessionService.saveUserSession(
