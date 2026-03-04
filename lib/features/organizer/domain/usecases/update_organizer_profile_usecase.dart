@@ -1,9 +1,9 @@
-﻿import 'package:dartz/dartz.dart';
+import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/core/error/failures.dart';
 import 'package:getagig/core/usecases/app_usecase.dart';
-import 'package:getagig/features/organizer/data/repositories/organizer_repository_impl.dart';
+import 'package:getagig/features/organizer/data/repositories/organizer_repository.dart';
 import 'package:getagig/features/organizer/domain/repositories/organizer_repository.dart';
 import '../entities/organizer_entity.dart';
 
@@ -13,9 +13,7 @@ class UpdateOrganizerProfileParams extends Equatable {
   final String? contactPerson;
   final String? phone;
   final String? email;
-  final String? city;
-  final String? state;
-  final String? country;
+  final String? location;
   final String? organizationType;
   final List<String>? eventTypes;
   final String? website;
@@ -26,9 +24,7 @@ class UpdateOrganizerProfileParams extends Equatable {
     this.contactPerson,
     this.phone,
     this.email,
-    this.city,
-    this.state,
-    this.country,
+    this.location,
     this.organizationType,
     this.eventTypes,
     this.website,
@@ -42,13 +38,7 @@ class UpdateOrganizerProfileParams extends Equatable {
     if (contactPerson != null) data['contactPerson'] = contactPerson;
     if (phone != null) data['phone'] = phone;
     if (email != null) data['email'] = email;
-
-    if (city != null || state != null || country != null) {
-      data['location'] = {};
-      if (city != null) data['location']['city'] = city;
-      if (state != null) data['location']['state'] = state;
-      if (country != null) data['location']['country'] = country;
-    }
+    if (location != null) data['location'] = location;
 
     if (organizationType != null) data['organizationType'] = organizationType;
     if (eventTypes != null) data['eventTypes'] = eventTypes;
@@ -64,19 +54,18 @@ class UpdateOrganizerProfileParams extends Equatable {
     contactPerson,
     phone,
     email,
-    city,
-    state,
-    country,
+    location,
     organizationType,
     eventTypes,
     website,
   ];
 }
 
-final updateOrganizerProfileUseCaseProvider = Provider<UpdateOrganizerProfileUseCase>((ref) {
-  final repository = ref.read(organizerRepositoryProvider);
-  return UpdateOrganizerProfileUseCase(repository: repository);
-});
+final updateOrganizerProfileUseCaseProvider =
+    Provider<UpdateOrganizerProfileUseCase>((ref) {
+      final repository = ref.read(organizerRepositoryProvider);
+      return UpdateOrganizerProfileUseCase(repository: repository);
+    });
 
 class UpdateOrganizerProfileUseCase
     implements UsecaseWithParms<OrganizerEntity, UpdateOrganizerProfileParams> {
@@ -86,9 +75,9 @@ class UpdateOrganizerProfileUseCase
     : _repository = repository;
 
   @override
-  Future<Either<Failure, OrganizerEntity>> call(UpdateOrganizerProfileParams params) {
+  Future<Either<Failure, OrganizerEntity>> call(
+    UpdateOrganizerProfileParams params,
+  ) {
     return _repository.updateProfile(params.toJson());
   }
 }
-
-
