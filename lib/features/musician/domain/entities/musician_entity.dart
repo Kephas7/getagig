@@ -7,7 +7,7 @@ class MusicianEntity extends Equatable {
   final String? profilePicture;
   final String? bio;
   final String phone;
-  final Map<String, dynamic> location;
+  final String location;
   final List<String> genres;
   final List<String> instruments;
   final int experienceYears;
@@ -15,18 +15,11 @@ class MusicianEntity extends Equatable {
   final List<String> photos;
   final List<String> videos;
   final List<String> audioSamples;
+  final bool isVerified;
+  final bool verificationRequested;
   final bool isAvailable;
   final String createdAt;
   final String updatedAt;
-
-  String getLocationValue(String key, [String defaultValue = '']) {
-    try {
-      final value = location[key];
-      return value?.toString() ?? defaultValue;
-    } catch (e) {
-      return defaultValue;
-    }
-  }
 
   const MusicianEntity({
     required this.id,
@@ -43,6 +36,8 @@ class MusicianEntity extends Equatable {
     required this.photos,
     required this.videos,
     required this.audioSamples,
+    required this.isVerified,
+    required this.verificationRequested,
     required this.isAvailable,
     required this.createdAt,
     required this.updatedAt,
@@ -64,9 +59,10 @@ class MusicianEntity extends Equatable {
     photos,
     videos,
     audioSamples,
+    isVerified,
+    verificationRequested,
     isAvailable,
     createdAt,
     updatedAt,
   ];
 }
-
