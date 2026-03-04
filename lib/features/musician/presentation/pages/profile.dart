@@ -173,6 +173,52 @@ class _ProfileState extends ConsumerState<Profile> {
     );
   }
 
+  Future<void> _requestMusicianVerification() async {
+    await ref
+        .read(musicianProfileViewModelProvider.notifier)
+        .requestVerification();
+
+    if (!mounted) return;
+    final nextState = ref.read(musicianProfileViewModelProvider);
+    if (nextState.status == MusicianProfileStatus.error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            nextState.errorMessage ?? 'Failed to request verification',
+          ),
+        ),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Verification request sent to admin')),
+    );
+  }
+
+  Future<void> _requestOrganizerVerification() async {
+    await ref
+        .read(organizerProfileViewModelProvider.notifier)
+        .requestVerification();
+
+    if (!mounted) return;
+    final nextState = ref.read(organizerProfileViewModelProvider);
+    if (nextState.status == OrganizerProfileStatus.error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            nextState.errorMessage ?? 'Failed to request verification',
+          ),
+        ),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Verification request sent to admin')),
+    );
+  }
+
   Widget _buildProfileAvatar(
     dynamic user,
     MusicianProfileState musicianState,
@@ -229,6 +275,8 @@ class _ProfileState extends ConsumerState<Profile> {
         const SizedBox(height: 12),
 
         _buildMusicianProfileStatusCard(musicianState),
+        const SizedBox(height: 12),
+        _buildMusicianVerificationCard(musicianState),
       ],
     );
   }
@@ -263,7 +311,197 @@ class _ProfileState extends ConsumerState<Profile> {
         const SizedBox(height: 12),
 
         _buildOrganizerProfileStatusCard(organizerState),
+        const SizedBox(height: 12),
+        _buildOrganizerVerificationCard(organizerState),
       ],
+    );
+  }
+
+  Widget _buildMusicianVerificationCard(MusicianProfileState musicianState) {
+    final profile = musicianState.profile;
+    if (profile == null) {
+      return const SizedBox.shrink();
+    }
+
+    final isVerified = profile.isVerified;
+    final isRequested = profile.verificationRequested;
+    final isLoading = musicianState.status == MusicianProfileStatus.loading;
+
+    String statusText;
+    Color statusColor;
+    if (isVerified) {
+      statusText = 'Verified';
+      statusColor = Colors.green;
+    } else if (isRequested) {
+      statusText = 'Pending';
+      statusColor = Colors.orange;
+    } else {
+      statusText = 'Not Requested';
+      statusColor = Colors.grey;
+    }
+
+    return Card(
+      elevation: 1,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.verified_outlined, color: Colors.purple),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text(
+                    'Verification Status',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    statusText,
+                    style: TextStyle(
+                      color: statusColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              isVerified
+                  ? 'Your profile is verified and trusted by organizers.'
+                  : isRequested
+                  ? 'Your verification request is under review by admin.'
+                  : 'Request verification to increase trust and improve your profile visibility.',
+              style: TextStyle(color: Colors.grey[700], fontSize: 13),
+            ),
+            if (!isVerified && !isRequested) ...[
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: isLoading ? null : _requestMusicianVerification,
+                  icon: isLoading
+                      ? const SizedBox(
+                          height: 16,
+                          width: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.verified_user_outlined),
+                  label: Text(
+                    isLoading ? 'Requesting...' : 'Request Verification',
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOrganizerVerificationCard(OrganizerProfileState organizerState) {
+    final profile = organizerState.profile;
+    if (profile == null) {
+      return const SizedBox.shrink();
+    }
+
+    final isVerified = profile.isVerified;
+    final isRequested = profile.verificationRequested;
+    final isLoading = organizerState.status == OrganizerProfileStatus.loading;
+
+    String statusText;
+    Color statusColor;
+    if (isVerified) {
+      statusText = 'Verified';
+      statusColor = Colors.green;
+    } else if (isRequested) {
+      statusText = 'Pending';
+      statusColor = Colors.orange;
+    } else {
+      statusText = 'Not Requested';
+      statusColor = Colors.grey;
+    }
+
+    return Card(
+      elevation: 1,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.verified_outlined, color: Colors.blue),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text(
+                    'Verification Status',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    statusText,
+                    style: TextStyle(
+                      color: statusColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              isVerified
+                  ? 'Your organization is verified and can post gigs.'
+                  : isRequested
+                  ? 'Your verification request is under review by admin.'
+                  : 'Request verification to post gigs and increase trust with musicians.',
+              style: TextStyle(color: Colors.grey[700], fontSize: 13),
+            ),
+            if (!isVerified && !isRequested) ...[
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: isLoading ? null : _requestOrganizerVerification,
+                  icon: isLoading
+                      ? const SizedBox(
+                          height: 16,
+                          width: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.verified_user_outlined),
+                  label: Text(
+                    isLoading ? 'Requesting...' : 'Request Verification',
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -352,7 +590,9 @@ class _ProfileState extends ConsumerState<Profile> {
     }
   }
 
-  Widget _buildOrganizerProfileStatusCard(OrganizerProfileState organizerState) {
+  Widget _buildOrganizerProfileStatusCard(
+    OrganizerProfileState organizerState,
+  ) {
     switch (organizerState.status) {
       case OrganizerProfileStatus.loading:
         return _buildLoadingCard('Loading organizer profile...');
@@ -710,4 +950,3 @@ class _ProfileState extends ConsumerState<Profile> {
     );
   }
 }
-
