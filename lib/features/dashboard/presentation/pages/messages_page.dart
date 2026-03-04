@@ -1,7 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/features/auth/presentation/view_model/auth_viewmodel.dart';
-import 'package:getagig/features/dashboard/presentation/view_model/conversations_provider.dart';
+import 'package:getagig/features/dashboard/presentation/view_model/conversations_viewmodel.dart';
 import 'package:getagig/features/dashboard/presentation/pages/chat_page.dart';
 
 class MessagesPage extends ConsumerWidget {
