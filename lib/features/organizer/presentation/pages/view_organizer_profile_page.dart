@@ -7,6 +7,7 @@ import 'package:getagig/features/organizer/presentation/view_model/organizer_vie
 import 'package:getagig/core/services/permissions/file_picker_service.dart';
 import 'package:getagig/core/api/api_endpoints.dart';
 import 'package:getagig/features/organizer/domain/entities/organizer_entity.dart';
+import 'package:getagig/features/gigs/presentation/pages/create_gig_page.dart';
 import 'edit_organizer_profile_page.dart';
 
 class ViewOrganizerProfilePage extends ConsumerStatefulWidget {
@@ -14,10 +15,12 @@ class ViewOrganizerProfilePage extends ConsumerStatefulWidget {
   const ViewOrganizerProfilePage({super.key, this.organizerId});
 
   @override
-  ConsumerState<ViewOrganizerProfilePage> createState() => _ViewOrganizerProfilePageState();
+  ConsumerState<ViewOrganizerProfilePage> createState() =>
+      _ViewOrganizerProfilePageState();
 }
 
-class _ViewOrganizerProfilePageState extends ConsumerState<ViewOrganizerProfilePage> {
+class _ViewOrganizerProfilePageState
+    extends ConsumerState<ViewOrganizerProfilePage> {
   @override
   void initState() {
     super.initState();
@@ -110,7 +113,28 @@ class _ViewOrganizerProfilePageState extends ConsumerState<ViewOrganizerProfileP
 
   void _showError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _requestVerification() async {
+    if (widget.organizerId != null) return;
+
+    await ref
+        .read(organizerProfileViewModelProvider.notifier)
+        .requestVerification();
+
+    if (!mounted) return;
+    final nextState = ref.read(organizerProfileViewModelProvider);
+    if (nextState.status == OrganizerProfileStatus.error) {
+      _showError(nextState.errorMessage ?? 'Failed to request verification');
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Verification request sent to admin')),
+    );
   }
 
   @override
@@ -142,8 +166,9 @@ class _ViewOrganizerProfilePageState extends ConsumerState<ViewOrganizerProfileP
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        EditOrganizerProfilePage(organizer: profileState.profile!),
+                    builder: (context) => EditOrganizerProfilePage(
+                      organizer: profileState.profile!,
+                    ),
                   ),
                 );
               },
@@ -227,9 +252,10 @@ class _ViewOrganizerProfilePageState extends ConsumerState<ViewOrganizerProfileP
   }
 
   Widget _buildProfileContent(OrganizerEntity organizer) {
-    final city = organizer.location['city'] ?? 'N/A';
-    final country = organizer.location['country'] ?? 'N/A';
-    
+    final locationText = organizer.location.trim().isEmpty
+        ? 'N/A'
+        : organizer.location.trim();
+
     return RefreshIndicator(
       onRefresh: () async {
         if (widget.organizerId != null) {
@@ -252,10 +278,7 @@ class _ViewOrganizerProfilePageState extends ConsumerState<ViewOrganizerProfileP
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [
-                    Colors.blue[700]!,
-                    Colors.blue[400]!,
-                  ],
+                  colors: [Colors.blue[700]!, Colors.blue[400]!],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -275,7 +298,11 @@ class _ViewOrganizerProfilePageState extends ConsumerState<ViewOrganizerProfileP
                               )
                             : null,
                         child: organizer.profilePicture == null
-                            ? const Icon(Icons.business, size: 60, color: Colors.blue)
+                            ? const Icon(
+                                Icons.business,
+                                size: 60,
+                                color: Colors.blue,
+                              )
                             : null,
                       ),
                       if (widget.organizerId == null)
@@ -289,7 +316,10 @@ class _ViewOrganizerProfilePageState extends ConsumerState<ViewOrganizerProfileP
                               decoration: BoxDecoration(
                                 color: Colors.blue,
                                 shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white, width: 2),
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2,
+                                ),
                               ),
                               child: const Icon(
                                 Icons.camera_alt,
@@ -315,14 +345,72 @@ class _ViewOrganizerProfilePageState extends ConsumerState<ViewOrganizerProfileP
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.location_on, color: Colors.white70, size: 16),
+                      const Icon(
+                        Icons.location_on,
+                        color: Colors.white70,
+                        size: 16,
+                      ),
                       const SizedBox(width: 4),
                       Text(
-                        '$city, $country',
+                        locationText,
                         style: const TextStyle(color: Colors.white70),
                       ),
                     ],
                   ),
+                  if (organizer.isVerified ||
+                      organizer.verificationRequested) ...[
+                    const SizedBox(height: 14),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.verified_rounded,
+                            size: 16,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            organizer.isVerified
+                                ? 'VERIFIED ORGANIZER'
+                                : 'VERIFICATION PENDING',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.7,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  if (widget.organizerId == null &&
+                      !organizer.isVerified &&
+                      !organizer.verificationRequested) ...[
+                    const SizedBox(height: 14),
+                    OutlinedButton.icon(
+                      onPressed: _requestVerification,
+                      icon: const Icon(Icons.verified_user_outlined, size: 18),
+                      label: const Text('Request Verification'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        side: const BorderSide(color: Colors.white),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -332,6 +420,72 @@ class _ViewOrganizerProfilePageState extends ConsumerState<ViewOrganizerProfileP
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (widget.organizerId == null) ...[
+                    _buildSectionTitle('Post Gig Access'),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.verified_outlined,
+                                  color: Colors.blue,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  organizer.isVerified
+                                      ? 'Verified Organizer'
+                                      : organizer.verificationRequested
+                                      ? 'Verification Under Review'
+                                      : 'Verification Required',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              organizer.isVerified
+                                  ? 'You can post gigs and hire top musical talent on Get-a-Gig.'
+                                  : organizer.verificationRequested
+                                  ? "Your verification request has been sent to admin. We'll notify you once reviewed."
+                                  : 'Request verification to increase trust and improve your hiring visibility.',
+                              style: TextStyle(
+                                color: Colors.grey[700],
+                                height: 1.4,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: organizer.isVerified
+                                    ? () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const CreateGigPage(),
+                                          ),
+                                        );
+                                      }
+                                    : null,
+                                icon: const Icon(Icons.add_circle_outline),
+                                label: const Text('Post a Gig'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+
                   // About Section
                   if (organizer.bio != null && organizer.bio!.isNotEmpty) ...[
                     _buildSectionTitle('About'),
@@ -369,7 +523,8 @@ class _ViewOrganizerProfilePageState extends ConsumerState<ViewOrganizerProfileP
                           title: const Text('Email'),
                           subtitle: Text(organizer.email),
                         ),
-                        if (organizer.website != null && organizer.website!.isNotEmpty) ...[
+                        if (organizer.website != null &&
+                            organizer.website!.isNotEmpty) ...[
                           const Divider(height: 1),
                           ListTile(
                             leading: const Icon(Icons.language),
@@ -449,7 +604,9 @@ class _ViewOrganizerProfilePageState extends ConsumerState<ViewOrganizerProfileP
                     child: ListTile(
                       leading: const Icon(Icons.verified_user),
                       title: const Text('Documents'),
-                      subtitle: Text('${organizer.verificationDocuments.length} files uploaded'),
+                      subtitle: Text(
+                        '${organizer.verificationDocuments.length} files uploaded',
+                      ),
                       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                       onTap: () {
                         // Navigate to handle documents
@@ -538,4 +695,3 @@ class _ViewOrganizerProfilePageState extends ConsumerState<ViewOrganizerProfileP
     );
   }
 }
-
