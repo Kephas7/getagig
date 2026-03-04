@@ -15,5 +15,5 @@ abstract class IOrganizerRemoteDataSource {
   Future<OrganizerApiModel> addVerificationDocuments(List<File> files);
   Future<OrganizerApiModel> removeVerificationDocument(String documentUrl);
   Future<OrganizerApiModel> updateActiveStatus(bool isActive);
+  Future<OrganizerApiModel> requestVerification();
 }
-
