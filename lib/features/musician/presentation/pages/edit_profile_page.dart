@@ -1,11 +1,8 @@
-﻿
-
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/features/musician/presentation/state/musician_state.dart';
 import 'package:getagig/features/musician/presentation/view_model/musician_viewmodel.dart';
 import '../../domain/entities/musician_entity.dart';
-
 
 class EditProfilePage extends ConsumerStatefulWidget {
   final MusicianEntity musician;
@@ -18,66 +15,61 @@ class EditProfilePage extends ConsumerStatefulWidget {
 
 class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
-  
+
   late TextEditingController _stageNameController;
   late TextEditingController _bioController;
   late TextEditingController _phoneController;
-  late TextEditingController _cityController;
-  late TextEditingController _stateController;
-  late TextEditingController _countryController;
+  late TextEditingController _locationController;
   late TextEditingController _experienceYearsController;
   late TextEditingController _hourlyRateController;
-  
+
   late List<String> _selectedGenres;
   late List<String> _selectedInstruments;
-  
+
   final List<String> _availableGenres = [
-    'Rock', 'Jazz', 'Classical', 'Pop', 'Hip Hop', 
-    'Blues', 'Country', 'Electronic', 'Folk', 'Metal'
-  ];
-  
-  final List<String> _availableInstruments = [
-    'Guitar', 'Piano', 'Drums', 'Bass', 'Violin',
-    'Saxophone', 'Trumpet', 'Flute', 'Vocals', 'Keyboard'
+    'Rock',
+    'Jazz',
+    'Classical',
+    'Pop',
+    'Hip Hop',
+    'Blues',
+    'Country',
+    'Electronic',
+    'Folk',
+    'Metal',
   ];
 
-  
-  String _getLocationValue(Map<String, dynamic>? location, String key, [String defaultValue = '']) {
-    if (location == null) return defaultValue;
-    try {
-      final value = location[key];
-      return value?.toString() ?? defaultValue;
-    } catch (e) {
-      print('Error accessing location[$key]: $e');
-      return defaultValue;
-    }
-  }
+  final List<String> _availableInstruments = [
+    'Guitar',
+    'Piano',
+    'Drums',
+    'Bass',
+    'Violin',
+    'Saxophone',
+    'Trumpet',
+    'Flute',
+    'Vocals',
+    'Keyboard',
+  ];
 
   @override
   void initState() {
     super.initState();
-    _stageNameController = TextEditingController(text: widget.musician.stageName);
+    _stageNameController = TextEditingController(
+      text: widget.musician.stageName,
+    );
     _bioController = TextEditingController(text: widget.musician.bio ?? '');
     _phoneController = TextEditingController(text: widget.musician.phone);
-    
-    
-    _cityController = TextEditingController(
-      text: _getLocationValue(widget.musician.location, 'city')
-    );
-    _stateController = TextEditingController(
-      text: _getLocationValue(widget.musician.location, 'state')
-    );
-    _countryController = TextEditingController(
-      text: _getLocationValue(widget.musician.location, 'country')
-    );
-    
+
+    _locationController = TextEditingController(text: widget.musician.location);
+
     _experienceYearsController = TextEditingController(
       text: widget.musician.experienceYears.toString(),
     );
     _hourlyRateController = TextEditingController(
       text: widget.musician.hourlyRate?.toString() ?? '',
     );
-    
+
     _selectedGenres = List.from(widget.musician.genres);
     _selectedInstruments = List.from(widget.musician.instruments);
   }
@@ -87,9 +79,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     _stageNameController.dispose();
     _bioController.dispose();
     _phoneController.dispose();
-    _cityController.dispose();
-    _stateController.dispose();
-    _countryController.dispose();
+    _locationController.dispose();
     _experienceYearsController.dispose();
     _hourlyRateController.dispose();
     super.dispose();
@@ -103,28 +93,32 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         );
         return;
       }
-      
+
       if (_selectedInstruments.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select at least one instrument')),
+          const SnackBar(
+            content: Text('Please select at least one instrument'),
+          ),
         );
         return;
       }
 
-      ref.read(musicianProfileViewModelProvider.notifier).updateProfile(
-        stageName: _stageNameController.text.trim(),
-        bio: _bioController.text.trim().isEmpty ? null : _bioController.text.trim(),
-        phone: _phoneController.text.trim(),
-        city: _cityController.text.trim(),
-        stateProvince: _stateController.text.trim(),
-        country: _countryController.text.trim(),
-        genres: _selectedGenres,
-        instruments: _selectedInstruments,
-        experienceYears: int.parse(_experienceYearsController.text.trim()),
-        hourlyRate: _hourlyRateController.text.trim().isEmpty 
-            ? null 
-            : double.parse(_hourlyRateController.text.trim()),
-      );
+      ref
+          .read(musicianProfileViewModelProvider.notifier)
+          .updateProfile(
+            stageName: _stageNameController.text.trim(),
+            bio: _bioController.text.trim().isEmpty
+                ? null
+                : _bioController.text.trim(),
+            phone: _phoneController.text.trim(),
+            location: _locationController.text.trim(),
+            genres: _selectedGenres,
+            instruments: _selectedInstruments,
+            experienceYears: int.parse(_experienceYearsController.text.trim()),
+            hourlyRate: _hourlyRateController.text.trim().isEmpty
+                ? null
+                : double.parse(_hourlyRateController.text.trim()),
+          );
     }
   }
 
@@ -132,27 +126,24 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   Widget build(BuildContext context) {
     final profileState = ref.watch(musicianProfileViewModelProvider);
 
-    ref.listen<MusicianProfileState>(
-      musicianProfileViewModelProvider,
-      (previous, next) {
-        if (next.status == MusicianProfileStatus.updated) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile updated successfully!')),
-          );
-          Navigator.pop(context);
-        } else if (next.status == MusicianProfileStatus.error) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(next.errorMessage ?? 'An error occurred')),
-          );
-        }
-      },
-    );
+    ref.listen<MusicianProfileState>(musicianProfileViewModelProvider, (
+      previous,
+      next,
+    ) {
+      if (next.status == MusicianProfileStatus.updated) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile updated successfully!')),
+        );
+        Navigator.pop(context);
+      } else if (next.status == MusicianProfileStatus.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(next.errorMessage ?? 'An error occurred')),
+        );
+      }
+    });
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Profile'),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('Edit Profile'), elevation: 0),
       body: profileState.status == MusicianProfileStatus.loading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -162,7 +153,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    
                     TextFormField(
                       controller: _stageNameController,
                       decoration: const InputDecoration(
@@ -179,7 +169,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     ),
                     const SizedBox(height: 16),
 
-                    
                     TextFormField(
                       controller: _bioController,
                       decoration: const InputDecoration(
@@ -193,7 +182,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     ),
                     const SizedBox(height: 16),
 
-                    
                     TextFormField(
                       controller: _phoneController,
                       decoration: const InputDecoration(
@@ -211,7 +199,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     ),
                     const SizedBox(height: 24),
 
-                    
                     const Text(
                       'Location',
                       style: TextStyle(
@@ -221,61 +208,28 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     ),
                     const SizedBox(height: 12),
 
-                    
                     TextFormField(
-                      controller: _cityController,
+                      controller: _locationController,
                       decoration: const InputDecoration(
-                        labelText: 'City *',
+                        labelText: 'Location *',
                         border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.location_city),
+                        prefixIcon: Icon(Icons.location_on),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter your city';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    
-                    TextFormField(
-                      controller: _stateController,
-                      decoration: const InputDecoration(
-                        labelText: 'State/Province *',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.map),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your state/province';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    
-                    TextFormField(
-                      controller: _countryController,
-                      decoration: const InputDecoration(
-                        labelText: 'Country *',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.flag),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your country';
+                          return 'Please enter your location';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 24),
 
-                    
                     const Text(
                       'Genres *',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Wrap(
@@ -295,23 +249,29 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                               }
                             });
                           },
-                          selectedColor: Theme.of(context).primaryColor.withOpacity(0.3),
+                          selectedColor: Theme.of(
+                            context,
+                          ).primaryColor.withOpacity(0.3),
                         );
                       }).toList(),
                     ),
                     const SizedBox(height: 24),
 
-                    
                     const Text(
                       'Instruments *',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
                       runSpacing: 4,
                       children: _availableInstruments.map((instrument) {
-                        final isSelected = _selectedInstruments.contains(instrument);
+                        final isSelected = _selectedInstruments.contains(
+                          instrument,
+                        );
                         return FilterChip(
                           label: Text(instrument),
                           selected: isSelected,
@@ -330,7 +290,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     ),
                     const SizedBox(height: 24),
 
-                    
                     TextFormField(
                       controller: _experienceYearsController,
                       decoration: const InputDecoration(
@@ -351,7 +310,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     ),
                     const SizedBox(height: 16),
 
-                    
                     TextFormField(
                       controller: _hourlyRateController,
                       decoration: const InputDecoration(
@@ -372,10 +330,10 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     ),
                     const SizedBox(height: 32),
 
-                    
                     ElevatedButton(
-                      onPressed: profileState.status == MusicianProfileStatus.loading 
-                          ? null 
+                      onPressed:
+                          profileState.status == MusicianProfileStatus.loading
+                          ? null
                           : _updateProfile,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -383,18 +341,24 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: profileState.status == MusicianProfileStatus.loading
+                      child:
+                          profileState.status == MusicianProfileStatus.loading
                           ? const SizedBox(
                               height: 20,
                               width: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
                               ),
                             )
                           : const Text(
                               'Update Profile',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                     ),
                   ],
@@ -404,4 +368,3 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     );
   }
 }
-
