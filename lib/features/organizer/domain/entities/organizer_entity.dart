@@ -9,7 +9,7 @@ class OrganizerEntity extends Equatable {
   final String contactPerson;
   final String phone;
   final String email;
-  final Map<String, dynamic> location;
+  final String location;
   final String organizationType;
   final List<String> eventTypes;
   final List<String> verificationDocuments;
@@ -17,18 +17,10 @@ class OrganizerEntity extends Equatable {
   final List<String> photos;
   final List<String> videos;
   final bool isVerified;
+  final bool verificationRequested;
   final bool isActive;
   final String createdAt;
   final String updatedAt;
-
-  String getLocationValue(String key, [String defaultValue = '']) {
-    try {
-      final value = location[key];
-      return value?.toString() ?? defaultValue;
-    } catch (e) {
-      return defaultValue;
-    }
-  }
 
   const OrganizerEntity({
     required this.id,
@@ -47,6 +39,7 @@ class OrganizerEntity extends Equatable {
     required this.photos,
     required this.videos,
     required this.isVerified,
+    required this.verificationRequested,
     required this.isActive,
     required this.createdAt,
     required this.updatedAt,
@@ -54,25 +47,25 @@ class OrganizerEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        userId,
-        organizationName,
-        profilePicture,
-        bio,
-        contactPerson,
-        phone,
-        email,
-        location,
-        organizationType,
-        eventTypes,
-        verificationDocuments,
-        website,
-        photos,
-        videos,
-        isVerified,
-        isActive,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    userId,
+    organizationName,
+    profilePicture,
+    bio,
+    contactPerson,
+    phone,
+    email,
+    location,
+    organizationType,
+    eventTypes,
+    verificationDocuments,
+    website,
+    photos,
+    videos,
+    isVerified,
+    verificationRequested,
+    isActive,
+    createdAt,
+    updatedAt,
+  ];
 }
-
