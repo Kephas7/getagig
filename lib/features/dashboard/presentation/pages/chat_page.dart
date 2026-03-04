@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/features/auth/presentation/view_model/auth_viewmodel.dart';
-import 'package:getagig/features/dashboard/presentation/view_model/chat_provider.dart';
+import 'package:getagig/features/dashboard/presentation/view_model/chat_viewmodel.dart';
 
 class ChatPage extends ConsumerStatefulWidget {
   final String conversationId;
