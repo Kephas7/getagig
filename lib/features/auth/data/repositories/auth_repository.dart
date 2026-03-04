@@ -42,35 +42,79 @@ class AuthRepository implements IAuthRepository {
     String email,
     String password,
   ) async {
+    try {
+      final apiModel = await _authRemoteDataSource.login(email, password);
+      if (apiModel != null) {
+        final entity = apiModel.toEntity();
+        return Right(entity);
+      }
+
+      return const Left(ApiFailure(message: "Invalid credentials."));
+    } on DioException catch (e) {
+      final isConnectionIssue =
+          e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.sendTimeout ||
+          e.type == DioExceptionType.receiveTimeout ||
+          e.type == DioExceptionType.connectionError;
+
+      if (isConnectionIssue) {
+        try {
+          final model = await _authLocalDataSource.login(email, password);
+          if (model != null) {
+            return Right(model.toEntity());
+          }
+        } catch (_) {}
+      }
+
+      return Left(ApiFailure.fromDioException(e, fallback: 'Login failed.'));
+    } catch (e) {
+      return Left(ApiFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> forgotPassword(String email) async {
     if (await _networkInfo.isConnected) {
       try {
-        final apiModel = await _authRemoteDataSource.login(email, password);
-        if (apiModel != null) {
-          // Token is automatically saved by ApiClient interceptor
-          final entity = apiModel.toEntity();
-          return Right(entity);
-        }
-        return const Left(ApiFailure(message: "Invalid credentials."));
+        final message = await _authRemoteDataSource.forgotPassword(email);
+        return Right(message);
       } on DioException catch (e) {
-        return Left(ApiFailure.fromDioException(e, fallback: 'Login failed.'));
+        return Left(
+          ApiFailure.fromDioException(
+            e,
+            fallback: 'Failed to send password reset link.',
+          ),
+        );
       } catch (e) {
         return Left(ApiFailure(message: e.toString()));
       }
-    } else {
+    }
+
+    return const Left(ApiFailure(message: 'No internet connection.'));
+  }
+
+  @override
+  Future<Either<Failure, String>> resetPassword(
+    String token,
+    String password,
+  ) async {
+    if (await _networkInfo.isConnected) {
       try {
-        final model = await _authLocalDataSource.login(email, password);
-
-        if (model == null) {
-          return const Left(
-            LocalDatabaseFailure(message: "Invalid email or password."),
-          );
-        }
-
-        return Right(model.toEntity());
+        final message = await _authRemoteDataSource.resetPassword(
+          token,
+          password,
+        );
+        return Right(message);
+      } on DioException catch (e) {
+        return Left(
+          ApiFailure.fromDioException(e, fallback: 'Failed to reset password.'),
+        );
       } catch (e) {
-        return Left(LocalDatabaseFailure(message: e.toString()));
+        return Left(ApiFailure(message: e.toString()));
       }
     }
+
+    return const Left(ApiFailure(message: 'No internet connection.'));
   }
 
   @override
@@ -81,7 +125,9 @@ class AuthRepository implements IAuthRepository {
         await _authRemoteDataSource.register(apiModel);
         return const Right(true);
       } on DioException catch (e) {
-        return Left(ApiFailure.fromDioException(e, fallback: 'Registration failed.'));
+        return Left(
+          ApiFailure.fromDioException(e, fallback: 'Registration failed.'),
+        );
       } catch (e) {
         return Left(ApiFailure(message: e.toString()));
       }
@@ -126,7 +172,9 @@ class AuthRepository implements IAuthRepository {
 
         return Right(apiModel.toEntity());
       } on DioException catch (e) {
-        return Left(ApiFailure.fromDioException(e, fallback: 'Failed to fetch user.'));
+        return Left(
+          ApiFailure.fromDioException(e, fallback: 'Failed to fetch user.'),
+        );
       } catch (e) {
         return Left(ApiFailure(message: e.toString()));
       }
@@ -155,5 +203,3 @@ class AuthRepository implements IAuthRepository {
     }
   }
 }
-
-
