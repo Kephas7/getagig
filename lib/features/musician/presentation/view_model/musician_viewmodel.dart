@@ -14,6 +14,7 @@ import '../../domain/usecases/remove_video_usecase.dart';
 import '../../domain/usecases/add_audio_usecase.dart';
 import '../../domain/usecases/remove_audio_usecase.dart';
 import '../../domain/usecases/update_availability_usecase.dart';
+import '../../domain/usecases/request_verification_usecase.dart';
 
 final musicianProfileViewModelProvider =
     NotifierProvider<MusicianProfileViewModel, MusicianProfileState>(
@@ -34,6 +35,7 @@ class MusicianProfileViewModel extends Notifier<MusicianProfileState> {
   late final AddAudioUseCase _addAudioUseCase;
   late final RemoveAudioUseCase _removeAudioUseCase;
   late final UpdateAvailabilityUseCase _updateAvailabilityUseCase;
+  late final RequestVerificationUseCase _requestVerificationUseCase;
 
   @override
   MusicianProfileState build() {
@@ -52,6 +54,7 @@ class MusicianProfileViewModel extends Notifier<MusicianProfileState> {
     _addAudioUseCase = ref.read(addAudioUseCaseProvider);
     _removeAudioUseCase = ref.read(removeAudioUseCaseProvider);
     _updateAvailabilityUseCase = ref.read(updateAvailabilityUseCaseProvider);
+    _requestVerificationUseCase = ref.read(requestVerificationUseCaseProvider);
     return const MusicianProfileState();
   }
 
@@ -59,9 +62,7 @@ class MusicianProfileViewModel extends Notifier<MusicianProfileState> {
     required String stageName,
     String? bio,
     required String phone,
-    required String city,
-    required String stateProvince,
-    required String country,
+    required String location,
     required List<String> genres,
     required List<String> instruments,
     required int experienceYears,
@@ -75,9 +76,7 @@ class MusicianProfileViewModel extends Notifier<MusicianProfileState> {
         stageName: stageName,
         bio: bio,
         phone: phone,
-        city: city,
-        state: stateProvince,
-        country: country,
+        location: location,
         genres: genres,
         instruments: instruments,
         experienceYears: experienceYears,
@@ -167,9 +166,7 @@ class MusicianProfileViewModel extends Notifier<MusicianProfileState> {
     String? stageName,
     String? bio,
     String? phone,
-    String? city,
-    String? stateProvince,
-    String? country,
+    String? location,
     List<String>? genres,
     List<String>? instruments,
     int? experienceYears,
@@ -183,9 +180,7 @@ class MusicianProfileViewModel extends Notifier<MusicianProfileState> {
         stageName: stageName,
         bio: bio,
         phone: phone,
-        city: city,
-        state: stateProvince,
-        country: country,
+        location: location,
         genres: genres,
         instruments: instruments,
         experienceYears: experienceYears,
@@ -398,6 +393,26 @@ class MusicianProfileViewModel extends Notifier<MusicianProfileState> {
     );
   }
 
+  Future<void> requestVerification() async {
+    state = state.copyWith(status: MusicianProfileStatus.loading);
+
+    final result = await _requestVerificationUseCase();
+
+    result.fold(
+      (failure) => state = state.copyWith(
+        status: MusicianProfileStatus.error,
+        errorMessage: failure.message,
+      ),
+      (profile) {
+        state = state.copyWith(
+          status: MusicianProfileStatus.updated,
+          profile: profile,
+          errorMessage: null,
+        );
+      },
+    );
+  }
+
   void clearError() {
     state = state.copyWith(errorMessage: null);
   }
@@ -414,4 +429,3 @@ class MusicianProfileViewModel extends Notifier<MusicianProfileState> {
     );
   }
 }
-
