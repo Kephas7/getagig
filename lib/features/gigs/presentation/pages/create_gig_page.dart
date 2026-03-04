@@ -1,7 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../view_model/organizer_gigs_provider.dart';
+import '../view_model/organizer_gigs_viewmodel.dart';
 
 class CreateGigPage extends ConsumerStatefulWidget {
   const CreateGigPage({super.key});
@@ -12,17 +12,16 @@ class CreateGigPage extends ConsumerStatefulWidget {
 
 class _CreateGigPageState extends ConsumerState<CreateGigPage> {
   final _formKey = GlobalKey<FormState>();
-  
+
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _cityController = TextEditingController();
-  final _stateController = TextEditingController();
-  final _countryController = TextEditingController();
+  final _locationController = TextEditingController();
   final _payRateController = TextEditingController();
   final _eventTypeController = TextEditingController();
   final _genresController = TextEditingController();
   final _instrumentsController = TextEditingController();
-  
+
+  DateTime? _eventDate;
   DateTime? _deadline;
   bool _isLoading = false;
 
@@ -30,9 +29,7 @@ class _CreateGigPageState extends ConsumerState<CreateGigPage> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
-    _cityController.dispose();
-    _stateController.dispose();
-    _countryController.dispose();
+    _locationController.dispose();
     _payRateController.dispose();
     _eventTypeController.dispose();
     _genresController.dispose();
@@ -52,11 +49,39 @@ class _CreateGigPageState extends ConsumerState<CreateGigPage> {
     }
   }
 
+  Future<void> _selectEventDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().add(const Duration(days: 14)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 730)),
+    );
+    if (picked != null) {
+      setState(() => _eventDate = picked);
+    }
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_deadline == null) {
+    if (_eventDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a deadline')),
+        const SnackBar(content: Text('Please select an event date')),
+      );
+      return;
+    }
+
+    if (_deadline == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please select a deadline')));
+      return;
+    }
+
+    if (_deadline!.isAfter(_eventDate!)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Application deadline must be on or before event date'),
+        ),
       );
       return;
     }
@@ -66,15 +91,20 @@ class _CreateGigPageState extends ConsumerState<CreateGigPage> {
     final data = {
       'title': _titleController.text.trim(),
       'description': _descriptionController.text.trim(),
-      'location': {
-        'city': _cityController.text.trim(),
-        'state': _stateController.text.trim(),
-        'country': _countryController.text.trim(),
-      },
-      'genres': _genresController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
-      'instruments': _instrumentsController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
+      'location': _locationController.text.trim(),
+      'genres': _genresController.text
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList(),
+      'instruments': _instrumentsController.text
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList(),
       'payRate': double.tryParse(_payRateController.text) ?? 0,
       'eventType': _eventTypeController.text.trim(),
+      'eventDate': _eventDate!.toIso8601String(),
       'deadline': _deadline!.toIso8601String(),
     };
 
@@ -88,9 +118,9 @@ class _CreateGigPageState extends ConsumerState<CreateGigPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -124,49 +154,69 @@ class _CreateGigPageState extends ConsumerState<CreateGigPage> {
             children: [
               _buildSectionTitle('GIG OVERVIEW'),
               _buildCardWrapper([
-                _buildTextField(_titleController, 'Gig Title', Icons.title_rounded,
-                    validator: (v) =>
-                        v!.length < 3 ? 'Title too short' : null),
+                _buildTextField(
+                  _titleController,
+                  'Gig Title',
+                  Icons.title_rounded,
+                  validator: (v) => v!.length < 3 ? 'Title too short' : null,
+                ),
                 const SizedBox(height: 20),
-                _buildTextField(_descriptionController, 'Description',
-                    Icons.description_rounded,
-                    maxLines: 4,
-                    validator: (v) =>
-                        v!.length < 10 ? 'Description too short' : null),
+                _buildTextField(
+                  _descriptionController,
+                  'Description',
+                  Icons.description_rounded,
+                  maxLines: 4,
+                  validator: (v) =>
+                      v!.length < 10 ? 'Description too short' : null,
+                ),
               ]),
               const SizedBox(height: 32),
               _buildSectionTitle('LOCATION'),
               _buildCardWrapper([
-                _buildTextField(_cityController, 'City', Icons.location_city_rounded),
-                const SizedBox(height: 20),
-                _buildTextField(_stateController, 'State', Icons.map_rounded),
-                const SizedBox(height: 20),
-                _buildTextField(_countryController, 'Country', Icons.public_rounded),
+                _buildTextField(
+                  _locationController,
+                  'Location (City, State, Country)',
+                  Icons.location_on_rounded,
+                ),
               ]),
               const SizedBox(height: 32),
               _buildSectionTitle('REQUIREMENTS & PAY'),
               _buildCardWrapper([
-                _buildTextField(_eventTypeController,
-                    'Event Type (e.g. Concert, Wedding)', Icons.event_rounded),
+                _buildTextField(
+                  _eventTypeController,
+                  'Event Type (e.g. Concert, Wedding)',
+                  Icons.event_rounded,
+                ),
                 const SizedBox(height: 20),
-                _buildTextField(_payRateController, 'Pay Rate (Rs.)',
-                    Icons.payments_rounded,
-                    keyboardType: TextInputType.number),
+                _buildTextField(
+                  _payRateController,
+                  'Pay Rate (Rs.)',
+                  Icons.payments_rounded,
+                  keyboardType: TextInputType.number,
+                ),
                 const SizedBox(height: 20),
-                _buildTextField(_genresController, 'Genres (comma separated)',
-                    Icons.music_note_rounded),
+                _buildTextField(
+                  _genresController,
+                  'Genres (comma separated)',
+                  Icons.music_note_rounded,
+                ),
                 const SizedBox(height: 20),
-                _buildTextField(_instrumentsController,
-                    'Instruments Required (comma separated)', Icons.piano_rounded),
+                _buildTextField(
+                  _instrumentsController,
+                  'Instruments Required (comma separated)',
+                  Icons.piano_rounded,
+                ),
               ]),
               const SizedBox(height: 32),
-              _buildSectionTitle('DEADLINE'),
+              _buildSectionTitle('SCHEDULE'),
               InkWell(
-                onTap: _selectDate,
+                onTap: _selectEventDate,
                 borderRadius: BorderRadius.circular(24),
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 20,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(24),
@@ -175,7 +225,7 @@ class _CreateGigPageState extends ConsumerState<CreateGigPage> {
                       BoxShadow(
                         color: Colors.black.withOpacity(0.02),
                         blurRadius: 10,
-                      )
+                      ),
                     ],
                   ),
                   child: Row(
@@ -186,8 +236,67 @@ class _CreateGigPageState extends ConsumerState<CreateGigPage> {
                           color: const Color(0xFF6366F1).withOpacity(0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.calendar_today_rounded,
-                            color: Color(0xFF6366F1), size: 20),
+                        child: const Icon(
+                          Icons.event_rounded,
+                          color: Color(0xFF6366F1),
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Text(
+                        _eventDate == null
+                            ? 'Select Event Date'
+                            : DateFormat('MMMM d, yyyy').format(_eventDate!),
+                        style: TextStyle(
+                          color: _eventDate == null
+                              ? Colors.black26
+                              : const Color(0xFF1A1B61),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const Spacer(),
+                      const Icon(
+                        Icons.arrow_drop_down_rounded,
+                        color: Colors.black26,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              InkWell(
+                onTap: _selectDate,
+                borderRadius: BorderRadius.circular(24),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 20,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: Colors.grey[100]!, width: 1.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.02),
+                        blurRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF6366F1).withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.calendar_today_rounded,
+                          color: Color(0xFF6366F1),
+                          size: 20,
+                        ),
                       ),
                       const SizedBox(width: 16),
                       Text(
@@ -203,8 +312,10 @@ class _CreateGigPageState extends ConsumerState<CreateGigPage> {
                         ),
                       ),
                       const Spacer(),
-                      const Icon(Icons.arrow_drop_down_rounded,
-                          color: Colors.black26),
+                      const Icon(
+                        Icons.arrow_drop_down_rounded,
+                        color: Colors.black26,
+                      ),
                     ],
                   ),
                 ),
@@ -228,7 +339,8 @@ class _CreateGigPageState extends ConsumerState<CreateGigPage> {
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 20),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20)),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     elevation: 0,
                   ),
                   child: _isLoading
@@ -236,7 +348,10 @@ class _CreateGigPageState extends ConsumerState<CreateGigPage> {
                           height: 20,
                           width: 20,
                           child: CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 2))
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
                       : const Text(
                           'Publish Gig',
                           style: TextStyle(
@@ -278,23 +393,21 @@ class _CreateGigPageState extends ConsumerState<CreateGigPage> {
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: Colors.grey[100]!, width: 1.5),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 15,
-          )
+          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 15),
         ],
       ),
-      child: Column(
-        children: children,
-      ),
+      child: Column(children: children),
     );
   }
 
   Widget _buildTextField(
-      TextEditingController controller, String label, IconData icon,
-      {int maxLines = 1,
-      TextInputType keyboardType = TextInputType.text,
-      String? Function(String?)? validator}) {
+    TextEditingController controller,
+    String label,
+    IconData icon, {
+    int maxLines = 1,
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
+  }) {
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
@@ -307,22 +420,30 @@ class _CreateGigPageState extends ConsumerState<CreateGigPage> {
       ),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Colors.black26, fontWeight: FontWeight.w600),
+        labelStyle: const TextStyle(
+          color: Colors.black26,
+          fontWeight: FontWeight.w600,
+        ),
         prefixIcon: Icon(icon, color: Colors.indigo[200], size: 22),
         filled: true,
         fillColor: const Color(0xFFFBFBFF),
         border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: Colors.grey[100]!)),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.grey[100]!),
+        ),
         enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: Colors.grey[100]!)),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.grey[100]!),
+        ),
         focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1.5)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
       ),
     );
   }
 }
-
