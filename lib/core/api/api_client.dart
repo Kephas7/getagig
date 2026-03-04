@@ -44,6 +44,10 @@ class ApiClient {
           Duration(seconds: 3),
         ],
         retryEvaluator: (error, attempt) {
+          if (error.requestOptions.extra['disableRetry'] == true) {
+            return false;
+          }
+
           return error.type == DioExceptionType.connectionTimeout ||
               error.type == DioExceptionType.sendTimeout ||
               error.type == DioExceptionType.receiveTimeout ||
@@ -183,7 +187,8 @@ class _AuthInterceptor extends QueuedInterceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final isAuthEndpoint = options.path == ApiEndpoints.login ||
+    final isAuthEndpoint =
+        options.path == ApiEndpoints.login ||
         options.path == ApiEndpoints.register;
 
     if (!isAuthEndpoint) {
@@ -226,4 +231,3 @@ class _AuthInterceptor extends QueuedInterceptor {
     handler.next(response);
   }
 }
-
