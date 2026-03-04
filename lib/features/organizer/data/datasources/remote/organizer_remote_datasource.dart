@@ -27,7 +27,9 @@ class OrganizerRemoteDataSource implements IOrganizerRemoteDataSource {
       );
 
       if (response.data['success'] == true && response.data['data'] != null) {
-        return OrganizerApiModel.fromJson(response.data['data']);
+        return OrganizerApiModel.fromJson(
+          _normalizeResponseData(response.data['data']),
+        );
       }
 
       throw Exception(response.data['message'] ?? 'Failed to create profile');
@@ -42,7 +44,9 @@ class OrganizerRemoteDataSource implements IOrganizerRemoteDataSource {
       final response = await apiClient.get(ApiEndpoints.organizerProfile);
 
       if (response.data['success'] == true && response.data['data'] != null) {
-        return OrganizerApiModel.fromJson(response.data['data']);
+        return OrganizerApiModel.fromJson(
+          _normalizeResponseData(response.data['data']),
+        );
       }
 
       throw Exception(response.data['message'] ?? 'Failed to get profile');
@@ -59,7 +63,9 @@ class OrganizerRemoteDataSource implements IOrganizerRemoteDataSource {
       );
 
       if (response.data['success'] == true && response.data['data'] != null) {
-        return OrganizerApiModel.fromJson(response.data['data']);
+        return OrganizerApiModel.fromJson(
+          _normalizeResponseData(response.data['data']),
+        );
       }
 
       throw Exception(response.data['message'] ?? 'Failed to get profile');
@@ -77,7 +83,9 @@ class OrganizerRemoteDataSource implements IOrganizerRemoteDataSource {
       );
 
       if (response.data['success'] == true && response.data['data'] != null) {
-        return OrganizerApiModel.fromJson(response.data['data']);
+        return OrganizerApiModel.fromJson(
+          _normalizeResponseData(response.data['data']),
+        );
       }
 
       throw Exception(response.data['message'] ?? 'Failed to update profile');
@@ -115,7 +123,9 @@ class OrganizerRemoteDataSource implements IOrganizerRemoteDataSource {
       );
 
       if (response.data['success'] == true && response.data['data'] != null) {
-        return OrganizerApiModel.fromJson(response.data['data']);
+        return OrganizerApiModel.fromJson(
+          _normalizeResponseData(response.data['data']),
+        );
       }
 
       throw Exception(
@@ -146,7 +156,9 @@ class OrganizerRemoteDataSource implements IOrganizerRemoteDataSource {
       );
 
       if (response.data['success'] == true && response.data['data'] != null) {
-        return OrganizerApiModel.fromJson(response.data['data']);
+        return OrganizerApiModel.fromJson(
+          _normalizeResponseData(response.data['data']),
+        );
       }
 
       throw Exception(response.data['message'] ?? 'Failed to add photos');
@@ -164,7 +176,9 @@ class OrganizerRemoteDataSource implements IOrganizerRemoteDataSource {
       );
 
       if (response.data['success'] == true && response.data['data'] != null) {
-        return OrganizerApiModel.fromJson(response.data['data']);
+        return OrganizerApiModel.fromJson(
+          _normalizeResponseData(response.data['data']),
+        );
       }
 
       throw Exception(response.data['message'] ?? 'Failed to remove photo');
@@ -193,7 +207,9 @@ class OrganizerRemoteDataSource implements IOrganizerRemoteDataSource {
       );
 
       if (response.data['success'] == true && response.data['data'] != null) {
-        return OrganizerApiModel.fromJson(response.data['data']);
+        return OrganizerApiModel.fromJson(
+          _normalizeResponseData(response.data['data']),
+        );
       }
 
       throw Exception(response.data['message'] ?? 'Failed to add videos');
@@ -211,7 +227,9 @@ class OrganizerRemoteDataSource implements IOrganizerRemoteDataSource {
       );
 
       if (response.data['success'] == true && response.data['data'] != null) {
-        return OrganizerApiModel.fromJson(response.data['data']);
+        return OrganizerApiModel.fromJson(
+          _normalizeResponseData(response.data['data']),
+        );
       }
 
       throw Exception(response.data['message'] ?? 'Failed to remove video');
@@ -240,7 +258,9 @@ class OrganizerRemoteDataSource implements IOrganizerRemoteDataSource {
       );
 
       if (response.data['success'] == true && response.data['data'] != null) {
-        return OrganizerApiModel.fromJson(response.data['data']);
+        return OrganizerApiModel.fromJson(
+          _normalizeResponseData(response.data['data']),
+        );
       }
 
       throw Exception(
@@ -262,7 +282,9 @@ class OrganizerRemoteDataSource implements IOrganizerRemoteDataSource {
       );
 
       if (response.data['success'] == true && response.data['data'] != null) {
-        return OrganizerApiModel.fromJson(response.data['data']);
+        return OrganizerApiModel.fromJson(
+          _normalizeResponseData(response.data['data']),
+        );
       }
 
       throw Exception(
@@ -282,11 +304,34 @@ class OrganizerRemoteDataSource implements IOrganizerRemoteDataSource {
       );
 
       if (response.data['success'] == true && response.data['data'] != null) {
-        return OrganizerApiModel.fromJson(response.data['data']);
+        return OrganizerApiModel.fromJson(
+          _normalizeResponseData(response.data['data']),
+        );
       }
 
       throw Exception(
         response.data['message'] ?? 'Failed to update active status',
+      );
+    } on DioException catch (e) {
+      throw Exception(_handleError(e));
+    }
+  }
+
+  @override
+  Future<OrganizerApiModel> requestVerification() async {
+    try {
+      final response = await apiClient.patch(
+        ApiEndpoints.organizerRequestVerification,
+      );
+
+      if (response.data['success'] == true && response.data['data'] != null) {
+        return OrganizerApiModel.fromJson(
+          _normalizeResponseData(response.data['data']),
+        );
+      }
+
+      throw Exception(
+        response.data['message'] ?? 'Failed to request verification',
       );
     } on DioException catch (e) {
       throw Exception(_handleError(e));
@@ -326,5 +371,26 @@ class OrganizerRemoteDataSource implements IOrganizerRemoteDataSource {
         return 'An unexpected error occurred. Please try again.';
     }
   }
-}
 
+  Map<String, dynamic> _normalizeResponseData(dynamic data) {
+    final json = Map<String, dynamic>.from(data as Map);
+    json['location'] = _normalizeLocation(json['location']);
+    return json;
+  }
+
+  String _normalizeLocation(dynamic rawLocation) {
+    if (rawLocation is String) {
+      return rawLocation.trim();
+    }
+
+    if (rawLocation is Map) {
+      final city = (rawLocation['city'] ?? '').toString().trim();
+      final state = (rawLocation['state'] ?? '').toString().trim();
+      final country = (rawLocation['country'] ?? '').toString().trim();
+
+      return [city, state, country].where((part) => part.isNotEmpty).join(', ');
+    }
+
+    return '';
+  }
+}
