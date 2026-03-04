@@ -14,8 +14,7 @@ MusicianApiModel _$MusicianApiModelFromJson(Map<String, dynamic> json) =>
       profilePicture: json['profilePicture'] as String?,
       bio: json['bio'] as String?,
       phone: json['phone'] as String? ?? '',
-      location: json['location'] as Map<String, dynamic>? ??
-          {'city': '', 'state': '', 'country': ''},
+      location: json['location'] as String? ?? '',
       genres: (json['genres'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
@@ -38,6 +37,8 @@ MusicianApiModel _$MusicianApiModelFromJson(Map<String, dynamic> json) =>
               ?.map((e) => e as String)
               .toList() ??
           [],
+      isVerified: json['isVerified'] as bool? ?? false,
+      verificationRequested: json['verificationRequested'] as bool? ?? false,
       isAvailable: json['isAvailable'] as bool? ?? true,
       createdAt: json['createdAt'] as String? ?? '',
       updatedAt: json['updatedAt'] as String? ?? '',
@@ -59,6 +60,8 @@ Map<String, dynamic> _$MusicianApiModelToJson(MusicianApiModel instance) =>
       'photos': instance.photos,
       'videos': instance.videos,
       'audioSamples': instance.audioSamples,
+      'isVerified': instance.isVerified,
+      'verificationRequested': instance.verificationRequested,
       'isAvailable': instance.isAvailable,
       'createdAt': instance.createdAt,
       'updatedAt': instance.updatedAt,
