@@ -1,17 +1,200 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:getagig/features/dashboard/presentation/pages/chat_page.dart';
+import 'package:getagig/features/dashboard/presentation/view_model/conversation_initiator_viewmodel.dart';
+import 'package:getagig/features/gigs/data/models/application_model.dart';
+import 'package:getagig/features/gigs/data/repositories/application_repository.dart';
 import 'package:getagig/features/gigs/domain/entities/gig_entity.dart';
-import 'package:getagig/features/gigs/presentation/view_model/organizer_gigs_provider.dart';
-import 'package:getagig/features/gigs/presentation/pages/gig_applications_page.dart';
 import 'package:getagig/features/gigs/presentation/pages/create_gig_page.dart';
 import 'package:getagig/features/gigs/presentation/pages/edit_gig_page.dart';
+import 'package:getagig/features/gigs/presentation/pages/gig_applications_page.dart';
+import 'package:getagig/features/gigs/presentation/view_model/organizer_gigs_viewmodel.dart';
+import 'package:getagig/features/organizer/presentation/pages/view_organizer_profile_page.dart';
+import 'package:getagig/features/organizer/presentation/view_model/organizer_view_model.dart';
 
-class OrganizerGigsPage extends ConsumerWidget {
+class OrganizerGigsPage extends ConsumerStatefulWidget {
   const OrganizerGigsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OrganizerGigsPage> createState() => _OrganizerGigsPageState();
+}
+
+class _OrganizerGigsPageState extends ConsumerState<OrganizerGigsPage> {
+  String _searchQuery = '';
+  bool _isApplicantsOpen = false;
+  bool _isLoadingApplicants = false;
+  String? _messagingApplicantId;
+  List<_ApplicantItem> _allApplicants = [];
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() async {
+      await ref.read(organizerProfileViewModelProvider.notifier).getProfile();
+      await _loadAllApplicants();
+    });
+  }
+
+  Future<void> _refreshAll() async {
+    await ref.read(organizerGigsProvider.notifier).refresh();
+    await _loadAllApplicants();
+  }
+
+  Future<void> _loadAllApplicants() async {
+    if (mounted) {
+      setState(() => _isLoadingApplicants = true);
+    }
+
+    try {
+      final gigs = await ref.read(organizerGigsProvider.future);
+      final repo = ref.read(applicationRepositoryProvider);
+
+      final items = <_ApplicantItem>[];
+      for (final gig in gigs) {
+        final result = await repo.getGigApplications(gig.id);
+        result.fold((_) {}, (applications) {
+          for (final ApplicationModel app in applications) {
+            final recipientUserId = (app.musician?.id ?? '').trim();
+            if (recipientUserId.isEmpty) {
+              continue;
+            }
+
+            items.add(
+              _ApplicantItem(
+                id: app.id ?? '${gig.id}-$recipientUserId',
+                recipientUserId: recipientUserId,
+                name: app.musician?.username ?? 'Unknown Musician',
+                role: app.musician?.role ?? 'Musician',
+                gigTitle: gig.title,
+                gigId: gig.id,
+                status: app.status,
+              ),
+            );
+          }
+        });
+      }
+
+      final statusPriority = <String, int>{
+        'pending': 0,
+        'accepted': 1,
+        'rejected': 2,
+      };
+
+      items.sort((a, b) {
+        final firstPriority = statusPriority[a.status.toLowerCase()] ?? 9;
+        final secondPriority = statusPriority[b.status.toLowerCase()] ?? 9;
+        if (firstPriority != secondPriority) {
+          return firstPriority.compareTo(secondPriority);
+        }
+        return a.name.compareTo(b.name);
+      });
+
+      if (mounted) {
+        setState(() {
+          _allApplicants = items;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to load applications overview.'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingApplicants = false);
+      }
+    }
+  }
+
+  Future<void> _messageApplicant(_ApplicantItem applicant) async {
+    setState(() => _messagingApplicantId = applicant.id);
+
+    final conversationInitiator = ref.read(
+      conversationInitiatorProvider.notifier,
+    );
+    final result = await conversationInitiator.startConversation(
+      applicant.recipientUserId,
+    );
+
+    if (!mounted) return;
+
+    result.fold(
+      (failure) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${failure.message}')));
+      },
+      (conversation) {
+        final participant = conversation.participants.firstWhere(
+          (p) => p.id == applicant.recipientUserId,
+          orElse: () => conversation.participants.first,
+        );
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChatPage(
+              conversationId: conversation.id ?? '',
+              receiverId: applicant.recipientUserId,
+              receiverName: participant.username,
+            ),
+          ),
+        );
+      },
+    );
+
+    if (mounted) {
+      setState(() => _messagingApplicantId = null);
+    }
+  }
+
+  Future<void> _openApplicantApplications(
+    _ApplicantItem applicant,
+    List<GigEntity> gigs,
+  ) async {
+    GigEntity? targetGig;
+    for (final gig in gigs) {
+      if (gig.id == applicant.gigId) {
+        targetGig = gig;
+        break;
+      }
+    }
+
+    if (targetGig == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gig not found for this application.')),
+      );
+      return;
+    }
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => GigApplicationsPage(gig: targetGig!)),
+    );
+
+    if (mounted) {
+      await _loadAllApplicants();
+    }
+  }
+
+  Color _statusColor(String status) {
+    final normalized = status.toLowerCase();
+    if (normalized == 'accepted') return const Color(0xFF10B981);
+    if (normalized == 'rejected') return const Color(0xFFEF4444);
+    return const Color(0xFFF59E0B);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final gigsAsyncValue = ref.watch(organizerGigsProvider);
+    final organizerProfileState = ref.watch(organizerProfileViewModelProvider);
+    final organizerProfile = organizerProfileState.profile;
+    final canPostGig = organizerProfile?.isVerified ?? false;
+    final isVerificationPending =
+        organizerProfile?.verificationRequested ?? false;
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -32,67 +215,367 @@ class OrganizerGigsPage extends ConsumerWidget {
                     letterSpacing: -1,
                   ),
                 ),
-                Container(
-                  decoration: BoxDecoration(
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF10B981).withOpacity(0.2),
-                        blurRadius: 15,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
+                ElevatedButton.icon(
+                  onPressed: canPostGig
+                      ? () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const CreateGigPage(),
+                            ),
+                          ).then((_) => _refreshAll());
+                        }
+                      : isVerificationPending
+                      ? null
+                      : () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ViewOrganizerProfilePage(),
+                            ),
+                          );
+                        },
+                  icon: Icon(
+                    canPostGig ? Icons.add_rounded : Icons.verified_outlined,
+                    size: 20,
                   ),
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const CreateGigPage(),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.add_rounded, size: 20),
-                    label: const Text('Post Gig'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF10B981), // Emerald
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 14),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                      elevation: 0,
+                  label: Text(
+                    canPostGig
+                        ? 'Post Gig'
+                        : isVerificationPending
+                        ? 'Verification Pending'
+                        : 'Verify to Post Gigs',
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: canPostGig
+                        ? const Color(0xFF10B981)
+                        : Colors.grey[600],
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 14,
                     ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 0,
                   ),
                 ),
               ],
             ),
           ),
           Expanded(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: gigsAsyncValue.when(
-                data: (gigs) {
-                  if (gigs.isEmpty) {
-                    return const _EmptyGigsState();
-                  }
-                  return RefreshIndicator(
-                    onRefresh: () =>
-                        ref.read(organizerGigsProvider.notifier).refresh(),
-                    child: ListView.builder(
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      itemCount: gigs.length,
-                      itemBuilder: (context, index) {
-                        final gig = gigs[index];
-                        return _OrganizerGigCard(gig: gig);
-                      },
-                    ),
+            child: gigsAsyncValue.when(
+              data: (gigs) {
+                final filteredGigs = gigs.where((gig) {
+                  final query = _searchQuery.trim().toLowerCase();
+                  if (query.isEmpty) return true;
+
+                  final searchable = [
+                    gig.title,
+                    gig.description,
+                    gig.eventType,
+                    gig.location,
+                  ].join(' ').toLowerCase();
+
+                  return searchable.contains(query);
+                }).toList();
+
+                final applicantCountByGig = <String, int>{};
+                for (final applicant in _allApplicants) {
+                  applicantCountByGig[applicant.gigId] =
+                      (applicantCountByGig[applicant.gigId] ?? 0) + 1;
+                }
+
+                if (gigs.isEmpty) {
+                  return _EmptyGigsState(
+                    canPostGig: canPostGig,
+                    isVerificationPending: isVerificationPending,
                   );
-                },
-                loading: () => const Center(
-                    child: CircularProgressIndicator(color: Color(0xFF1A1B61))),
-                error: (err, stack) =>
-                    Center(child: Text('Error: $err', style: const TextStyle(color: Colors.red))),
+                }
+
+                final pendingCount = _allApplicants
+                    .where((a) => a.status.toLowerCase() == 'pending')
+                    .length;
+                final acceptedCount = _allApplicants
+                    .where((a) => a.status.toLowerCase() == 'accepted')
+                    .length;
+                final rejectedCount = _allApplicants
+                    .where((a) => a.status.toLowerCase() == 'rejected')
+                    .length;
+
+                return RefreshIndicator(
+                  onRefresh: _refreshAll,
+                  child: ListView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    children: [
+                      TextField(
+                        onChanged: (value) {
+                          setState(() {
+                            _searchQuery = value;
+                          });
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'Search gigs...',
+                          prefixIcon: const Icon(Icons.search_rounded),
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 0,
+                            horizontal: 14,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _ApplicantStatChip(
+                              label: 'Pending',
+                              value: pendingCount,
+                              color: const Color(0xFFF59E0B),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _ApplicantStatChip(
+                              label: 'Accepted',
+                              value: acceptedCount,
+                              color: const Color(0xFF10B981),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _ApplicantStatChip(
+                              label: 'Rejected',
+                              value: rejectedCount,
+                              color: const Color(0xFFEF4444),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      InkWell(
+                        onTap: () {
+                          setState(
+                            () => _isApplicantsOpen = !_isApplicantsOpen,
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(14),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: Colors.grey[200]!),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.people_alt_outlined, size: 18),
+                              const SizedBox(width: 8),
+                              const Expanded(
+                                child: Text(
+                                  'View All Applications',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF1A1B61),
+                                  ),
+                                ),
+                              ),
+                              if (_isLoadingApplicants)
+                                const SizedBox(
+                                  height: 16,
+                                  width: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              else
+                                Icon(
+                                  _isApplicantsOpen
+                                      ? Icons.expand_less_rounded
+                                      : Icons.expand_more_rounded,
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (_isApplicantsOpen) ...[
+                        const SizedBox(height: 10),
+                        if (_isLoadingApplicants)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Center(child: CircularProgressIndicator()),
+                          )
+                        else if (_allApplicants.isEmpty)
+                          Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: Colors.grey[200]!),
+                            ),
+                            child: const Text(
+                              'No applications yet.',
+                              style: TextStyle(color: Colors.black54),
+                            ),
+                          )
+                        else
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: Colors.grey[200]!),
+                            ),
+                            child: Column(
+                              children: _allApplicants.map((applicant) {
+                                final color = _statusColor(applicant.status);
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 10,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    border: Border(
+                                      bottom: BorderSide(
+                                        color: Colors.grey[200]!,
+                                        width: 0.8,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  applicant.name,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.w700,
+                                                    color: Color(0xFF1A1B61),
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  applicant.gigTitle,
+                                                  style: TextStyle(
+                                                    color: Colors.grey[600],
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: color.withValues(
+                                                alpha: 0.1,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: Text(
+                                              applicant.status.toUpperCase(),
+                                              style: TextStyle(
+                                                color: color,
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w900,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                _openApplicantApplications(
+                                                  applicant,
+                                                  gigs,
+                                                ),
+                                            child: const Text('View'),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          TextButton(
+                                            onPressed:
+                                                _messagingApplicantId ==
+                                                    applicant.id
+                                                ? null
+                                                : () => _messageApplicant(
+                                                    applicant,
+                                                  ),
+                                            child: Text(
+                                              _messagingApplicantId ==
+                                                      applicant.id
+                                                  ? 'Opening...'
+                                                  : 'Message',
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                      ],
+                      const SizedBox(height: 16),
+                      if (filteredGigs.isEmpty)
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: Colors.grey[200]!),
+                          ),
+                          child: const Text(
+                            'No gigs match your search.',
+                            style: TextStyle(color: Colors.black54),
+                          ),
+                        )
+                      else
+                        ...filteredGigs.map((gig) {
+                          return _OrganizerGigCard(
+                            gig: gig,
+                            applicantCount: applicantCountByGig[gig.id] ?? 0,
+                            onDataChanged: _refreshAll,
+                          );
+                        }),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                );
+              },
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: Color(0xFF1A1B61)),
+              ),
+              error: (err, stack) => Center(
+                child: Text(
+                  'Error: $err',
+                  style: const TextStyle(color: Colors.red),
+                ),
               ),
             ),
           ),
@@ -104,11 +587,18 @@ class OrganizerGigsPage extends ConsumerWidget {
 
 class _OrganizerGigCard extends StatelessWidget {
   final GigEntity gig;
-  const _OrganizerGigCard({required this.gig});
+  final int applicantCount;
+  final Future<void> Function() onDataChanged;
+
+  const _OrganizerGigCard({
+    required this.gig,
+    required this.applicantCount,
+    required this.onDataChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
-    bool isOpen = gig.status.toLowerCase() == 'open';
+    final isOpen = gig.status.toLowerCase() == 'open';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
@@ -117,7 +607,7 @@ class _OrganizerGigCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -137,16 +627,21 @@ class _OrganizerGigCard extends StatelessWidget {
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: (isOpen ? const Color(0xFF10B981) : Colors.black45)
-                            .withOpacity(0.1),
+                        color:
+                            (isOpen ? const Color(0xFF10B981) : Colors.black45)
+                                .withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         gig.status.toUpperCase(),
                         style: TextStyle(
-                          color: isOpen ? const Color(0xFF10B981) : Colors.black45,
+                          color: isOpen
+                              ? const Color(0xFF10B981)
+                              : Colors.black45,
                           fontSize: 10,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 1,
@@ -154,7 +649,7 @@ class _OrganizerGigCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      "\$${gig.payRate}",
+                      'Rs. ${gig.payRate.toStringAsFixed(0)}',
                       style: const TextStyle(
                         fontWeight: FontWeight.w900,
                         fontSize: 20,
@@ -176,8 +671,11 @@ class _OrganizerGigCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(Icons.music_note_rounded,
-                        size: 16, color: Colors.indigo[400]),
+                    Icon(
+                      Icons.music_note_rounded,
+                      size: 16,
+                      color: Colors.indigo[400],
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       gig.eventType,
@@ -188,11 +686,14 @@ class _OrganizerGigCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 16),
-                    Icon(Icons.people_rounded,
-                        size: 16, color: const Color(0xFF10B981)),
+                    const Icon(
+                      Icons.people_rounded,
+                      size: 16,
+                      color: Color(0xFF10B981),
+                    ),
                     const SizedBox(width: 4),
                     Text(
-                      "12 Applicants", // Placeholder
+                      '$applicantCount Applicants',
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontWeight: FontWeight.w600,
@@ -213,16 +714,18 @@ class _OrganizerGigCard extends StatelessWidget {
                     onPressed: () {
                       if (gig.id.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Error: Gig ID is missing')),
+                          const SnackBar(
+                            content: Text('Error: Gig ID is missing'),
+                          ),
                         );
                         return;
                       }
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => GigApplicationsPage(gig: gig),
+                          builder: (_) => GigApplicationsPage(gig: gig),
                         ),
-                      );
+                      ).then((_) => onDataChanged());
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF1A1B61),
@@ -242,10 +745,8 @@ class _OrganizerGigCard extends StatelessWidget {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => EditGigPage(gig: gig),
-                      ),
-                    );
+                      MaterialPageRoute(builder: (_) => EditGigPage(gig: gig)),
+                    ).then((_) => onDataChanged());
                   },
                 ),
                 const SizedBox(width: 12),
@@ -259,24 +760,30 @@ class _OrganizerGigCard extends StatelessWidget {
                           context: context,
                           builder: (context) => AlertDialog(
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(24)),
+                              borderRadius: BorderRadius.circular(24),
+                            ),
                             title: const Text('Delete Gig'),
                             content: const Text(
-                                'Are you sure you want to delete this gig? This action cannot be undone.'),
+                              'Are you sure you want to delete this gig? This action cannot be undone.',
+                            ),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(context),
                                 child: const Text('Cancel'),
                               ),
                               TextButton(
-                                onPressed: () {
-                                  ref
+                                onPressed: () async {
+                                  await ref
                                       .read(organizerGigsProvider.notifier)
                                       .deleteGig(gig.id);
-                                  Navigator.pop(context);
+                                  if (context.mounted) {
+                                    Navigator.pop(context);
+                                  }
+                                  await onDataChanged();
                                 },
                                 style: TextButton.styleFrom(
-                                    foregroundColor: const Color(0xFFEF4444)),
+                                  foregroundColor: const Color(0xFFEF4444),
+                                ),
                                 child: const Text('Delete'),
                               ),
                             ],
@@ -288,7 +795,71 @@ class _OrganizerGigCard extends StatelessWidget {
                 ),
               ],
             ),
-          )
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ApplicantItem {
+  final String id;
+  final String recipientUserId;
+  final String name;
+  final String role;
+  final String gigTitle;
+  final String gigId;
+  final String status;
+
+  const _ApplicantItem({
+    required this.id,
+    required this.recipientUserId,
+    required this.name,
+    required this.role,
+    required this.gigTitle,
+    required this.gigId,
+    required this.status,
+  });
+}
+
+class _ApplicantStatChip extends StatelessWidget {
+  final String label;
+  final int value;
+  final Color color;
+
+  const _ApplicantStatChip({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            '$value',
+            style: TextStyle(
+              color: color,
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );
@@ -315,7 +886,7 @@ class _ActionButton extends StatelessWidget {
         height: 48,
         width: 48,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Icon(icon, color: color, size: 22),
@@ -325,7 +896,13 @@ class _ActionButton extends StatelessWidget {
 }
 
 class _EmptyGigsState extends StatelessWidget {
-  const _EmptyGigsState();
+  final bool canPostGig;
+  final bool isVerificationPending;
+
+  const _EmptyGigsState({
+    required this.canPostGig,
+    required this.isVerificationPending,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -336,7 +913,7 @@ class _EmptyGigsState extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: const Color(0xFF10B981).withOpacity(0.05),
+              color: const Color(0xFF10B981).withValues(alpha: 0.05),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -347,27 +924,25 @@ class _EmptyGigsState extends StatelessWidget {
           ),
           const SizedBox(height: 32),
           const Text(
-            "No gigs posted yet",
+            'No gigs posted yet',
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w900,
               color: Color(0xFF1A1B61),
-              letterSpacing: -0.5,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            "Start by posting your first musical event!",
+          Text(
+            canPostGig
+                ? 'Create your first gig posting to start receiving applications.'
+                : isVerificationPending
+                ? 'Your verification is under review.'
+                : 'Complete verification to post your first gig.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.black45,
-              fontWeight: FontWeight.w500,
-            ),
+            style: const TextStyle(color: Colors.black54),
           ),
         ],
       ),
     );
   }
 }
-
