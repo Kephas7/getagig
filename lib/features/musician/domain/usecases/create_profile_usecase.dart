@@ -12,9 +12,7 @@ class CreateProfileParams extends Equatable {
   final String stageName;
   final String? bio;
   final String phone;
-  final String city;
-  final String state;
-  final String country;
+  final String location;
   final List<String> genres;
   final List<String> instruments;
   final int experienceYears;
@@ -25,9 +23,7 @@ class CreateProfileParams extends Equatable {
     required this.stageName,
     this.bio,
     required this.phone,
-    required this.city,
-    required this.state,
-    required this.country,
+    required this.location,
     required this.genres,
     required this.instruments,
     required this.experienceYears,
@@ -40,7 +36,7 @@ class CreateProfileParams extends Equatable {
       'stageName': stageName,
       if (bio != null) 'bio': bio,
       'phone': phone,
-      'location': {'city': city, 'state': state, 'country': country},
+      'location': location,
       'genres': genres,
       'instruments': instruments,
       'experienceYears': experienceYears,
@@ -54,9 +50,7 @@ class CreateProfileParams extends Equatable {
     stageName,
     bio,
     phone,
-    city,
-    state,
-    country,
+    location,
     genres,
     instruments,
     experienceYears,
@@ -82,4 +76,3 @@ class CreateProfileUseCase
     return _repository.createProfile(params.toJson());
   }
 }
-
