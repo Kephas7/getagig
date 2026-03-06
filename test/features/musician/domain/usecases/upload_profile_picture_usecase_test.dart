@@ -31,7 +31,7 @@ void main() {
     profilePicture: null,
     bio: 'Bio',
     phone: '1234567890',
-    location: {'city': 'Kathmandu', 'country': 'Nepal'},
+    location: 'Kathmandu, Nepal',
     genres: ['Rock'],
     instruments: ['Guitar'],
     experienceYears: 3,
@@ -39,39 +39,35 @@ void main() {
     photos: ['p1'],
     videos: ['v1'],
     audioSamples: ['a1'],
+    isVerified: false,
+    verificationRequested: false,
     isAvailable: true,
     createdAt: '2024-01-01',
     updatedAt: '2024-01-02',
   );
 
   test('should return updated musician entity when upload succeeds', () async {
-    
     final file = File('test_resources/dummy.jpg');
     when(
       () => mockRepository.uploadProfilePicture(any()),
     ).thenAnswer((_) async => const Right(tMusician));
 
-    
     final result = await usecase(file);
 
-    
     expect(result, const Right(tMusician));
     verify(() => mockRepository.uploadProfilePicture(any())).called(1);
     verifyNoMoreInteractions(mockRepository);
   });
 
   test('should return failure when upload fails', () async {
-    
     final file = File('test_resources/dummy.jpg');
     const failure = ApiFailure(message: 'Upload failed');
     when(
       () => mockRepository.uploadProfilePicture(any()),
     ).thenAnswer((_) async => const Left(failure));
 
-    
     final result = await usecase(file);
 
-    
     expect(result, const Left(failure));
     verify(() => mockRepository.uploadProfilePicture(any())).called(1);
   });

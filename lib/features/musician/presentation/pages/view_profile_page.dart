@@ -704,7 +704,6 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                   const SizedBox(height: 24),
 
                   if (widget.musicianId == null) ...[
-                    const SizedBox(height: 24),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(

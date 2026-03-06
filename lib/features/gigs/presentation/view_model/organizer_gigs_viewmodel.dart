@@ -1,6 +1,7 @@
 ﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/features/gigs/domain/entities/gig_entity.dart';
 import 'package:getagig/features/gigs/data/repositories/gig_repository.dart';
+import 'package:getagig/features/organizer/domain/usecases/get_organizer_profile_usecase.dart';
 
 final organizerGigsProvider =
     AsyncNotifierProvider<OrganizerGigsNotifier, List<GigEntity>>(() {
@@ -14,12 +15,17 @@ class OrganizerGigsNotifier extends AsyncNotifier<List<GigEntity>> {
   }
 
   Future<List<GigEntity>> _fetchGigs() async {
+    final getOrganizerProfile = ref.read(getOrganizerProfileUseCaseProvider);
     final repo = ref.read(gigRepositoryProvider);
-    final result = await repo.getAllGigs();
-    return result.fold(
+
+    final organizerProfileResult = await getOrganizerProfile();
+    final organizerProfile = organizerProfileResult.fold(
       (failure) => throw failure,
-      (gigs) => gigs,
+      (profile) => profile,
     );
+
+    final gigsResult = await repo.getAllGigs(organizerId: organizerProfile.id);
+    return gigsResult.fold((failure) => throw failure, (gigs) => gigs);
   }
 
   Future<void> refresh() async {
@@ -62,10 +68,11 @@ class OrganizerGigsNotifier extends AsyncNotifier<List<GigEntity>> {
       (failure) => state = AsyncValue.error(failure, StackTrace.current),
       (_) {
         if (state.value != null) {
-          state = AsyncValue.data(state.value!.where((g) => g.id != id).toList());
+          state = AsyncValue.data(
+            state.value!.where((g) => g.id != id).toList(),
+          );
         }
       },
     );
   }
 }
-

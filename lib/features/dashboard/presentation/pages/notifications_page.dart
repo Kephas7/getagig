@@ -33,10 +33,7 @@ class NotificationsPage extends ConsumerWidget {
             },
             child: const Text(
               "Mark all read",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
           ),
           const SizedBox(width: 8),
@@ -117,7 +114,11 @@ class NotificationsPage extends ConsumerWidget {
 
                         if (notification.type == 'new_message' &&
                             notification.relatedId != null) {
-                          _navigateToChat(context, ref, notification.relatedId!);
+                          _navigateToChat(
+                            context,
+                            ref,
+                            notification.relatedId!,
+                          );
                         }
                       },
                       child: Padding(
@@ -274,9 +275,9 @@ class NotificationsPage extends ConsumerWidget {
               conversationId: conversation.id ?? '',
               receiverId: userId,
               receiverName: conversation.participants.isNotEmpty
-                  ? (conversation.participants.first.username ??
-                        conversation.participants.first.email ??
-                        '')
+                  ? (conversation.participants.first.username.trim().isNotEmpty
+                        ? conversation.participants.first.username
+                        : conversation.participants.first.email)
                   : '',
             ),
           ),

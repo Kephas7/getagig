@@ -96,6 +96,26 @@ class ChatStateNotifier extends StateNotifier<AsyncValue<List<MessageModel>>> {
     );
   }
 
+  Future<void> clearConversation() async {
+    final repo = ref.read(messageRepositoryProvider);
+    final result = await repo.clearConversation(conversationId: conversationId);
+
+    result.fold((failure) => throw Exception(failure.message), (_) {
+      state = const AsyncValue.data(<MessageModel>[]);
+    });
+  }
+
+  Future<void> deleteConversation() async {
+    final repo = ref.read(messageRepositoryProvider);
+    final result = await repo.deleteConversation(
+      conversationId: conversationId,
+    );
+
+    result.fold((failure) => throw Exception(failure.message), (_) {
+      state = const AsyncValue.data(<MessageModel>[]);
+    });
+  }
+
   @override
   void dispose() {
     _socketSubscription?.cancel();

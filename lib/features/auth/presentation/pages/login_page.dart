@@ -1,7 +1,11 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'dart:async';
+
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:getagig/app/routes/route_constants.dart';
+import 'package:getagig/core/services/security/biometric_auth_service.dart';
+import 'package:getagig/core/services/storage/user_session_service.dart';
 import 'package:getagig/features/auth/presentation/state/auth_state.dart';
 import 'package:getagig/features/auth/presentation/view_model/auth_viewmodel.dart';
 
@@ -17,6 +21,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isCheckingBiometricState = true;
+  bool _isBiometricSupported = false;
+  bool _isBiometricEnabled = false;
+  bool _isBiometricLoginInProgress = false;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadBiometricState());
+  }
 
   @override
   void dispose() {
@@ -36,8 +50,78 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     }
   }
 
+  Future<void> _loadBiometricState() async {
+    final biometricAuthService = ref.read(biometricAuthServiceProvider);
+    final sessionService = ref.read(userSessionServiceProvider);
+
+    final isSupported = await biometricAuthService.isFingerprintSupported();
+    final isEnabled = isSupported
+        ? await sessionService.isBiometricLoginEnabled()
+        : false;
+
+    if (!mounted) return;
+    setState(() {
+      _isBiometricSupported = isSupported;
+      _isBiometricEnabled = isEnabled;
+      _isCheckingBiometricState = false;
+    });
+  }
+
+  Future<void> _handleBiometricLogin() async {
+    if (_isBiometricLoginInProgress || _isCheckingBiometricState) {
+      return;
+    }
+
+    final sessionService = ref.read(userSessionServiceProvider);
+    final biometricAuthService = ref.read(biometricAuthServiceProvider);
+
+    final credentials = await sessionService.getBiometricCredentials();
+    if (credentials == null) {
+      await sessionService.disableBiometricLogin();
+      if (!mounted) return;
+      setState(() {
+        _isBiometricEnabled = false;
+      });
+      _showSnackBar('Biometric login is not set up yet.');
+      return;
+    }
+
+    final authenticated = await biometricAuthService.authenticateForLogin();
+    if (!authenticated) {
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _isBiometricLoginInProgress = true;
+    });
+
+    _emailController.text = credentials.email;
+    _passwordController.text = credentials.password;
+
+    await ref
+        .read(authViewModelProvider.notifier)
+        .login(email: credentials.email, password: credentials.password);
+
+    if (!mounted) return;
+    setState(() {
+      _isBiometricLoginInProgress = false;
+    });
+  }
+
+  void _showSnackBar(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   void _navigateToSignup() {
     context.pushNamed(RouteNames.signup);
+  }
+
+  void _navigateToForgotPassword() {
+    context.pushNamed(RouteNames.forgotPassword);
   }
 
   @override
@@ -46,6 +130,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     ref.listen<AuthState>(authViewModelProvider, (previous, next) {
       if (next.status == AuthStatus.error && next.errorMessage != null) {
+        if (mounted && _isBiometricLoginInProgress) {
+          setState(() {
+            _isBiometricLoginInProgress = false;
+          });
+        }
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(next.errorMessage!)));
@@ -54,7 +143,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     final orientation = MediaQuery.of(context).orientation;
     final isLandscape = orientation == Orientation.landscape;
-    final isLoading = authState.status == AuthStatus.loading;
+    final isLoading =
+        authState.status == AuthStatus.loading || _isBiometricLoginInProgress;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -125,6 +215,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         ),
                       ),
                     ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: _navigateToForgotPassword,
+                        child: const Text('Forgot Password?'),
+                      ),
+                    ),
                     const SizedBox(height: 20),
                     isLoading
                         ? const CircularProgressIndicator()
@@ -135,6 +232,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               child: const Text("Log in"),
                             ),
                           ),
+                    if (!_isCheckingBiometricState &&
+                        _isBiometricSupported &&
+                        _isBiometricEnabled) ...[
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: isLoading ? null : _handleBiometricLogin,
+                          icon: const Icon(Icons.fingerprint),
+                          label: const Text('Log in with Biometrics'),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 10),
                     TextButton(
                       onPressed: _navigateToSignup,
@@ -150,4 +260,3 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 }
-

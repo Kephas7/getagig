@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/features/auth/presentation/view_model/auth_viewmodel.dart';
+import 'package:getagig/features/dashboard/presentation/view_model/conversations_viewmodel.dart';
 import 'package:getagig/features/dashboard/presentation/view_model/chat_viewmodel.dart';
+
+enum _ConversationAction { clear, delete }
 
 class ChatPage extends ConsumerStatefulWidget {
   final String conversationId;
@@ -22,6 +25,8 @@ class ChatPage extends ConsumerStatefulWidget {
 class _ChatPageState extends ConsumerState<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  bool _isClearing = false;
+  bool _isDeleting = false;
 
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
@@ -35,7 +40,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   void _sendMessage() {
     final text = _messageController.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty || _isClearing || _isDeleting) return;
 
     ref
         .read(chatStateProvider(widget.conversationId).notifier)
@@ -46,10 +51,110 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     Future.delayed(const Duration(milliseconds: 100), _scrollToBottom);
   }
 
+  Future<bool> _confirmAction({
+    required String title,
+    required String message,
+    required String confirmLabel,
+    bool isDestructive = false,
+  }) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              style: isDestructive
+                  ? FilledButton.styleFrom(backgroundColor: Colors.red)
+                  : null,
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(confirmLabel),
+            ),
+          ],
+        );
+      },
+    );
+
+    return result ?? false;
+  }
+
+  Future<void> _clearConversation() async {
+    if (_isClearing || _isDeleting) return;
+
+    final confirmed = await _confirmAction(
+      title: 'Clear conversation?',
+      message: 'This will remove all messages from this chat.',
+      confirmLabel: 'Clear',
+    );
+    if (!confirmed || !mounted) return;
+
+    setState(() => _isClearing = true);
+
+    try {
+      await ref
+          .read(chatStateProvider(widget.conversationId).notifier)
+          .clearConversation();
+      await ref.read(conversationsProvider.notifier).refresh();
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Conversation cleared.')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to clear conversation: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isClearing = false);
+      }
+    }
+  }
+
+  Future<void> _deleteConversation() async {
+    if (_isClearing || _isDeleting) return;
+
+    final confirmed = await _confirmAction(
+      title: 'Delete conversation?',
+      message: 'This permanently deletes this chat and all messages.',
+      confirmLabel: 'Delete',
+      isDestructive: true,
+    );
+    if (!confirmed || !mounted) return;
+
+    setState(() => _isDeleting = true);
+
+    try {
+      await ref
+          .read(chatStateProvider(widget.conversationId).notifier)
+          .deleteConversation();
+      await ref.read(conversationsProvider.notifier).refresh();
+
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete conversation: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isDeleting = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final messagesAsyncValue =
-        ref.watch(chatStateProvider(widget.conversationId));
+    final messagesAsyncValue = ref.watch(
+      chatStateProvider(widget.conversationId),
+    );
     final authUser = ref.read(authViewModelProvider).user;
     final currentUserId = authUser?.userId ?? authUser?.id;
 
@@ -86,6 +191,50 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           ],
         ),
         iconTheme: const IconThemeData(color: Colors.black87),
+        actions: [
+          if (_isClearing || _isDeleting)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              child: Center(
+                child: SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2.2),
+                ),
+              ),
+            ),
+          PopupMenuButton<_ConversationAction>(
+            enabled: !_isClearing && !_isDeleting,
+            onSelected: (action) {
+              switch (action) {
+                case _ConversationAction.clear:
+                  _clearConversation();
+                  break;
+                case _ConversationAction.delete:
+                  _deleteConversation();
+                  break;
+              }
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem<_ConversationAction>(
+                value: _ConversationAction.clear,
+                child: ListTile(
+                  dense: true,
+                  leading: Icon(Icons.cleaning_services_outlined),
+                  title: Text('Clear conversation'),
+                ),
+              ),
+              PopupMenuItem<_ConversationAction>(
+                value: _ConversationAction.delete,
+                child: ListTile(
+                  dense: true,
+                  leading: Icon(Icons.delete_outline, color: Colors.red),
+                  title: Text('Delete conversation'),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -183,12 +332,14 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                 ),
                 const SizedBox(width: 12),
                 InkWell(
-                  onTap: _sendMessage,
+                  onTap: _isClearing || _isDeleting ? null : _sendMessage,
                   borderRadius: BorderRadius.circular(24),
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.blue[600],
+                      color: _isClearing || _isDeleting
+                          ? Colors.grey[400]
+                          : Colors.blue[600],
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(

@@ -9,6 +9,7 @@ import 'package:getagig/core/api/api_endpoints.dart';
 import 'package:getagig/features/organizer/domain/entities/organizer_entity.dart';
 import 'package:getagig/features/gigs/presentation/pages/create_gig_page.dart';
 import 'edit_organizer_profile_page.dart';
+import 'manage_organizer_media_page.dart';
 
 class ViewOrganizerProfilePage extends ConsumerStatefulWidget {
   final String? organizerId;
@@ -581,7 +582,15 @@ class _ViewOrganizerProfilePageState
                           title: 'Photos',
                           count: organizer.photos.length,
                           onTap: () {
-                            // Navigate to ManageMediaPage
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ManageOrganizerMediaPage(
+                                  mediaType: OrganizerMediaType.photos,
+                                  isOwner: widget.organizerId == null,
+                                ),
+                              ),
+                            );
                           },
                         ),
                         const Divider(height: 1),
@@ -590,7 +599,15 @@ class _ViewOrganizerProfilePageState
                           title: 'Videos',
                           count: organizer.videos.length,
                           onTap: () {
-                            // Navigate to ManageMediaPage
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ManageOrganizerMediaPage(
+                                  mediaType: OrganizerMediaType.videos,
+                                  isOwner: widget.organizerId == null,
+                                ),
+                              ),
+                            );
                           },
                         ),
                       ],
@@ -609,7 +626,15 @@ class _ViewOrganizerProfilePageState
                       ),
                       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                       onTap: () {
-                        // Navigate to handle documents
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ManageOrganizerMediaPage(
+                              mediaType: OrganizerMediaType.documents,
+                              isOwner: widget.organizerId == null,
+                            ),
+                          ),
+                        );
                       },
                     ),
                   ),

@@ -67,8 +67,8 @@ class MessagesPage extends ConsumerWidget {
                     color: Colors.transparent,
                     child: InkWell(
                       borderRadius: BorderRadius.circular(24),
-                      onTap: () {
-                        Navigator.push(
+                      onTap: () async {
+                        final updated = await Navigator.push<bool>(
                           context,
                           MaterialPageRoute(
                             builder: (context) => ChatPage(
@@ -78,6 +78,12 @@ class MessagesPage extends ConsumerWidget {
                             ),
                           ),
                         );
+
+                        if (updated == true && context.mounted) {
+                          await ref
+                              .read(conversationsProvider.notifier)
+                              .refresh();
+                        }
                       },
                       child: Padding(
                         padding: const EdgeInsets.all(16),
@@ -91,7 +97,7 @@ class MessagesPage extends ConsumerWidget {
                                 gradient: LinearGradient(
                                   colors: [
                                     const Color(0xFF6366F1).withOpacity(0.1),
-                                    const Color(0xFF1A1B61).withOpacity(0.1)
+                                    const Color(0xFF1A1B61).withOpacity(0.1),
                                   ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
@@ -190,4 +196,3 @@ class MessagesPage extends ConsumerWidget {
     );
   }
 }
-

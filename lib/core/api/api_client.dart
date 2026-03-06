@@ -32,7 +32,7 @@ class ApiClient {
       ),
     );
 
-    _dio.interceptors.add(_AuthInterceptor(_dio, _tokenManager));
+    _dio.interceptors.add(_AuthInterceptor(_tokenManager));
 
     _dio.interceptors.add(
       RetryInterceptor(
@@ -177,10 +177,9 @@ class _TokenManager {
 }
 
 class _AuthInterceptor extends QueuedInterceptor {
-  final Dio _dio;
   final _TokenManager _tokenManager;
 
-  _AuthInterceptor(this._dio, this._tokenManager);
+  _AuthInterceptor(this._tokenManager);
 
   @override
   void onRequest(

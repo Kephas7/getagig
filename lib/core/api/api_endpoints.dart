@@ -8,7 +8,7 @@ class ApiEndpoints {
   // Configuration
   static const String _ipAddress = String.fromEnvironment(
     'API_IP_ADDRESS',
-    defaultValue: '192.168.1.3',
+    defaultValue: '192.168.1.28',
   );
   static const int _port = 5050;
   static const Duration _hostProbeTimeout = Duration(milliseconds: 700);
@@ -136,6 +136,10 @@ class ApiEndpoints {
   static const String messages = '/messages';
   static const String conversations = '/messages/conversations';
   static String conversationMessages(String conversationId) =>
+      '/messages/conversations/$conversationId';
+  static String clearConversationMessages(String conversationId) =>
+      '/messages/conversations/$conversationId/messages';
+  static String deleteConversation(String conversationId) =>
       '/messages/conversations/$conversationId';
   static const String startConversation = '/messages/conversations/start';
   static const String sendMessage = '/messages/send';

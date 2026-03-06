@@ -87,6 +87,37 @@ class HiveService {
         .toList();
   }
 
+  Future<void> clearMessagesForConversation(String conversationId) async {
+    final keysToDelete = _messageBox.keys.where((key) {
+      final message = _messageBox.get(key);
+      return message?.conversationId == conversationId;
+    }).toList();
+
+    if (keysToDelete.isNotEmpty) {
+      await _messageBox.deleteAll(keysToDelete);
+    }
+  }
+
+  Future<void> updateConversationPreview({
+    required String conversationId,
+    String? lastMessage,
+  }) async {
+    final conversation = _conversationBox.get(conversationId);
+    if (conversation == null) return;
+
+    await _conversationBox.put(
+      conversationId,
+      conversation.copyWith(
+        lastMessage: lastMessage,
+        updatedAt: DateTime.now(),
+      ),
+    );
+  }
+
+  Future<void> deleteConversation(String conversationId) async {
+    await _conversationBox.delete(conversationId);
+  }
+
   Future<void> saveNotifications(List<NotificationModel> notifications) async {
     await _notificationBox.clear();
     for (var notif in notifications) {

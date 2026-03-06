@@ -19,9 +19,20 @@ class GigRepository implements IGigRepository {
   GigRepository({required ApiClient apiClient}) : _apiClient = apiClient;
 
   @override
-  Future<Either<Failure, List<GigEntity>>> getAllGigs() async {
+  Future<Either<Failure, List<GigEntity>>> getAllGigs({
+    String? organizerId,
+  }) async {
     try {
-      final response = await _apiClient.get(ApiEndpoints.gigs);
+      final trimmedOrganizerId = organizerId?.trim();
+      final queryParameters =
+          (trimmedOrganizerId != null && trimmedOrganizerId.isNotEmpty)
+          ? <String, dynamic>{'organizerId': trimmedOrganizerId}
+          : null;
+
+      final response = await _apiClient.get(
+        ApiEndpoints.gigs,
+        queryParameters: queryParameters,
+      );
       if (response.data['success'] == true) {
         final dynamic responseData = response.data['data'];
         List<dynamic> dataList = [];

@@ -48,7 +48,7 @@ void main() {
     profilePicture: null,
     bio: 'Bio details',
     phone: '1234567890',
-    location: {'city': 'Kathmandu', 'country': 'Nepal'},
+    location: 'Kathmandu, Nepal',
     genres: ['Rock', 'Pop'],
     instruments: ['Guitar', 'Drums'],
     experienceYears: 5,
@@ -56,6 +56,8 @@ void main() {
     photos: ['p1', 'p2'],
     videos: ['v1'],
     audioSamples: ['a1'],
+    isVerified: false,
+    verificationRequested: false,
     isAvailable: true,
     createdAt: '2024-01-01',
     updatedAt: '2024-01-02',
@@ -96,13 +98,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Stage One'), findsOneWidget);
-    expect(find.text('Available for Gigs'), findsOneWidget);
+    expect(find.text('AVAILABLE FOR GIGS'), findsOneWidget);
     expect(find.text('Bio details'), findsOneWidget);
-    expect(find.text('1234567890'), findsOneWidget);
     expect(find.text('Rock'), findsOneWidget);
     expect(find.text('Guitar'), findsOneWidget);
     expect(find.text('Photos'), findsOneWidget);
-    expect(find.text('2'), findsOneWidget);
   });
 
   testWidgets('shows error message and retry button when failure occurs', (

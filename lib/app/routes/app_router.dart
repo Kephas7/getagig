@@ -2,8 +2,10 @@
 import 'package:go_router/go_router.dart';
 import 'package:getagig/app/routes/route_constants.dart';
 import 'package:getagig/app/routes/router_notifier.dart';
+import 'package:getagig/features/auth/presentation/pages/forgot_password_page.dart';
 import 'package:getagig/features/auth/presentation/pages/login_page.dart';
 import 'package:getagig/features/auth/presentation/pages/register_page.dart';
+import 'package:getagig/features/auth/presentation/pages/reset_password_page.dart';
 import 'package:getagig/features/auth/presentation/state/auth_state.dart';
 
 import 'package:getagig/features/dashboard/presentation/pages/dashboard_router.dart';
@@ -27,12 +29,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isAuthenticated = routerNotifier.isAuthenticated;
       final authStatus = routerNotifier.authStatus;
 
-      const publicRoutes = [
+      const staticPublicRoutes = [
         RouteConstants.splash,
         RouteConstants.login,
         RouteConstants.signup,
+        RouteConstants.forgotPassword,
       ];
-      final isPublicRoute = publicRoutes.contains(currentPath);
+      final isResetPasswordPath = currentPath.startsWith(
+        '${RouteConstants.resetPassword}/',
+      );
+      final isPublicRoute =
+          staticPublicRoutes.contains(currentPath) || isResetPasswordPath;
 
       if (isAuthenticated) {
         if (isPublicRoute) {
@@ -70,6 +77,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: RouteConstants.signup,
         name: RouteNames.signup,
         builder: (context, state) => const RegisterPage(),
+      ),
+      GoRoute(
+        path: RouteConstants.forgotPassword,
+        name: RouteNames.forgotPassword,
+        builder: (context, state) => const ForgotPasswordPage(),
+      ),
+      GoRoute(
+        path: '${RouteConstants.resetPassword}/:token',
+        name: RouteNames.resetPassword,
+        builder: (context, state) {
+          final token = state.pathParameters['token'];
+          return ResetPasswordPage(token: token ?? '');
+        },
       ),
       GoRoute(
         path: RouteConstants.dashboard,

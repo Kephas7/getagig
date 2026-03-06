@@ -5,13 +5,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:getagig/core/error/failures.dart';
+import 'package:getagig/core/services/security/biometric_auth_service.dart';
+import 'package:getagig/core/services/storage/user_session_service.dart';
 import 'package:getagig/features/auth/domain/entities/auth_entity.dart';
+import 'package:getagig/features/auth/domain/usecases/forgot_password_usecase.dart';
 import 'package:getagig/features/auth/domain/usecases/get_current_user_usecase.dart';
 import 'package:getagig/features/auth/domain/usecases/login_usecase.dart';
 import 'package:getagig/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:getagig/features/auth/domain/usecases/register_usecase.dart';
+import 'package:getagig/features/auth/domain/usecases/reset_password_usecase.dart';
 import 'package:getagig/features/auth/presentation/pages/login_page.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MockNavigatorObserver extends Mock implements NavigatorObserver {}
 
@@ -23,11 +28,34 @@ class MockGetCurrentUserUsecase extends Mock implements GetCurrentUserUsecase {}
 
 class MockLogoutUsecase extends Mock implements LogoutUsecase {}
 
+class MockForgotPasswordUsecase extends Mock implements ForgotPasswordUsecase {}
+
+class MockResetPasswordUsecase extends Mock implements ResetPasswordUsecase {}
+
+class _FakeUnsupportedBiometricAuthService extends BiometricAuthService {
+  @override
+  Future<bool> isFingerprintSupported() async => false;
+
+  @override
+  Future<bool> authenticateForLogin() async => false;
+}
+
+class _FakeSupportedBiometricAuthService extends BiometricAuthService {
+  @override
+  Future<bool> isFingerprintSupported() async => true;
+
+  @override
+  Future<bool> authenticateForLogin() async => true;
+}
+
 void main() {
   late MockRegisterUsecase mockRegisterUsecase;
   late MockLoginUsecase mockLoginUsecase;
   late MockGetCurrentUserUsecase mockGetCurrentUserUsecase;
   late MockLogoutUsecase mockLogoutUsecase;
+  late MockForgotPasswordUsecase mockForgotPasswordUsecase;
+  late MockResetPasswordUsecase mockResetPasswordUsecase;
+  late SharedPreferences mockPrefs;
   setUpAll(() {
     registerFallbackValue(
       const RegisterParams(
@@ -41,21 +69,39 @@ void main() {
       const LoginParams(email: 'fallback@email.com', password: 'fallback'),
     );
   });
-  setUp(() {
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    mockPrefs = await SharedPreferences.getInstance();
+
     mockRegisterUsecase = MockRegisterUsecase();
     mockLoginUsecase = MockLoginUsecase();
     mockGetCurrentUserUsecase = MockGetCurrentUserUsecase();
     mockLogoutUsecase = MockLogoutUsecase();
+    mockForgotPasswordUsecase = MockForgotPasswordUsecase();
+    mockResetPasswordUsecase = MockResetPasswordUsecase();
   });
-  Widget createTestWidget() {
+
+  Widget createTestWidget({bool biometricSupported = false}) {
     return ProviderScope(
       overrides: [
         registerUsecaseProvider.overrideWithValue(mockRegisterUsecase),
         loginUsecaseProvider.overrideWithValue(mockLoginUsecase),
+        forgotPasswordUsecaseProvider.overrideWithValue(
+          mockForgotPasswordUsecase,
+        ),
+        resetPasswordUsecaseProvider.overrideWithValue(
+          mockResetPasswordUsecase,
+        ),
         getCurrentUserUsecaseProvider.overrideWithValue(
           mockGetCurrentUserUsecase,
         ),
         logoutUsecaseProvider.overrideWithValue(mockLogoutUsecase),
+        sharedPreferencesProvider.overrideWithValue(mockPrefs),
+        biometricAuthServiceProvider.overrideWithValue(
+          biometricSupported
+              ? _FakeSupportedBiometricAuthService()
+              : _FakeUnsupportedBiometricAuthService(),
+        ),
       ],
       child: const MaterialApp(home: LoginPage()),
     );
@@ -107,6 +153,12 @@ void main() {
       await tester.pumpWidget(createTestWidget());
 
       expect(find.text("Create Account"), findsOneWidget);
+    });
+
+    testWidgets('should display forgot password link text', (tester) async {
+      await tester.pumpWidget(createTestWidget());
+
+      expect(find.text('Forgot Password?'), findsOneWidget);
     });
     testWidgets('should display hint texts', (tester) async {
       await tester.pumpWidget(createTestWidget());

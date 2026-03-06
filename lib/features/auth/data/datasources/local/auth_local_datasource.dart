@@ -42,6 +42,10 @@ class AuthLocalDatasource implements IAuthLocalDataSource {
         username: user.username,
         role: user.role,
       );
+      await _userSessionService.cacheLoginCredentials(
+        email: email,
+        password: password,
+      );
 
       return user;
     } catch (_) {
@@ -92,4 +96,3 @@ class AuthLocalDatasource implements IAuthLocalDataSource {
     return true;
   }
 }
-

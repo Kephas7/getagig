@@ -80,7 +80,7 @@ extension ConversationModelX on ConversationModel {
   String get participantName {
     if (participants.isEmpty) return '';
     final first = participants.first;
-    return first.username ?? first.email ?? '';
+    return first.username.trim().isNotEmpty ? first.username : first.email;
   }
 
   /// Safe non-null id

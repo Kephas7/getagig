@@ -2,7 +2,6 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
   throw UnimplementedError('SharedPreferences must be overridden in main.dart');
 });
@@ -24,8 +23,12 @@ class UserSessionService {
 
   UserSessionService(this._prefs);
 
-
   static const String _keyAuthToken = 'auth_token';
+  static const String _keyBiometricEnabled = 'biometric_enabled';
+  static const String _keyBiometricEmail = 'biometric_email';
+  static const String _keyBiometricPassword = 'biometric_password';
+  static const String _keyCachedLoginEmail = 'cached_login_email';
+  static const String _keyCachedLoginPassword = 'cached_login_password';
 
   Future<void> saveUserSession({
     required String userId,
@@ -49,6 +52,70 @@ class UserSessionService {
   Future<void> saveToken(String token) =>
       _secureStorage.write(key: _keyAuthToken, value: token);
 
+  Future<void> enableBiometricLogin({
+    required String email,
+    required String password,
+  }) async {
+    await _prefs.setBool(_keyBiometricEnabled, true);
+    await _secureStorage.write(key: _keyBiometricEmail, value: email);
+    await _secureStorage.write(key: _keyBiometricPassword, value: password);
+  }
+
+  Future<void> cacheLoginCredentials({
+    required String email,
+    required String password,
+  }) async {
+    await _secureStorage.write(key: _keyCachedLoginEmail, value: email);
+    await _secureStorage.write(key: _keyCachedLoginPassword, value: password);
+  }
+
+  Future<BiometricCredentials?> getCachedLoginCredentials() async {
+    final email = await _secureStorage.read(key: _keyCachedLoginEmail);
+    final password = await _secureStorage.read(key: _keyCachedLoginPassword);
+    if (email == null || password == null) {
+      return null;
+    }
+
+    return BiometricCredentials(email: email, password: password);
+  }
+
+  Future<void> disableBiometricLogin() async {
+    await _prefs.setBool(_keyBiometricEnabled, false);
+    await _secureStorage.delete(key: _keyBiometricEmail);
+    await _secureStorage.delete(key: _keyBiometricPassword);
+  }
+
+  Future<bool> isBiometricLoginEnabled() async {
+    final enabled = _prefs.getBool(_keyBiometricEnabled) ?? false;
+    if (!enabled) {
+      return false;
+    }
+
+    final email = await _secureStorage.read(key: _keyBiometricEmail);
+    final password = await _secureStorage.read(key: _keyBiometricPassword);
+
+    if (email == null || password == null) {
+      await _prefs.setBool(_keyBiometricEnabled, false);
+      return false;
+    }
+
+    return true;
+  }
+
+  Future<BiometricCredentials?> getBiometricCredentials() async {
+    final enabled = await isBiometricLoginEnabled();
+    if (!enabled) {
+      return null;
+    }
+
+    final email = await _secureStorage.read(key: _keyBiometricEmail);
+    final password = await _secureStorage.read(key: _keyBiometricPassword);
+    if (email == null || password == null) {
+      return null;
+    }
+
+    return BiometricCredentials(email: email, password: password);
+  }
 
   bool hasSession() {
     return _prefs.containsKey(_keyUserId);
@@ -75,7 +142,15 @@ class UserSessionService {
     await _prefs.remove(_keyUserEmail);
     await _prefs.remove(_keyUserName);
     await _prefs.remove(_keyUserRole);
-    await _secureStorage.delete(key:'auth_token');
+    await _secureStorage.delete(key: _keyAuthToken);
+    await _secureStorage.delete(key: _keyCachedLoginEmail);
+    await _secureStorage.delete(key: _keyCachedLoginPassword);
   }
 }
 
+class BiometricCredentials {
+  final String email;
+  final String password;
+
+  const BiometricCredentials({required this.email, required this.password});
+}

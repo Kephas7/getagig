@@ -132,4 +132,53 @@ class MessageRepository {
       return Left(ApiFailure(message: e.toString()));
     }
   }
+
+  Future<Either<Failure, bool>> clearConversation({
+    required String conversationId,
+  }) async {
+    try {
+      final response = await _apiClient.delete(
+        ApiEndpoints.clearConversationMessages(conversationId),
+      );
+
+      if (response.data['success'] == true) {
+        await _hiveService.clearMessagesForConversation(conversationId);
+        await _hiveService.updateConversationPreview(
+          conversationId: conversationId,
+          lastMessage: null,
+        );
+        return const Right(true);
+      }
+
+      final message =
+          response.data['message']?.toString() ??
+          'Failed to clear conversation';
+      return Left(ApiFailure(message: message));
+    } catch (e) {
+      return Left(ApiFailure(message: e.toString()));
+    }
+  }
+
+  Future<Either<Failure, bool>> deleteConversation({
+    required String conversationId,
+  }) async {
+    try {
+      final response = await _apiClient.delete(
+        ApiEndpoints.deleteConversation(conversationId),
+      );
+
+      if (response.data['success'] == true) {
+        await _hiveService.clearMessagesForConversation(conversationId);
+        await _hiveService.deleteConversation(conversationId);
+        return const Right(true);
+      }
+
+      final message =
+          response.data['message']?.toString() ??
+          'Failed to delete conversation';
+      return Left(ApiFailure(message: message));
+    } catch (e) {
+      return Left(ApiFailure(message: e.toString()));
+    }
+  }
 }

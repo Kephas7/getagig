@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/app/routes/app_routes.dart';
 import 'package:getagig/core/api/api_endpoints.dart';
+import 'package:getagig/core/services/security/biometric_auth_service.dart';
+import 'package:getagig/core/services/storage/user_session_service.dart';
 import 'package:getagig/features/auth/presentation/pages/login_page.dart';
 import 'package:getagig/features/auth/presentation/state/auth_state.dart';
 import 'package:getagig/features/auth/presentation/view_model/auth_viewmodel.dart';
@@ -23,9 +25,15 @@ class Profile extends ConsumerStatefulWidget {
 }
 
 class _ProfileState extends ConsumerState<Profile> {
+  bool _isCheckingBiometricState = true;
+  bool _isBiometricSupported = false;
+  bool _isBiometricEnabled = false;
+  bool _isUpdatingBiometricPreference = false;
+
   @override
   void initState() {
     super.initState();
+    _loadBiometricPreference();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authState = ref.read(authViewModelProvider);
@@ -35,6 +43,11 @@ class _ProfileState extends ConsumerState<Profile> {
         ref.read(organizerProfileViewModelProvider.notifier).getProfile();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
@@ -152,6 +165,11 @@ class _ProfileState extends ConsumerState<Profile> {
             _buildOrganizerProfileSection(organizerState),
           ],
 
+          const SizedBox(height: 30),
+          const Divider(),
+          const SizedBox(height: 20),
+          _buildBiometricSecuritySection(),
+
           const SizedBox(height: 40),
 
           SizedBox(
@@ -171,6 +189,93 @@ class _ProfileState extends ConsumerState<Profile> {
         ],
       ),
     );
+  }
+
+  Future<void> _loadBiometricPreference() async {
+    final biometricAuthService = ref.read(biometricAuthServiceProvider);
+    final sessionService = ref.read(userSessionServiceProvider);
+
+    final isSupported = await biometricAuthService.isFingerprintSupported();
+    final isEnabled = isSupported
+        ? await sessionService.isBiometricLoginEnabled()
+        : false;
+
+    if (!mounted) return;
+    setState(() {
+      _isBiometricSupported = isSupported;
+      _isBiometricEnabled = isEnabled;
+      _isCheckingBiometricState = false;
+    });
+  }
+
+  Future<void> _onBiometricToggleChanged(bool value) async {
+    if (_isUpdatingBiometricPreference) {
+      return;
+    }
+
+    final sessionService = ref.read(userSessionServiceProvider);
+
+    setState(() {
+      _isUpdatingBiometricPreference = true;
+    });
+
+    try {
+      if (!value) {
+        await sessionService.disableBiometricLogin();
+        if (!mounted) return;
+        setState(() {
+          _isBiometricEnabled = false;
+        });
+        _showMessage('Biometric login disabled.');
+        return;
+      }
+
+      if (!_isBiometricSupported) {
+        _showMessage(
+          'Face unlock or fingerprint is not available on this device.',
+        );
+        return;
+      }
+
+      final biometricAuthService = ref.read(biometricAuthServiceProvider);
+      final authenticated = await biometricAuthService.authenticateForLogin();
+      if (!authenticated) {
+        _showMessage('Biometric verification cancelled or failed.');
+        return;
+      }
+
+      final cachedCredentials = await sessionService
+          .getCachedLoginCredentials();
+      if (cachedCredentials == null) {
+        _showMessage(
+          'Please log in with email and password once before enabling biometric login.',
+        );
+        return;
+      }
+
+      await sessionService.enableBiometricLogin(
+        email: cachedCredentials.email,
+        password: cachedCredentials.password,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _isBiometricEnabled = true;
+      });
+      _showMessage('Biometric login enabled.');
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isUpdatingBiometricPreference = false;
+      });
+    }
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _requestMusicianVerification() async {
@@ -193,6 +298,57 @@ class _ProfileState extends ConsumerState<Profile> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Verification request sent to admin')),
+    );
+  }
+
+  Widget _buildBiometricSecuritySection() {
+    return Card(
+      elevation: 1,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.fingerprint, color: Colors.indigo),
+                SizedBox(width: 10),
+                Text(
+                  'Security',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Enable face unlock or fingerprint login for quicker sign in on this device.',
+              style: TextStyle(color: Colors.grey[700], fontSize: 13),
+            ),
+            const SizedBox(height: 14),
+            SwitchListTile.adaptive(
+              value: _isBiometricEnabled,
+              contentPadding: EdgeInsets.zero,
+              onChanged:
+                  (_isCheckingBiometricState ||
+                      _isUpdatingBiometricPreference ||
+                      (!_isBiometricSupported && !_isBiometricEnabled))
+                  ? null
+                  : _onBiometricToggleChanged,
+              title: const Text('Use biometric for login'),
+              subtitle: _isCheckingBiometricState
+                  ? const Text('Checking biometric availability...')
+                  : Text(
+                      _isBiometricSupported
+                          ? (_isBiometricEnabled
+                                ? 'Enabled on this device.'
+                                : 'Turn on this switch and verify face unlock or fingerprint to complete setup.')
+                          : 'Face unlock or fingerprint is not available or not enrolled on this device.',
+                    ),
+              secondary: const Icon(Icons.fingerprint),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

@@ -14,8 +14,7 @@ class GetAllGigsUseCase {
 
   GetAllGigsUseCase({required this.repository});
 
-  Future<Either<Failure, List<GigEntity>>> call() async {
-    return await repository.getAllGigs();
+  Future<Either<Failure, List<GigEntity>>> call({String? organizerId}) async {
+    return await repository.getAllGigs(organizerId: organizerId);
   }
 }
-

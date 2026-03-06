@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:getagig/core/error/failures.dart';
 import 'package:getagig/features/auth/domain/entities/auth_entity.dart';
+import 'package:getagig/features/auth/domain/usecases/forgot_password_usecase.dart';
 import 'package:getagig/features/auth/domain/usecases/get_current_user_usecase.dart';
 import 'package:getagig/features/auth/domain/usecases/login_usecase.dart';
 import 'package:getagig/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:getagig/features/auth/domain/usecases/register_usecase.dart';
+import 'package:getagig/features/auth/domain/usecases/reset_password_usecase.dart';
 import 'package:getagig/features/auth/presentation/state/auth_state.dart';
 import 'package:getagig/features/auth/presentation/view_model/auth_viewmodel.dart';
 import 'package:mocktail/mocktail.dart';
@@ -19,11 +21,17 @@ class MockGetCurrentUserUsecase extends Mock implements GetCurrentUserUsecase {}
 
 class MockLogoutUsecase extends Mock implements LogoutUsecase {}
 
+class MockForgotPasswordUsecase extends Mock implements ForgotPasswordUsecase {}
+
+class MockResetPasswordUsecase extends Mock implements ResetPasswordUsecase {}
+
 void main() {
   late MockRegisterUsecase mockRegisterUsecase;
   late MockLoginUsecase mockLoginUsecase;
   late MockGetCurrentUserUsecase mockGetCurrentUserUsecase;
   late MockLogoutUsecase mockLogoutUsecase;
+  late MockForgotPasswordUsecase mockForgotPasswordUsecase;
+  late MockResetPasswordUsecase mockResetPasswordUsecase;
   late ProviderContainer container;
 
   setUpAll(() {
@@ -38,6 +46,12 @@ void main() {
     registerFallbackValue(
       const LoginParams(email: 'fallback@email.com', password: 'fallback'),
     );
+    registerFallbackValue(
+      const ForgotPasswordParams(email: 'fallback@email.com'),
+    );
+    registerFallbackValue(
+      const ResetPasswordParams(token: 'token', password: 'fallback'),
+    );
   });
 
   setUp(() {
@@ -45,11 +59,19 @@ void main() {
     mockLoginUsecase = MockLoginUsecase();
     mockGetCurrentUserUsecase = MockGetCurrentUserUsecase();
     mockLogoutUsecase = MockLogoutUsecase();
+    mockForgotPasswordUsecase = MockForgotPasswordUsecase();
+    mockResetPasswordUsecase = MockResetPasswordUsecase();
 
     container = ProviderContainer(
       overrides: [
         registerUsecaseProvider.overrideWithValue(mockRegisterUsecase),
         loginUsecaseProvider.overrideWithValue(mockLoginUsecase),
+        forgotPasswordUsecaseProvider.overrideWithValue(
+          mockForgotPasswordUsecase,
+        ),
+        resetPasswordUsecaseProvider.overrideWithValue(
+          mockResetPasswordUsecase,
+        ),
         getCurrentUserUsecaseProvider.overrideWithValue(
           mockGetCurrentUserUsecase,
         ),
@@ -242,6 +264,80 @@ void main() {
       });
     });
 
+    group('forgotPassword', () {
+      test(
+        'should emit forgotPasswordSuccess state when request succeeds',
+        () async {
+          when(
+            () => mockForgotPasswordUsecase(any()),
+          ).thenAnswer((_) async => const Right('Reset link sent'));
+
+          final viewModel = container.read(authViewModelProvider.notifier);
+          await viewModel.forgotPassword('test@example.com');
+
+          final state = container.read(authViewModelProvider);
+          expect(state.status, AuthStatus.forgotPasswordSuccess);
+          expect(state.errorMessage, isNull);
+          verify(() => mockForgotPasswordUsecase(any())).called(1);
+        },
+      );
+
+      test(
+        'should emit error state when forgot password request fails',
+        () async {
+          const failure = ApiFailure(message: 'Failed to send reset email');
+          when(
+            () => mockForgotPasswordUsecase(any()),
+          ).thenAnswer((_) async => const Left(failure));
+
+          final viewModel = container.read(authViewModelProvider.notifier);
+          await viewModel.forgotPassword('test@example.com');
+
+          final state = container.read(authViewModelProvider);
+          expect(state.status, AuthStatus.error);
+          expect(state.errorMessage, 'Failed to send reset email');
+          verify(() => mockForgotPasswordUsecase(any())).called(1);
+        },
+      );
+    });
+
+    group('resetPassword', () {
+      test(
+        'should emit resetPasswordSuccess state when reset succeeds',
+        () async {
+          when(
+            () => mockResetPasswordUsecase(any()),
+          ).thenAnswer((_) async => const Right('Password reset successful'));
+
+          final viewModel = container.read(authViewModelProvider.notifier);
+          await viewModel.resetPassword('token-123', 'new-password');
+
+          final state = container.read(authViewModelProvider);
+          expect(state.status, AuthStatus.resetPasswordSuccess);
+          expect(state.errorMessage, isNull);
+          verify(() => mockResetPasswordUsecase(any())).called(1);
+        },
+      );
+
+      test(
+        'should emit error state when reset password request fails',
+        () async {
+          const failure = ApiFailure(message: 'Invalid or expired reset token');
+          when(
+            () => mockResetPasswordUsecase(any()),
+          ).thenAnswer((_) async => const Left(failure));
+
+          final viewModel = container.read(authViewModelProvider.notifier);
+          await viewModel.resetPassword('bad-token', 'new-password');
+
+          final state = container.read(authViewModelProvider);
+          expect(state.status, AuthStatus.error);
+          expect(state.errorMessage, 'Invalid or expired reset token');
+          verify(() => mockResetPasswordUsecase(any())).called(1);
+        },
+      );
+    });
+
     group('getCurrentUser', () {
       test(
         'should emit authenticated state with user when user is found',
@@ -357,8 +453,6 @@ void main() {
   });
 
   group('AuthState', () {
-  
-
     test('copyWith should update specified fields', () {
       const state = AuthState();
 

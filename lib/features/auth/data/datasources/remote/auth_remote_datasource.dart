@@ -54,6 +54,10 @@ class AuthRemoteDatasource implements IAuthRemoteDataSource {
         role: user.role,
         token: token,
       );
+      await _userSessionService.cacheLoginCredentials(
+        email: email,
+        password: password,
+      );
 
       try {
         final deviceToken = await FirebaseMessaging.instance.getToken();
@@ -105,16 +109,35 @@ class AuthRemoteDatasource implements IAuthRemoteDataSource {
 
   @override
   Future<AuthApiModel> register(AuthApiModel user) async {
+    final payload = {...user.toJson(), 'confirmPassword': user.password};
+
     final response = await _apiClient.post(
       ApiEndpoints.register,
-      data: user.toJson(),
+      data: payload,
     );
-    if (response.data['success'] == true) {
-      final data = response.data['data'] as Map<String, dynamic>;
+
+    final responseData = response.data as Map<String, dynamic>? ?? {};
+    if (responseData['success'] == true) {
+      final data = responseData['data'] as Map<String, dynamic>;
       final registeredUser = AuthApiModel.fromJson(data);
       return registeredUser;
     }
-    return user;
+
+    String? errorMessage = responseData['message'] as String?;
+    if (errorMessage == null || errorMessage == 'Validation Error') {
+      final errors = responseData['errors'];
+      if (errors is List && errors.isNotEmpty) {
+        final firstError = errors.first;
+        if (firstError is Map<String, dynamic>) {
+          final firstMessage = firstError['message'];
+          if (firstMessage is String && firstMessage.trim().isNotEmpty) {
+            errorMessage = firstMessage.trim();
+          }
+        }
+      }
+    }
+
+    throw Exception(errorMessage ?? 'Failed to register user.');
   }
 
   @override

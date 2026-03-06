@@ -404,7 +404,9 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
             builder: (context) => ChatPage(
               conversationId: conversation.id ?? '',
               receiverId: recipientUserId,
-              receiverName: participant.username ?? participant.email ?? '',
+              receiverName: participant.username.trim().isNotEmpty
+                  ? participant.username
+                  : participant.email,
             ),
           ),
         );

@@ -1,4 +1,4 @@
-﻿import 'package:dartz/dartz.dart';
+import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/core/error/failures.dart';
@@ -129,7 +129,17 @@ class AuthRepository implements IAuthRepository {
           ApiFailure.fromDioException(e, fallback: 'Registration failed.'),
         );
       } catch (e) {
-        return Left(ApiFailure(message: e.toString()));
+        final errorMessage = e
+            .toString()
+            .replaceFirst('Exception: ', '')
+            .trim();
+        return Left(
+          ApiFailure(
+            message: errorMessage.isEmpty
+                ? 'Registration failed.'
+                : errorMessage,
+          ),
+        );
       }
     } else {
       try {

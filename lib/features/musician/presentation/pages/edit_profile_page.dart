@@ -328,6 +328,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                         return null;
                       },
                     ),
+                    const SizedBox(height: 24),
                     const SizedBox(height: 32),
 
                     ElevatedButton(

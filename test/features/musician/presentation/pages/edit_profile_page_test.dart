@@ -12,7 +12,7 @@ void main() {
     profilePicture: null,
     bio: 'Short bio',
     phone: '1234567890',
-    location: {'city': 'Kathmandu', 'state': 'Bagmati', 'country': 'Nepal'},
+    location: 'Kathmandu, Bagmati, Nepal',
     genres: ['Rock'],
     instruments: ['Guitar'],
     experienceYears: 5,
@@ -20,6 +20,8 @@ void main() {
     photos: [],
     videos: [],
     audioSamples: [],
+    isVerified: false,
+    verificationRequested: false,
     isAvailable: true,
     createdAt: '2024-01-01',
     updatedAt: '2024-01-02',
@@ -40,14 +42,10 @@ void main() {
     expect(find.text('Stage One'), findsOneWidget);
     expect(find.text('Short bio'), findsOneWidget);
     expect(find.text('1234567890'), findsOneWidget);
-    expect(find.text('Kathmandu'), findsOneWidget);
-    expect(find.text('Bagmati'), findsOneWidget);
-    expect(find.text('Nepal'), findsOneWidget);
+    expect(find.text('Kathmandu, Bagmati, Nepal'), findsOneWidget);
     expect(find.text('Rock'), findsOneWidget);
     expect(find.text('Guitar'), findsOneWidget);
   });
-
-
 
   testWidgets('shows snack bar when genres deselected', (tester) async {
     await tester.pumpWidget(createTestWidget());

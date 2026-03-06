@@ -1,14 +1,12 @@
 ﻿import 'package:flutter/material.dart';
 
 ThemeData getApplicationTheme() {
-  const Color primaryColor = Color(0xFF1A1B61); 
-  const Color accentColor = Color(0xFF6366F1); 
-  const Color musicianAccent = Color(0xFFEC4899); 
-  const Color organizerAccent = Color(0xFF10B981); 
+  const Color primaryColor = Color(0xFF1A1B61);
+  const Color accentColor = Color(0xFF6366F1);
 
   return ThemeData(
     useMaterial3: true,
-    scaffoldBackgroundColor: const Color(0xFFF8FAFC), 
+    scaffoldBackgroundColor: const Color(0xFFF8FAFC),
     fontFamily: 'Urbanist-Medium',
     colorScheme: ColorScheme.fromSeed(
       seedColor: primaryColor,
@@ -77,4 +75,3 @@ ThemeData getApplicationTheme() {
     ),
   );
 }
-
