@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:getagig/features/dashboard/presentation/pages/messages_page.dart';
+import 'package:getagig/app/theme/app_shell_styles.dart';
+import 'package:getagig/app/widgets/app_logo.dart';
+import 'package:getagig/core/controllers/shake_refresh_controller.dart';
+import 'package:getagig/features/messaging/presentation/pages/messages_page.dart';
 import 'package:getagig/features/musician/presentation/pages/profile.dart';
 import 'package:getagig/features/gigs/presentation/pages/organizer_gigs_page.dart';
 import 'package:getagig/features/gigs/presentation/pages/create_gig_page.dart';
@@ -8,17 +11,19 @@ import 'package:getagig/features/gigs/presentation/pages/edit_gig_page.dart';
 import 'package:getagig/features/gigs/presentation/view_model/organizer_gigs_viewmodel.dart';
 import 'package:getagig/features/gigs/domain/entities/gig_entity.dart';
 import 'package:getagig/features/organizer/presentation/view_model/organizer_view_model.dart';
-import 'package:getagig/features/dashboard/presentation/pages/notifications_page.dart';
-import 'package:getagig/features/dashboard/presentation/view_model/notifications_viewmodel.dart';
+import 'package:getagig/features/notifications/presentation/pages/notifications_page.dart';
+import 'package:getagig/features/notifications/presentation/view_model/notifications_viewmodel.dart';
 
-class OrganizerDashboardPage extends StatefulWidget {
+class OrganizerDashboardPage extends ConsumerStatefulWidget {
   const OrganizerDashboardPage({super.key});
 
   @override
-  State<OrganizerDashboardPage> createState() => _OrganizerDashboardPageState();
+  ConsumerState<OrganizerDashboardPage> createState() =>
+      _OrganizerDashboardPageState();
 }
 
-class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
+class _OrganizerDashboardPageState
+    extends ConsumerState<OrganizerDashboardPage> {
   int _selectedIndex = 0;
 
   Widget _buildScreen() {
@@ -42,15 +47,22 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final unreadMessageCount = ref.watch(
+      unreadMessageNotificationCountProvider,
+    );
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: colorScheme.surface,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         elevation: 0,
         automaticallyImplyLeading: false,
         title: Padding(
           padding: const EdgeInsets.only(left: 4),
-          child: Image.asset("assets/images/mylogo.png", height: 40),
+          child: const AppLogo(height: 48),
         ),
         actions: [
           const _NotificationIconButtonWithBadge(),
@@ -61,50 +73,60 @@ class _OrganizerDashboardPageState extends State<OrganizerDashboardPage> {
         duration: const Duration(milliseconds: 300),
         child: _buildScreen(),
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border(top: BorderSide(color: Colors.grey[100]!, width: 1)),
-        ),
-        child: BottomNavigationBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          type: BottomNavigationBarType.fixed,
-          currentIndex: _selectedIndex,
-          onTap: (index) => setState(() => _selectedIndex = index),
-          selectedItemColor: Colors.black,
-          unselectedItemColor: Colors.black26,
-          showUnselectedLabels: true,
-          selectedLabelStyle: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 12,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+          child: Container(
+            decoration: AppShellStyles.glassCard(context, radius: 22),
+            child: BottomNavigationBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              type: BottomNavigationBarType.fixed,
+              currentIndex: _selectedIndex,
+              onTap: (index) => setState(() => _selectedIndex = index),
+              selectedItemColor: colorScheme.onSurface,
+              unselectedItemColor: AppShellStyles.mutedText(context),
+              showUnselectedLabels: true,
+              selectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 12,
+              ),
+              items: [
+                const BottomNavigationBarItem(
+                  icon: Icon(Icons.home_outlined),
+                  activeIcon: Icon(Icons.home_rounded),
+                  label: "Home",
+                ),
+                const BottomNavigationBarItem(
+                  icon: Icon(Icons.event_outlined),
+                  activeIcon: Icon(Icons.event_rounded),
+                  label: "Gigs",
+                ),
+                BottomNavigationBarItem(
+                  icon: _MessageTabIconWithBadge(
+                    icon: Icons.chat_bubble_outline_rounded,
+                    unreadCount: unreadMessageCount,
+                  ),
+                  activeIcon: _MessageTabIconWithBadge(
+                    icon: Icons.chat_bubble_rounded,
+                    unreadCount: unreadMessageCount,
+                  ),
+                  label: "Messages",
+                ),
+                const BottomNavigationBarItem(
+                  icon: Icon(Icons.person_outline_rounded),
+                  activeIcon: Icon(Icons.person_rounded),
+                  label: "Profile",
+                ),
+              ],
+            ),
           ),
-          unselectedLabelStyle: const TextStyle(
-            fontWeight: FontWeight.w500,
-            fontSize: 12,
-          ),
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home_rounded),
-              label: "Home",
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.event_outlined),
-              activeIcon: Icon(Icons.event_rounded),
-              label: "Gigs",
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.chat_bubble_outline_rounded),
-              activeIcon: Icon(Icons.chat_bubble_rounded),
-              label: "Messages",
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline_rounded),
-              activeIcon: Icon(Icons.person_rounded),
-              label: "Profile",
-            ),
-          ],
         ),
       ),
     );
@@ -123,6 +145,7 @@ class _OrganizerHomeTab extends ConsumerStatefulWidget {
 class _OrganizerHomeTabState extends ConsumerState<_OrganizerHomeTab> {
   late DateTime _calendarMonth;
   late DateTime _selectedDate;
+  late final ShakeRefreshController _shakeRefreshController;
 
   @override
   void initState() {
@@ -133,6 +156,36 @@ class _OrganizerHomeTabState extends ConsumerState<_OrganizerHomeTab> {
     Future.microtask(() {
       ref.read(organizerProfileViewModelProvider.notifier).getProfile();
     });
+
+    _shakeRefreshController = ShakeRefreshController(
+      onShake: _refreshFromShake,
+    );
+    _shakeRefreshController.start();
+  }
+
+  @override
+  void dispose() {
+    _shakeRefreshController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _refreshHomeData() async {
+    await Future.wait([
+      ref.read(organizerGigsProvider.notifier).refresh(),
+      ref.read(organizerProfileViewModelProvider.notifier).getProfile(),
+    ]);
+  }
+
+  Future<void> _refreshFromShake() async {
+    await _refreshHomeData();
+
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger == null) return;
+
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text('Page refreshed')));
   }
 
   @override
@@ -182,12 +235,7 @@ class _OrganizerHomeTabState extends ConsumerState<_OrganizerHomeTab> {
     }).toList()..sort((a, b) => a.date.compareTo(b.date));
 
     return RefreshIndicator(
-      onRefresh: () async {
-        await Future.wait([
-          ref.read(organizerGigsProvider.notifier).refresh(),
-          ref.read(organizerProfileViewModelProvider.notifier).getProfile(),
-        ]);
-      },
+      onRefresh: _refreshHomeData,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
@@ -311,34 +359,39 @@ class _OrganizerHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final dark = AppShellStyles.isDark(context);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFFBEB), Color(0xFFF8FAFC)],
+        gradient: LinearGradient(
+          colors: [
+            dark ? const Color(0xFF171717) : const Color(0xFFFFFFFF),
+            dark ? const Color(0xFF0F0F0F) : const Color(0xFFF3F3F3),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: const Color(0xFFF59E0B).withValues(alpha: 0.22),
+          color: colorScheme.secondary.withValues(alpha: 0.35),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Icon(
                 Icons.auto_awesome_rounded,
-                color: Color(0xFFF59E0B),
+                color: colorScheme.secondary,
                 size: 18,
               ),
               SizedBox(width: 8),
               Text(
                 'Organizer Dashboard',
                 style: TextStyle(
-                  color: Color(0xFFF59E0B),
+                  color: colorScheme.secondary,
                   fontWeight: FontWeight.w700,
                   fontSize: 12,
                 ),
@@ -346,12 +399,12 @@ class _OrganizerHeroCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Manage gigs and applications in one place',
             style: TextStyle(
               fontSize: 23,
               fontWeight: FontWeight.w800,
-              color: Color(0xFF1A1B61),
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 10),
@@ -375,9 +428,9 @@ class _OrganizerHeroCard extends StatelessWidget {
             label: Text(canPostGig ? 'Post a Gig' : 'Complete Verification'),
             style: ElevatedButton.styleFrom(
               backgroundColor: canPostGig
-                  ? const Color(0xFF1A1B61)
+                  ? colorScheme.secondary
                   : const Color(0xFFF59E0B),
-              foregroundColor: Colors.white,
+              foregroundColor: dark ? const Color(0xFF111111) : Colors.white,
             ),
           ),
         ],
@@ -393,18 +446,20 @@ class _OrganizerInfoChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
+        color: AppShellStyles.mutedSurface(context),
+        border: Border.all(color: AppShellStyles.border(context)),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w700,
-          color: Color(0xFFB45309),
+          color: colorScheme.secondary,
         ),
       ),
     );
@@ -418,12 +473,13 @@ class _OrganizerSectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 20,
         fontWeight: FontWeight.w800,
-        color: Color(0xFF1A1B61),
+        color: colorScheme.onSurface,
       ),
     );
   }
@@ -448,13 +504,10 @@ class _OrganizerStatsGrid extends StatelessWidget {
       ),
       itemBuilder: (context, index) {
         final card = cards[index];
+        final colorScheme = Theme.of(context).colorScheme;
         return Container(
           padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey[200]!),
-          ),
+          decoration: AppShellStyles.glassCard(context, radius: 16),
           child: Row(
             children: [
               Container(
@@ -473,16 +526,16 @@ class _OrganizerStatsGrid extends StatelessWidget {
                   children: [
                     Text(
                       card.value,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 18,
-                        color: Color(0xFF1A1B61),
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     Text(
                       card.label,
                       style: TextStyle(
-                        color: Colors.grey[600],
+                        color: AppShellStyles.mutedText(context),
                         fontWeight: FontWeight.w600,
                         fontSize: 12,
                       ),
@@ -549,6 +602,7 @@ class _OrganizerCalendarPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final monthLabel = '${_monthNames[month.month - 1]} ${month.year}';
     final firstDayOffset = DateTime(month.year, month.month, 1).weekday % 7;
     final daysInMonth = DateUtils.getDaysInMonth(month.year, month.month);
@@ -570,11 +624,7 @@ class _OrganizerCalendarPanel extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
+      decoration: AppShellStyles.glassCard(context, radius: 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -583,14 +633,14 @@ class _OrganizerCalendarPanel extends StatelessWidget {
               const Icon(
                 Icons.calendar_month_rounded,
                 size: 18,
-                color: Color(0xFFF59E0B),
+                color: Color(0xFF9F7A3B),
               ),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Gig Calendar',
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF1A1B61),
+                  color: colorScheme.onSurface,
                 ),
               ),
               const Spacer(),
@@ -608,9 +658,9 @@ class _OrganizerCalendarPanel extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             monthLabel,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w700,
-              color: Color(0xFF1A1B61),
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 8),
@@ -898,6 +948,7 @@ class _OrganizerCalendarNavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(10),
@@ -906,10 +957,10 @@ class _OrganizerCalendarNavButton extends StatelessWidget {
         height: 30,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.grey[300]!),
-          color: Colors.grey[50],
+          border: Border.all(color: AppShellStyles.border(context)),
+          color: AppShellStyles.mutedSurface(context),
         ),
-        child: Icon(icon, size: 18, color: const Color(0xFF1A1B61)),
+        child: Icon(icon, size: 18, color: colorScheme.onSurface),
       ),
     );
   }
@@ -937,7 +988,7 @@ class _OrganizerCalendarLegend extends StatelessWidget {
           style: TextStyle(
             fontSize: 10,
             fontWeight: FontWeight.w700,
-            color: Colors.grey[700],
+            color: AppShellStyles.mutedText(context),
           ),
         ),
       ],
@@ -959,7 +1010,7 @@ class _OrganizerCalendarDayLabel extends StatelessWidget {
         style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w700,
-          color: Colors.grey[600],
+          color: AppShellStyles.mutedText(context),
         ),
       ),
     );
@@ -1009,11 +1060,7 @@ class _OrganizerLoadingPanel extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 26),
       alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
+      decoration: AppShellStyles.glassCard(context, radius: 16),
       child: const CircularProgressIndicator(),
     );
   }
@@ -1027,24 +1074,31 @@ class _OrganizerErrorPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
+      decoration: AppShellStyles.glassCard(
+        context,
+        radius: 16,
+        tint: Colors.redAccent,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Something went wrong',
-            style: TextStyle(fontWeight: FontWeight.w700),
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
             message,
-            style: TextStyle(color: Colors.grey[700], fontSize: 12),
+            style: TextStyle(
+              color: AppShellStyles.mutedText(context),
+              fontSize: 12,
+            ),
           ),
           const SizedBox(height: 10),
           OutlinedButton(onPressed: onRetry, child: const Text('Retry')),
@@ -1062,26 +1116,26 @@ class _OrganizerEmptyPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
+      decoration: AppShellStyles.glassCard(context, radius: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w700,
-              color: Color(0xFF1A1B61),
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 6),
-          Text(subtitle, style: TextStyle(color: Colors.grey[700])),
+          Text(
+            subtitle,
+            style: TextStyle(color: AppShellStyles.mutedText(context)),
+          ),
         ],
       ),
     );
@@ -1095,17 +1149,57 @@ class _CircleIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(14),
       child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Icon(icon, color: Colors.black87, size: 24),
+        padding: const EdgeInsets.all(9),
+        decoration: AppShellStyles.glassCard(context, radius: 14),
+        child: Icon(icon, color: colorScheme.onSurface, size: 24),
       ),
+    );
+  }
+}
+
+class _MessageTabIconWithBadge extends StatelessWidget {
+  final IconData icon;
+  final int unreadCount;
+
+  const _MessageTabIconWithBadge({
+    required this.icon,
+    required this.unreadCount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Icon(icon),
+        if (unreadCount > 0)
+          Positioned(
+            right: -8,
+            top: -6,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+              constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
+              decoration: BoxDecoration(
+                color: Colors.redAccent,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                unreadCount > 9 ? '9+' : unreadCount.toString(),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

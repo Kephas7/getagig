@@ -1,4 +1,6 @@
 ﻿import 'dart:io';
+
+import '../models/organizer_hive_model.dart';
 import '../models/organizer_api_model.dart';
 
 abstract class IOrganizerRemoteDataSource {
@@ -16,4 +18,12 @@ abstract class IOrganizerRemoteDataSource {
   Future<OrganizerApiModel> removeVerificationDocument(String documentUrl);
   Future<OrganizerApiModel> updateActiveStatus(bool isActive);
   Future<OrganizerApiModel> requestVerification();
+}
+
+abstract interface class IOrganizerLocalDataSource {
+  Future<void> cacheProfile(OrganizerHiveModel profile);
+  Future<OrganizerHiveModel?> getCachedProfileById(String id);
+  Future<OrganizerHiveModel?> getCachedProfileByUserId(String userId);
+  Future<void> deleteCachedProfileById(String id);
+  Future<void> deleteCachedProfileByUserId(String userId);
 }

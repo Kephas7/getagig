@@ -1,12 +1,10 @@
 ﻿import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:getagig/app/routes/app_routes.dart';
+import 'package:getagig/app/theme/theme_viewmodel.dart';
 import 'package:getagig/core/api/api_endpoints.dart';
 import 'package:getagig/core/services/security/biometric_auth_service.dart';
 import 'package:getagig/core/services/storage/user_session_service.dart';
-import 'package:getagig/features/auth/presentation/pages/login_page.dart';
-import 'package:getagig/features/auth/presentation/state/auth_state.dart';
 import 'package:getagig/features/auth/presentation/view_model/auth_viewmodel.dart';
 import 'package:getagig/features/musician/presentation/pages/create_profile_page.dart';
 import 'package:getagig/features/musician/presentation/pages/view_profile_page.dart';
@@ -53,15 +51,10 @@ class _ProfileState extends ConsumerState<Profile> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authViewModelProvider);
+    final themeMode = ref.watch(themeViewModelProvider);
     final musicianState = ref.watch(musicianProfileViewModelProvider);
     final organizerState = ref.watch(organizerProfileViewModelProvider);
     final user = authState.user;
-
-    ref.listen<AuthState>(authViewModelProvider, (previous, next) {
-      if (next.status == AuthStatus.unauthenticated) {
-        AppRoutes.pushAndRemoveUntil(context, const LoginPage());
-      }
-    });
 
     ref.listen<MusicianProfileState>(musicianProfileViewModelProvider, (
       previous,
@@ -164,6 +157,11 @@ class _ProfileState extends ConsumerState<Profile> {
             const SizedBox(height: 20),
             _buildOrganizerProfileSection(organizerState),
           ],
+
+          const SizedBox(height: 30),
+          const Divider(),
+          const SizedBox(height: 20),
+          _buildAppearanceSection(themeMode),
 
           const SizedBox(height: 30),
           const Divider(),
@@ -373,6 +371,76 @@ class _ProfileState extends ConsumerState<Profile> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Verification request sent to admin')),
     );
+  }
+
+  Widget _buildAppearanceSection(ThemeMode themeMode) {
+    Future<void> onThemeChanged(ThemeMode? mode) async {
+      if (mode == null) return;
+      await ref.read(themeViewModelProvider.notifier).setThemeMode(mode);
+      if (!mounted) return;
+      _showMessage('Theme updated to ${_themeLabel(mode)} mode.');
+    }
+
+    return Card(
+      elevation: 1,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.palette_outlined, color: Colors.indigo),
+                SizedBox(width: 10),
+                Text(
+                  'Appearance',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Choose your app theme preference.',
+              style: TextStyle(color: Colors.grey[700], fontSize: 13),
+            ),
+            const SizedBox(height: 10),
+            RadioListTile<ThemeMode>(
+              value: ThemeMode.system,
+              groupValue: themeMode,
+              title: const Text('System default'),
+              subtitle: const Text('Follow your device setting'),
+              onChanged: onThemeChanged,
+              contentPadding: EdgeInsets.zero,
+            ),
+            RadioListTile<ThemeMode>(
+              value: ThemeMode.light,
+              groupValue: themeMode,
+              title: const Text('Light'),
+              onChanged: onThemeChanged,
+              contentPadding: EdgeInsets.zero,
+            ),
+            RadioListTile<ThemeMode>(
+              value: ThemeMode.dark,
+              groupValue: themeMode,
+              title: const Text('Dark'),
+              onChanged: onThemeChanged,
+              contentPadding: EdgeInsets.zero,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _themeLabel(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.light:
+        return 'Light';
+      case ThemeMode.dark:
+        return 'Dark';
+      case ThemeMode.system:
+        return 'System';
+    }
   }
 
   Widget _buildProfileAvatar(

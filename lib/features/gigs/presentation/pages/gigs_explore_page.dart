@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:getagig/app/theme/app_shell_styles.dart';
+import 'package:getagig/core/controllers/shake_refresh_controller.dart';
+import 'package:getagig/features/applications/presentation/pages/my_applications_page.dart';
 import 'package:getagig/features/gigs/domain/entities/gig_entity.dart';
 import 'package:getagig/features/gigs/presentation/view_model/gigs_feed_viewmodel.dart';
 import 'package:getagig/features/gigs/presentation/pages/gig_details_page.dart';
-import 'package:getagig/features/gigs/presentation/pages/my_applications_page.dart';
 
 class GigsExplorePage extends ConsumerStatefulWidget {
   const GigsExplorePage({super.key});
@@ -13,6 +15,7 @@ class GigsExplorePage extends ConsumerStatefulWidget {
 }
 
 class _GigsExplorePageState extends ConsumerState<GigsExplorePage> {
+  late final ShakeRefreshController _shakeRefreshController;
   String _searchQuery = "";
   String _selectedFilter = "All";
 
@@ -25,25 +28,58 @@ class _GigsExplorePageState extends ConsumerState<GigsExplorePage> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _shakeRefreshController = ShakeRefreshController(
+      onShake: _refreshFromShake,
+    );
+    _shakeRefreshController.start();
+  }
+
+  @override
+  void dispose() {
+    _shakeRefreshController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _refreshGigsFeed() async {
+    await ref.read(gigsFeedProvider.notifier).refresh();
+  }
+
+  Future<void> _refreshFromShake() async {
+    await _refreshGigsFeed();
+
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger == null) return;
+
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text('Page refreshed')));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final gigsAsyncValue = ref.watch(gigsFeedProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Find Gigs',
           style: TextStyle(
-            color: Colors.black87,
+            color: colorScheme.onSurface,
             fontWeight: FontWeight.w900,
             fontSize: 28,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: colorScheme.surface,
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.assignment_outlined, color: Colors.black87),
+            icon: Icon(Icons.assignment_outlined, color: colorScheme.onSurface),
             onPressed: () {
               Navigator.push(
                 context,
@@ -65,7 +101,7 @@ class _GigsExplorePageState extends ConsumerState<GigsExplorePage> {
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.grey[100],
+                      color: AppShellStyles.mutedSurface(context),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: TextField(
@@ -74,12 +110,17 @@ class _GigsExplorePageState extends ConsumerState<GigsExplorePage> {
                           _searchQuery = value.toLowerCase();
                         });
                       },
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         hintText: "Search gigs by title...",
-                        hintStyle: TextStyle(color: Colors.black38),
-                        prefixIcon: Icon(Icons.search, color: Colors.black54),
+                        hintStyle: TextStyle(
+                          color: AppShellStyles.mutedText(context),
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: AppShellStyles.mutedText(context),
+                        ),
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(
+                        contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 14,
                         ),
@@ -108,14 +149,16 @@ class _GigsExplorePageState extends ConsumerState<GigsExplorePage> {
                         _selectedFilter = filter;
                       });
                     },
-                    selectedColor: Colors.black87,
+                    selectedColor: colorScheme.primary,
                     labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : Colors.black87,
+                      color: isSelected
+                          ? colorScheme.onPrimary
+                          : colorScheme.onSurface,
                       fontWeight: isSelected
                           ? FontWeight.w600
                           : FontWeight.normal,
                     ),
-                    backgroundColor: Colors.grey[100],
+                    backgroundColor: AppShellStyles.mutedSurface(context),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                       side: BorderSide.none,
@@ -171,9 +214,8 @@ class _GigsExplorePageState extends ConsumerState<GigsExplorePage> {
                 }
 
                 return RefreshIndicator(
-                  color: Colors.black87,
-                  onRefresh: () =>
-                      ref.read(gigsFeedProvider.notifier).refresh(),
+                  color: colorScheme.secondary,
+                  onRefresh: _refreshGigsFeed,
                   child: ListView(
                     padding: const EdgeInsets.all(16),
                     children: [
@@ -185,15 +227,15 @@ class _GigsExplorePageState extends ConsumerState<GigsExplorePage> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.grey[100],
+                            color: AppShellStyles.mutedSurface(context),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
                             '${filteredGigs.length} Gigs Found',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
-                              color: Colors.black87,
+                              color: colorScheme.onSurface,
                             ),
                           ),
                         ),
@@ -204,10 +246,13 @@ class _GigsExplorePageState extends ConsumerState<GigsExplorePage> {
                   ),
                 );
               },
-              loading: () => const Center(
-                child: CircularProgressIndicator(color: Colors.black87),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, stack) => Center(
+                child: Text(
+                  'Error: $err',
+                  style: TextStyle(color: colorScheme.error),
+                ),
               ),
-              error: (err, stack) => Center(child: Text('Error: $err')),
             ),
           ),
         ],
@@ -222,12 +267,13 @@ class _GigCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppShellStyles.cardSurface(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(color: AppShellStyles.border(context)),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
@@ -246,10 +292,10 @@ class _GigCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       gig.title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
-                        color: Colors.black87,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                   ),
@@ -266,27 +312,27 @@ class _GigCard extends StatelessWidget {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.location_on_outlined,
                     size: 16,
-                    color: Colors.black45,
+                    color: AppShellStyles.mutedText(context),
                   ),
                   const SizedBox(width: 4),
                   Text(
                     gig.location,
-                    style: const TextStyle(color: Colors.black54),
+                    style: TextStyle(color: AppShellStyles.mutedText(context)),
                   ),
                   const SizedBox(width: 16),
-                  const Icon(
+                  Icon(
                     Icons.calendar_today_outlined,
                     size: 16,
-                    color: Colors.black45,
+                    color: AppShellStyles.mutedText(context),
                   ),
                   const SizedBox(width: 4),
                   Text(
                     gig.deadline?.toLocal().toString().split(' ')[0] ??
                         'No deadline',
-                    style: const TextStyle(color: Colors.black54),
+                    style: TextStyle(color: AppShellStyles.mutedText(context)),
                   ),
                 ],
               ),
@@ -297,13 +343,13 @@ class _GigCard extends StatelessWidget {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: AppShellStyles.mutedSurface(context),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   gig.eventType,
-                  style: const TextStyle(
-                    color: Colors.black54,
+                  style: TextStyle(
+                    color: AppShellStyles.mutedText(context),
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                   ),
@@ -324,15 +370,23 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.search_off_rounded, size: 64, color: Colors.grey[300]),
+          Icon(
+            Icons.search_off_rounded,
+            size: 64,
+            color: AppShellStyles.mutedText(context).withValues(alpha: 0.5),
+          ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             "No gigs found",
-            style: TextStyle(color: Colors.black38, fontSize: 18),
+            style: TextStyle(
+              color: colorScheme.onSurface.withValues(alpha: 0.66),
+              fontSize: 18,
+            ),
           ),
           if (onClearFilters != null) ...[
             const SizedBox(height: 16),

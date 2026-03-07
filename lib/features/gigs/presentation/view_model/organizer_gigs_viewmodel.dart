@@ -1,7 +1,10 @@
 ﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/features/gigs/domain/entities/gig_entity.dart';
-import 'package:getagig/features/gigs/data/repositories/gig_repository.dart';
+import 'package:getagig/features/gigs/domain/usecases/create_gig_usecase.dart';
+import 'package:getagig/features/gigs/domain/usecases/delete_gig_usecase.dart';
+import 'package:getagig/features/gigs/domain/usecases/update_gig_usecase.dart';
 import 'package:getagig/features/organizer/domain/usecases/get_organizer_profile_usecase.dart';
+import 'package:getagig/features/gigs/domain/usecases/get_all_gigs_usecase.dart';
 
 final organizerGigsProvider =
     AsyncNotifierProvider<OrganizerGigsNotifier, List<GigEntity>>(() {
@@ -16,7 +19,7 @@ class OrganizerGigsNotifier extends AsyncNotifier<List<GigEntity>> {
 
   Future<List<GigEntity>> _fetchGigs() async {
     final getOrganizerProfile = ref.read(getOrganizerProfileUseCaseProvider);
-    final repo = ref.read(gigRepositoryProvider);
+    final getAllGigs = ref.read(getAllGigsUseCaseProvider);
 
     final organizerProfileResult = await getOrganizerProfile();
     final organizerProfile = organizerProfileResult.fold(
@@ -24,7 +27,7 @@ class OrganizerGigsNotifier extends AsyncNotifier<List<GigEntity>> {
       (profile) => profile,
     );
 
-    final gigsResult = await repo.getAllGigs(organizerId: organizerProfile.id);
+    final gigsResult = await getAllGigs(organizerId: organizerProfile.id);
     return gigsResult.fold((failure) => throw failure, (gigs) => gigs);
   }
 
@@ -34,8 +37,8 @@ class OrganizerGigsNotifier extends AsyncNotifier<List<GigEntity>> {
   }
 
   Future<void> createGig(Map<String, dynamic> data) async {
-    final repo = ref.read(gigRepositoryProvider);
-    final result = await repo.createGig(data);
+    final useCase = ref.read(createGigUseCaseProvider);
+    final result = await useCase(data);
     result.fold(
       (failure) => state = AsyncValue.error(failure, StackTrace.current),
       (createdGig) {
@@ -47,8 +50,8 @@ class OrganizerGigsNotifier extends AsyncNotifier<List<GigEntity>> {
   }
 
   Future<void> updateGig(String id, Map<String, dynamic> updates) async {
-    final repo = ref.read(gigRepositoryProvider);
-    final result = await repo.updateGig(id, updates);
+    final useCase = ref.read(updateGigUseCaseProvider);
+    final result = await useCase(id, updates);
     result.fold(
       (failure) => state = AsyncValue.error(failure, StackTrace.current),
       (updatedGig) {
@@ -62,8 +65,8 @@ class OrganizerGigsNotifier extends AsyncNotifier<List<GigEntity>> {
   }
 
   Future<void> deleteGig(String id) async {
-    final repo = ref.read(gigRepositoryProvider);
-    final result = await repo.deleteGig(id);
+    final useCase = ref.read(deleteGigUseCaseProvider);
+    final result = await useCase(id);
     result.fold(
       (failure) => state = AsyncValue.error(failure, StackTrace.current),
       (_) {

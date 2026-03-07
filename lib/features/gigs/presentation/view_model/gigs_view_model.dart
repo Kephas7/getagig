@@ -1,7 +1,8 @@
 ﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:getagig/features/applications/application_providers.dart';
+import 'package:getagig/features/applications/domain/usecases/apply_to_gig_usecase.dart';
 import '../state/gigs_state.dart';
 import '../../domain/usecases/get_all_gigs_usecase.dart';
-import '../../domain/usecases/apply_to_gig_usecase.dart';
 
 final gigsViewModelProvider = NotifierProvider<GigsViewModel, GigsState>(
   GigsViewModel.new,
@@ -43,10 +44,7 @@ class GigsViewModel extends Notifier<GigsState> {
         errorMessage: failure.message,
       ),
       (_) {
-        state = state.copyWith(
-          status: GigsStatus.applied,
-          errorMessage: null,
-        );
+        state = state.copyWith(status: GigsStatus.applied, errorMessage: null);
         // Refresh gigs list if necessary or just a success state
       },
     );
@@ -56,4 +54,3 @@ class GigsViewModel extends Notifier<GigsState> {
     state = state.copyWith(errorMessage: null);
   }
 }
-

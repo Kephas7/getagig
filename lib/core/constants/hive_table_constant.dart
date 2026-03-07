@@ -16,5 +16,16 @@
   static const String notificationTable = 'notification_table';
 
   static const int authApiTypeId = 4;
-}
 
+  static const int gigTypeId = 5;
+  static const String gigTable = 'gig_table';
+
+  static const int musicianProfileTypeId = 6;
+  static const String musicianProfileTable = 'musician_profile_table';
+
+  static const int organizerProfileTypeId = 7;
+  static const String organizerProfileTable = 'organizer_profile_table';
+
+  static const int applicationTypeId = 8;
+  static const String applicationTable = 'application_table';
+}

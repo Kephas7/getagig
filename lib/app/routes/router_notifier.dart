@@ -6,8 +6,14 @@ import 'package:getagig/features/auth/presentation/view_model/auth_viewmodel.dar
 class RouterNotifier extends ChangeNotifier {
   final Ref _ref;
   bool _splashTimerComplete = false;
+  bool _hasResolvedInitialAuth = false;
 
   RouterNotifier(this._ref) {
+    final initialStatus = _ref.read(authViewModelProvider).status;
+    _hasResolvedInitialAuth =
+        initialStatus != AuthStatus.initial &&
+        initialStatus != AuthStatus.loading;
+
     // Minimum splash display time
     Future.delayed(const Duration(seconds: 2), () {
       _splashTimerComplete = true;
@@ -16,17 +22,20 @@ class RouterNotifier extends ChangeNotifier {
 
     // Listen to auth state changes and notify GoRouter
     _ref.listen<AuthState>(authViewModelProvider, (previous, next) {
-      if (previous?.status != next.status) {
+      if (next.status != AuthStatus.initial &&
+          next.status != AuthStatus.loading) {
+        _hasResolvedInitialAuth = true;
+      }
+
+      if (previous?.status != next.status ||
+          previous?.user?.role != next.user?.role) {
         notifyListeners();
       }
     });
   }
 
   bool get isReady {
-    final status = authStatus;
-    final authResolved =
-        status != AuthStatus.initial && status != AuthStatus.loading;
-    return _splashTimerComplete && authResolved;
+    return _splashTimerComplete && _hasResolvedInitialAuth;
   }
 
   bool get isAuthenticated {
@@ -43,4 +52,3 @@ class RouterNotifier extends ChangeNotifier {
 final routerNotifierProvider = Provider<RouterNotifier>((ref) {
   return RouterNotifier(ref);
 });
-

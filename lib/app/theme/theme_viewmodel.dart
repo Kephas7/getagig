@@ -15,8 +15,12 @@ class ThemeViewModel extends Notifier<ThemeMode> {
   ThemeMode build() {
     _prefs = ref.watch(sharedPreferencesProvider);
     final themeIndex = _prefs.getInt(_keyThemeMode);
-    
-    if (themeIndex == null) return ThemeMode.system;
+
+    if (themeIndex == null ||
+        themeIndex < 0 ||
+        themeIndex >= ThemeMode.values.length) {
+      return ThemeMode.system;
+    }
     return ThemeMode.values[themeIndex];
   }
 

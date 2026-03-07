@@ -1,5 +1,6 @@
 ﻿import 'dart:io';
 
+import 'package:getagig/features/musician/data/models/musician_hive_model.dart';
 import 'package:getagig/features/musician/data/models/musician_api_model.dart';
 
 abstract interface class IMusicianRemoteDataSource {
@@ -17,4 +18,12 @@ abstract interface class IMusicianRemoteDataSource {
   Future<MusicianApiModel> removeAudio(String audioUrl);
   Future<MusicianApiModel> updateAvailability(bool isAvailable);
   Future<MusicianApiModel> requestVerification();
+}
+
+abstract interface class IMusicianLocalDataSource {
+  Future<void> cacheProfile(MusicianHiveModel profile);
+  Future<MusicianHiveModel?> getCachedProfileById(String id);
+  Future<MusicianHiveModel?> getCachedProfileByUserId(String userId);
+  Future<void> deleteCachedProfileById(String id);
+  Future<void> deleteCachedProfileByUserId(String userId);
 }

@@ -24,6 +24,7 @@ class UserSessionService {
   UserSessionService(this._prefs);
 
   static const String _keyAuthToken = 'auth_token';
+  static const String _keyOnboardingSeen = 'onboarding_seen';
   static const String _keyBiometricEnabled = 'biometric_enabled';
   static const String _keyBiometricEmail = 'biometric_email';
   static const String _keyBiometricPassword = 'biometric_password';
@@ -51,6 +52,14 @@ class UserSessionService {
 
   Future<void> saveToken(String token) =>
       _secureStorage.write(key: _keyAuthToken, value: token);
+
+  bool hasSeenOnboarding() {
+    return _prefs.getBool(_keyOnboardingSeen) ?? false;
+  }
+
+  Future<void> markOnboardingSeen() async {
+    await _prefs.setBool(_keyOnboardingSeen, true);
+  }
 
   Future<void> enableBiometricLogin({
     required String email,

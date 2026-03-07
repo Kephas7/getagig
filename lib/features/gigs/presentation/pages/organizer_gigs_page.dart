@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:getagig/features/dashboard/presentation/pages/chat_page.dart';
-import 'package:getagig/features/dashboard/presentation/view_model/conversation_initiator_viewmodel.dart';
-import 'package:getagig/features/gigs/data/models/application_model.dart';
-import 'package:getagig/features/gigs/data/repositories/application_repository.dart';
+import 'package:getagig/app/theme/app_shell_styles.dart';
+import 'package:getagig/core/controllers/shake_refresh_controller.dart';
+import 'package:getagig/features/applications/application_providers.dart';
+import 'package:getagig/features/applications/domain/entities/application_entity.dart';
+import 'package:getagig/features/applications/presentation/pages/gig_applications_page.dart';
+import 'package:getagig/features/messaging/presentation/pages/chat_page.dart';
+import 'package:getagig/features/messaging/presentation/view_model/conversation_initiator_viewmodel.dart';
 import 'package:getagig/features/gigs/domain/entities/gig_entity.dart';
 import 'package:getagig/features/gigs/presentation/pages/create_gig_page.dart';
 import 'package:getagig/features/gigs/presentation/pages/edit_gig_page.dart';
-import 'package:getagig/features/gigs/presentation/pages/gig_applications_page.dart';
 import 'package:getagig/features/gigs/presentation/view_model/organizer_gigs_viewmodel.dart';
 import 'package:getagig/features/organizer/presentation/pages/view_organizer_profile_page.dart';
 import 'package:getagig/features/organizer/presentation/view_model/organizer_view_model.dart';
@@ -20,6 +22,7 @@ class OrganizerGigsPage extends ConsumerStatefulWidget {
 }
 
 class _OrganizerGigsPageState extends ConsumerState<OrganizerGigsPage> {
+  late final ShakeRefreshController _shakeRefreshController;
   String _searchQuery = '';
   bool _isApplicantsOpen = false;
   bool _isLoadingApplicants = false;
@@ -33,11 +36,34 @@ class _OrganizerGigsPageState extends ConsumerState<OrganizerGigsPage> {
       await ref.read(organizerProfileViewModelProvider.notifier).getProfile();
       await _loadAllApplicants();
     });
+
+    _shakeRefreshController = ShakeRefreshController(
+      onShake: _refreshFromShake,
+    );
+    _shakeRefreshController.start();
+  }
+
+  @override
+  void dispose() {
+    _shakeRefreshController.dispose();
+    super.dispose();
   }
 
   Future<void> _refreshAll() async {
     await ref.read(organizerGigsProvider.notifier).refresh();
     await _loadAllApplicants();
+  }
+
+  Future<void> _refreshFromShake() async {
+    await _refreshAll();
+
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger == null) return;
+
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text('Page refreshed')));
   }
 
   Future<void> _loadAllApplicants() async {
@@ -47,14 +73,19 @@ class _OrganizerGigsPageState extends ConsumerState<OrganizerGigsPage> {
 
     try {
       final gigs = await ref.read(organizerGigsProvider.future);
-      final repo = ref.read(applicationRepositoryProvider);
+      final getGigApplications = ref.read(getGigApplicationsUseCaseProvider);
 
       final items = <_ApplicantItem>[];
       for (final gig in gigs) {
-        final result = await repo.getGigApplications(gig.id);
+        final result = await getGigApplications(gig.id);
         result.fold((_) {}, (applications) {
-          for (final ApplicationModel app in applications) {
-            final recipientUserId = (app.musician?.id ?? '').trim();
+          for (final ApplicationEntity app in applications) {
+            final recipientUserId =
+                (app.musicianUserId ??
+                        app.musician?.userId ??
+                        app.musician?.id ??
+                        '')
+                    .trim();
             if (recipientUserId.isEmpty) {
               continue;
             }
@@ -196,6 +227,7 @@ class _OrganizerGigsPageState extends ConsumerState<OrganizerGigsPage> {
     final isVerificationPending =
         organizerProfile?.verificationRequested ?? false;
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -206,12 +238,12 @@ class _OrganizerGigsPageState extends ConsumerState<OrganizerGigsPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Your Gigs',
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w900,
-                    color: Color(0xFF1A1B61),
+                    color: colorScheme.onSurface,
                     letterSpacing: -1,
                   ),
                 ),
@@ -318,9 +350,15 @@ class _OrganizerGigsPageState extends ConsumerState<OrganizerGigsPage> {
                         },
                         decoration: InputDecoration(
                           hintText: 'Search gigs...',
-                          prefixIcon: const Icon(Icons.search_rounded),
+                          hintStyle: TextStyle(
+                            color: AppShellStyles.mutedText(context),
+                          ),
+                          prefixIcon: Icon(
+                            Icons.search_rounded,
+                            color: AppShellStyles.mutedText(context),
+                          ),
                           filled: true,
-                          fillColor: Colors.grey[100],
+                          fillColor: AppShellStyles.mutedSurface(context),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
                             borderSide: BorderSide.none,
@@ -373,9 +411,11 @@ class _OrganizerGigsPageState extends ConsumerState<OrganizerGigsPage> {
                             vertical: 12,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: AppShellStyles.cardSurface(context),
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: Colors.grey[200]!),
+                            border: Border.all(
+                              color: AppShellStyles.border(context),
+                            ),
                           ),
                           child: Row(
                             children: [
@@ -384,10 +424,7 @@ class _OrganizerGigsPageState extends ConsumerState<OrganizerGigsPage> {
                               const Expanded(
                                 child: Text(
                                   'View All Applications',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF1A1B61),
-                                  ),
+                                  style: TextStyle(fontWeight: FontWeight.w700),
                                 ),
                               ),
                               if (_isLoadingApplicants)
@@ -419,21 +456,27 @@ class _OrganizerGigsPageState extends ConsumerState<OrganizerGigsPage> {
                           Container(
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: AppShellStyles.cardSurface(context),
                               borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: Colors.grey[200]!),
+                              border: Border.all(
+                                color: AppShellStyles.border(context),
+                              ),
                             ),
-                            child: const Text(
+                            child: Text(
                               'No applications yet.',
-                              style: TextStyle(color: Colors.black54),
+                              style: TextStyle(
+                                color: AppShellStyles.mutedText(context),
+                              ),
                             ),
                           )
                         else
                           Container(
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: AppShellStyles.cardSurface(context),
                               borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: Colors.grey[200]!),
+                              border: Border.all(
+                                color: AppShellStyles.border(context),
+                              ),
                             ),
                             child: Column(
                               children: _allApplicants.map((applicant) {
@@ -446,7 +489,7 @@ class _OrganizerGigsPageState extends ConsumerState<OrganizerGigsPage> {
                                   decoration: BoxDecoration(
                                     border: Border(
                                       bottom: BorderSide(
-                                        color: Colors.grey[200]!,
+                                        color: AppShellStyles.border(context),
                                         width: 0.8,
                                       ),
                                     ),
@@ -464,16 +507,20 @@ class _OrganizerGigsPageState extends ConsumerState<OrganizerGigsPage> {
                                               children: [
                                                 Text(
                                                   applicant.name,
-                                                  style: const TextStyle(
+                                                  style: TextStyle(
                                                     fontWeight: FontWeight.w700,
-                                                    color: Color(0xFF1A1B61),
+                                                    color:
+                                                        colorScheme.onSurface,
                                                   ),
                                                 ),
                                                 const SizedBox(height: 2),
                                                 Text(
                                                   applicant.gigTitle,
                                                   style: TextStyle(
-                                                    color: Colors.grey[600],
+                                                    color:
+                                                        AppShellStyles.mutedText(
+                                                          context,
+                                                        ),
                                                     fontSize: 12,
                                                   ),
                                                 ),
@@ -546,13 +593,17 @@ class _OrganizerGigsPageState extends ConsumerState<OrganizerGigsPage> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: AppShellStyles.cardSurface(context),
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: Colors.grey[200]!),
+                            border: Border.all(
+                              color: AppShellStyles.border(context),
+                            ),
                           ),
-                          child: const Text(
+                          child: Text(
                             'No gigs match your search.',
-                            style: TextStyle(color: Colors.black54),
+                            style: TextStyle(
+                              color: AppShellStyles.mutedText(context),
+                            ),
                           ),
                         )
                       else
@@ -568,13 +619,11 @@ class _OrganizerGigsPageState extends ConsumerState<OrganizerGigsPage> {
                   ),
                 );
               },
-              loading: () => const Center(
-                child: CircularProgressIndicator(color: Color(0xFF1A1B61)),
-              ),
+              loading: () => const Center(child: CircularProgressIndicator()),
               error: (err, stack) => Center(
                 child: Text(
                   'Error: $err',
-                  style: const TextStyle(color: Colors.red),
+                  style: TextStyle(color: colorScheme.error),
                 ),
               ),
             ),
@@ -599,20 +648,22 @@ class _OrganizerGigCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isOpen = gig.status.toLowerCase() == 'open';
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppShellStyles.cardSurface(context),
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
+          if (!AppShellStyles.isDark(context))
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
         ],
-        border: Border.all(color: Colors.grey[100]!, width: 1.5),
+        border: Border.all(color: AppShellStyles.border(context), width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -641,7 +692,7 @@ class _OrganizerGigCard extends StatelessWidget {
                         style: TextStyle(
                           color: isOpen
                               ? const Color(0xFF10B981)
-                              : Colors.black45,
+                              : AppShellStyles.mutedText(context),
                           fontSize: 10,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 1,
@@ -650,10 +701,10 @@ class _OrganizerGigCard extends StatelessWidget {
                     ),
                     Text(
                       'Rs. ${gig.payRate.toStringAsFixed(0)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w900,
                         fontSize: 20,
-                        color: Color(0xFF1A1B61),
+                        color: colorScheme.onSurface,
                       ),
                     ),
                   ],
@@ -661,10 +712,10 @@ class _OrganizerGigCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   gig.title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 22,
-                    color: Color(0xFF1A1B61),
+                    color: colorScheme.onSurface,
                     height: 1.2,
                   ),
                 ),
@@ -680,7 +731,7 @@ class _OrganizerGigCard extends StatelessWidget {
                     Text(
                       gig.eventType,
                       style: TextStyle(
-                        color: Colors.grey[600],
+                        color: AppShellStyles.mutedText(context),
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
                       ),
@@ -695,7 +746,7 @@ class _OrganizerGigCard extends StatelessWidget {
                     Text(
                       '$applicantCount Applicants',
                       style: TextStyle(
-                        color: Colors.grey[600],
+                        color: AppShellStyles.mutedText(context),
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
                       ),
@@ -728,8 +779,8 @@ class _OrganizerGigCard extends StatelessWidget {
                       ).then((_) => onDataChanged());
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1A1B61),
-                      foregroundColor: Colors.white,
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -906,6 +957,7 @@ class _EmptyGigsState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -923,12 +975,12 @@ class _EmptyGigsState extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 32),
-          const Text(
+          Text(
             'No gigs posted yet',
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w900,
-              color: Color(0xFF1A1B61),
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 8),
@@ -939,7 +991,7 @@ class _EmptyGigsState extends StatelessWidget {
                 ? 'Your verification is under review.'
                 : 'Complete verification to post your first gig.',
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.black54),
+            style: TextStyle(color: AppShellStyles.mutedText(context)),
           ),
         ],
       ),

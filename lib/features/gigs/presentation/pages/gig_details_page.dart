@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:getagig/features/applications/presentation/view_model/my_applications_viewmodel.dart';
 import 'package:getagig/features/gigs/domain/entities/gig_entity.dart';
-import 'package:getagig/features/gigs/presentation/view_model/my_applications_viewmodel.dart';
 import 'package:getagig/features/organizer/presentation/pages/view_organizer_profile_page.dart';
 import 'package:getagig/features/organizer/domain/usecases/get_organizer_profile_by_id_usecase.dart';
-import 'package:getagig/features/dashboard/presentation/pages/chat_page.dart';
-import 'package:getagig/features/dashboard/presentation/view_model/conversation_initiator_viewmodel.dart';
+import 'package:getagig/features/messaging/presentation/pages/chat_page.dart';
+import 'package:getagig/features/messaging/presentation/view_model/conversation_initiator_viewmodel.dart';
 
 class GigDetailsPage extends ConsumerStatefulWidget {
   final GigEntity gig;

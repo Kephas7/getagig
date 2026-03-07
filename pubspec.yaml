@@ -71,6 +71,7 @@ dependencies:
   flutter_cache_manager: ^3.3.1
   video_thumbnail: ^0.5.3
   flutter_svg: ^2.0.10+1
+  sensors_plus: ^6.1.2
 
   # Real-time Features
   web_socket_channel: ^3.0.3
@@ -107,10 +108,17 @@ dev_dependencies:
   freezed: ^2.5.2
   json_serializable: ^6.8.0
   hive_generator: ^2.0.1
+  flutter_launcher_icons: ^0.14.3
 
   # Testing
   mocktail: ^1.0.3
   fake_async: ^1.3.1
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/icon.png"
+  remove_alpha_ios: true
 flutter:
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

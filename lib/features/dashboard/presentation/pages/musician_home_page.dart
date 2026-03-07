@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
+import 'package:getagig/app/theme/app_shell_styles.dart';
 import 'package:getagig/core/api/api_client.dart';
 import 'package:getagig/core/api/api_endpoints.dart';
+import 'package:getagig/core/controllers/shake_refresh_controller.dart';
 import 'package:getagig/features/auth/presentation/view_model/auth_viewmodel.dart';
 import 'package:getagig/features/gigs/presentation/view_model/gigs_feed_viewmodel.dart';
 import 'package:getagig/features/gigs/presentation/pages/gig_details_page.dart';
 import 'package:getagig/features/gigs/presentation/pages/gigs_explore_page.dart';
-import 'package:getagig/features/gigs/presentation/view_model/my_applications_viewmodel.dart';
+import 'package:getagig/features/applications/presentation/view_model/my_applications_viewmodel.dart';
 import 'package:getagig/features/gigs/domain/entities/gig_entity.dart';
 
 class MusicianHomePage extends ConsumerStatefulWidget {
@@ -20,6 +22,7 @@ class MusicianHomePage extends ConsumerStatefulWidget {
 class _MusicianHomePageState extends ConsumerState<MusicianHomePage> {
   late DateTime _calendarMonth;
   late DateTime _selectedDate;
+  late final ShakeRefreshController _shakeRefreshController;
   List<_MusicianPlannedEvent> _plannedEvents = [];
   bool _isLoadingPlannedEvents = false;
   bool _isSyncingCalendarEvent = false;
@@ -33,6 +36,30 @@ class _MusicianHomePageState extends ConsumerState<MusicianHomePage> {
     _calendarMonth = DateTime(now.year, now.month, 1);
     _selectedDate = DateTime(now.year, now.month, now.day);
     Future.microtask(() => _loadPlannedEvents(showError: false));
+
+    _shakeRefreshController = ShakeRefreshController(
+      onShake: _refreshFromShake,
+    );
+    _shakeRefreshController.start();
+  }
+
+  @override
+  void dispose() {
+    _shakeRefreshController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _refreshDashboard() async {
+    await Future.wait([
+      ref.read(gigsFeedProvider.notifier).refresh(),
+      ref.read(myApplicationsProvider.notifier).refresh(),
+      _loadPlannedEvents(showError: false),
+    ]);
+  }
+
+  Future<void> _refreshFromShake() async {
+    await _refreshDashboard();
+    _showPageSnackBar('Page refreshed');
   }
 
   Future<void> _loadPlannedEvents({bool showError = true}) async {
@@ -496,17 +523,16 @@ class _MusicianHomePageState extends ConsumerState<MusicianHomePage> {
           return application.gig?.deadline != null && status == 'accepted';
         })
         .map((application) {
-          final gigModel = application.gig!;
-          final gigEntity = gigModel.toEntity();
-          final location = gigModel.location.trim();
+          final gigEntity = application.gig!;
+          final location = gigEntity.location.trim();
 
           return _MusicianCalendarEvent(
             title: gigEntity.title,
             location: location.isEmpty ? 'Location not specified' : location,
             date: DateTime(
-              gigModel.deadline!.year,
-              gigModel.deadline!.month,
-              gigModel.deadline!.day,
+              gigEntity.deadline!.year,
+              gigEntity.deadline!.month,
+              gigEntity.deadline!.day,
             ),
             status: 'accepted',
             source: _MusicianCalendarEventSource.gig,
@@ -530,15 +556,12 @@ class _MusicianHomePageState extends ConsumerState<MusicianHomePage> {
     final calendarEvents = [...gigCalendarEvents, ...plannedCalendarEvents]
       ..sort((a, b) => a.date.compareTo(b.date));
 
+    final theme = Theme.of(context);
+
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: RefreshIndicator(
-        onRefresh: () async {
-          await Future.wait([
-            ref.read(gigsFeedProvider.notifier).refresh(),
-            ref.read(myApplicationsProvider.notifier).refresh(),
-            _loadPlannedEvents(showError: false),
-          ]);
-        },
+        onRefresh: _refreshDashboard,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
@@ -617,6 +640,7 @@ class _MusicianHomePageState extends ConsumerState<MusicianHomePage> {
 
                 return Column(
                   children: sortedItems.take(4).map((item) {
+                    final colorScheme = Theme.of(context).colorScheme;
                     final status = item.status.toLowerCase();
                     final gig = item.gig;
                     final title = gig?.title ?? 'Unknown Gig';
@@ -624,33 +648,31 @@ class _MusicianHomePageState extends ConsumerState<MusicianHomePage> {
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 10),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: Colors.grey[200]!),
-                      ),
+                      decoration: AppShellStyles.glassCard(context, radius: 18),
                       child: ListTile(
                         onTap: gig != null
                             ? () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) =>
-                                        GigDetailsPage(gig: gig.toEntity()),
+                                    builder: (_) => GigDetailsPage(gig: gig),
                                   ),
                                 );
                               }
                             : null,
                         title: Text(
                           title,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF1A1B61),
+                            color: colorScheme.onSurface,
                           ),
                         ),
                         subtitle: Text(
                           location.isEmpty ? 'No location' : location,
-                          style: const TextStyle(fontSize: 12),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppShellStyles.mutedText(context),
+                          ),
                         ),
                         trailing: _StatusBadge(status: status),
                       ),
@@ -720,13 +742,10 @@ class _MusicianHomePageState extends ConsumerState<MusicianHomePage> {
 
                 return Column(
                   children: items.take(6).map((gig) {
+                    final colorScheme = Theme.of(context).colorScheme;
                     return Container(
                       margin: const EdgeInsets.only(bottom: 10),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: Colors.grey[200]!),
-                      ),
+                      decoration: AppShellStyles.glassCard(context, radius: 18),
                       child: ListTile(
                         onTap: () {
                           Navigator.push(
@@ -738,14 +757,17 @@ class _MusicianHomePageState extends ConsumerState<MusicianHomePage> {
                         },
                         title: Text(
                           gig.title,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF1A1B61),
+                            color: colorScheme.onSurface,
                           ),
                         ),
                         subtitle: Text(
                           gig.location,
-                          style: const TextStyle(fontSize: 12),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppShellStyles.mutedText(context),
+                          ),
                         ),
                         trailing: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -762,7 +784,7 @@ class _MusicianHomePageState extends ConsumerState<MusicianHomePage> {
                               gig.status.toUpperCase(),
                               style: TextStyle(
                                 fontSize: 10,
-                                color: Colors.grey[600],
+                                color: AppShellStyles.mutedText(context),
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -792,23 +814,28 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF1A1B61),
+            color: colorScheme.onSurface,
             letterSpacing: -0.5,
           ),
         ),
         TextButton(
           onPressed: () {},
-          child: const Text(
+          child: Text(
             "View All",
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: colorScheme.secondary,
+            ),
           ),
         ),
       ],
@@ -833,41 +860,47 @@ class _HeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final dark = AppShellStyles.isDark(context);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFEEF2FF), Color(0xFFF8FAFC)],
+        gradient: LinearGradient(
+          colors: [
+            dark ? const Color(0xFF171717) : const Color(0xFFFFFFFF),
+            dark ? const Color(0xFF0F0F0F) : const Color(0xFFF3F3F3),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: const Color(0xFF6366F1).withValues(alpha: 0.2),
+          color: colorScheme.secondary.withValues(alpha: 0.35),
         ),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
+          if (!dark)
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Icon(
                 Icons.auto_awesome_rounded,
-                color: Color(0xFF6366F1),
+                color: colorScheme.secondary,
                 size: 18,
               ),
               SizedBox(width: 8),
               Text(
                 'Musician Dashboard',
                 style: TextStyle(
-                  color: Color(0xFF6366F1),
+                  color: colorScheme.secondary,
                   fontWeight: FontWeight.w700,
                   fontSize: 12,
                 ),
@@ -877,17 +910,17 @@ class _HeroCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Welcome back, $displayName',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w800,
-              color: Color(0xFF1A1B61),
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             "Here's what is happening in your journey today.",
             style: TextStyle(
-              color: Colors.grey[700],
+              color: AppShellStyles.mutedText(context),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -909,8 +942,8 @@ class _HeroCard extends StatelessWidget {
               icon: const Icon(Icons.search_rounded, size: 18),
               label: const Text('Find Gigs'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6366F1),
-                foregroundColor: Colors.white,
+                backgroundColor: colorScheme.secondary,
+                foregroundColor: dark ? const Color(0xFF111111) : Colors.white,
               ),
             ),
           ),
@@ -926,16 +959,18 @@ class _InfoChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+        color: AppShellStyles.mutedSurface(context),
+        border: Border.all(color: AppShellStyles.border(context)),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         text,
-        style: const TextStyle(
-          color: Color(0xFF6366F1),
+        style: TextStyle(
+          color: colorScheme.secondary,
           fontWeight: FontWeight.w700,
           fontSize: 11,
         ),
@@ -963,13 +998,10 @@ class _DashboardStatsGrid extends StatelessWidget {
       ),
       itemBuilder: (context, index) {
         final card = cards[index];
+        final colorScheme = Theme.of(context).colorScheme;
         return Container(
           padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey[200]!),
-          ),
+          decoration: AppShellStyles.glassCard(context, radius: 16),
           child: Row(
             children: [
               Container(
@@ -988,16 +1020,16 @@ class _DashboardStatsGrid extends StatelessWidget {
                   children: [
                     Text(
                       card.value,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 18,
-                        color: Color(0xFF1A1B61),
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     Text(
                       card.label,
                       style: TextStyle(
-                        color: Colors.grey[600],
+                        color: AppShellStyles.mutedText(context),
                         fontWeight: FontWeight.w600,
                         fontSize: 12,
                       ),
@@ -1144,6 +1176,7 @@ class _MusicianCalendarPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final monthLabel = '${_monthNames[month.month - 1]} ${month.year}';
     final firstDayOffset = DateTime(month.year, month.month, 1).weekday % 7;
     final daysInMonth = DateUtils.getDaysInMonth(month.year, month.month);
@@ -1165,11 +1198,7 @@ class _MusicianCalendarPanel extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
+      decoration: AppShellStyles.glassCard(context, radius: 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1178,14 +1207,14 @@ class _MusicianCalendarPanel extends StatelessWidget {
               const Icon(
                 Icons.calendar_month_rounded,
                 size: 18,
-                color: Color(0xFF6366F1),
+                color: Color(0xFF9F7A3B),
               ),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Gig Calendar',
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF1A1B61),
+                  color: colorScheme.onSurface,
                 ),
               ),
               const Spacer(),
@@ -1196,7 +1225,7 @@ class _MusicianCalendarPanel extends StatelessWidget {
                 icon: const Icon(Icons.add_rounded, size: 16),
                 label: const Text('Add Event'),
                 style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFF6366F1),
+                  foregroundColor: colorScheme.secondary,
                   textStyle: const TextStyle(fontWeight: FontWeight.w700),
                 ),
               ),
@@ -1214,9 +1243,9 @@ class _MusicianCalendarPanel extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             monthLabel,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w700,
-              color: Color(0xFF1A1B61),
+              color: colorScheme.onSurface,
             ),
           ),
           if (isLoadingPlannedEvents) ...[
@@ -1570,6 +1599,7 @@ class _CalendarNavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(10),
@@ -1578,10 +1608,10 @@ class _CalendarNavButton extends StatelessWidget {
         width: 30,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.grey[300]!),
-          color: Colors.grey[50],
+          border: Border.all(color: AppShellStyles.border(context)),
+          color: AppShellStyles.mutedSurface(context),
         ),
-        child: Icon(icon, size: 18, color: const Color(0xFF1A1B61)),
+        child: Icon(icon, size: 18, color: colorScheme.onSurface),
       ),
     );
   }
@@ -1609,7 +1639,7 @@ class _CalendarLegend extends StatelessWidget {
           style: TextStyle(
             fontSize: 10,
             fontWeight: FontWeight.w700,
-            color: Colors.grey[700],
+            color: AppShellStyles.mutedText(context),
           ),
         ),
       ],
@@ -1631,7 +1661,7 @@ class _CalendarDayLabel extends StatelessWidget {
         style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w700,
-          color: Colors.grey[600],
+          color: AppShellStyles.mutedText(context),
         ),
       ),
     );
@@ -1646,11 +1676,7 @@ class _LoadingPanel extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 26),
       alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
+      decoration: AppShellStyles.glassCard(context, radius: 16),
       child: const CircularProgressIndicator(),
     );
   }
@@ -1664,24 +1690,31 @@ class _ErrorPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
+      decoration: AppShellStyles.glassCard(
+        context,
+        radius: 16,
+        tint: Colors.redAccent,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Something went wrong',
-            style: TextStyle(fontWeight: FontWeight.w700),
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
             message,
-            style: TextStyle(color: Colors.grey[700], fontSize: 12),
+            style: TextStyle(
+              color: AppShellStyles.mutedText(context),
+              fontSize: 12,
+            ),
           ),
           const SizedBox(height: 10),
           OutlinedButton(onPressed: onRetry, child: const Text('Retry')),
@@ -1706,26 +1739,26 @@ class _EmptyPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
+      decoration: AppShellStyles.glassCard(context, radius: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w700,
-              color: Color(0xFF1A1B61),
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 6),
-          Text(subtitle, style: TextStyle(color: Colors.grey[700])),
+          Text(
+            subtitle,
+            style: TextStyle(color: AppShellStyles.mutedText(context)),
+          ),
           if (actionText != null && onAction != null) ...[
             const SizedBox(height: 12),
             ElevatedButton(onPressed: onAction, child: Text(actionText!)),

@@ -11,5 +11,4 @@ abstract interface class IGigRepository {
     Map<String, dynamic> data,
   );
   Future<Either<Failure, void>> deleteGig(String id);
-  Future<Either<Failure, void>> applyToGig(String gigId, String coverLetter);
 }
