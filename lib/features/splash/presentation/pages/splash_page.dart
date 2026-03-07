@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:getagig/app/widgets/app_logo.dart';
 import 'package:getagig/features/auth/presentation/view_model/auth_viewmodel.dart';
 
 class SplashPage extends ConsumerStatefulWidget {
@@ -25,21 +26,13 @@ class _SplashPageState extends ConsumerState<SplashPage> {
     // Navigation is handled automatically by RouterNotifier and GoRouter
     // based on the authViewModelProvider state.
 
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(
-              "assets/images/mylogo.png",
-              height: 150,
-              width: 150,
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(Icons.music_note, size: 100, color: Colors.blue);
-              },
-            ),
+            const AppLogo(height: 150, width: 150, forceLight: true),
             const SizedBox(height: 20),
             const CircularProgressIndicator(
               valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
@@ -59,4 +52,3 @@ class _SplashPageState extends ConsumerState<SplashPage> {
     );
   }
 }
-

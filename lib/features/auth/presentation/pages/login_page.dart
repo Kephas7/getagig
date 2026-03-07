@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:getagig/app/routes/route_constants.dart';
+import 'package:getagig/app/widgets/app_logo.dart';
 import 'package:getagig/core/services/security/biometric_auth_service.dart';
 import 'package:getagig/core/services/storage/user_session_service.dart';
 import 'package:getagig/features/auth/presentation/state/auth_state.dart';
@@ -127,6 +128,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authViewModelProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     ref.listen<AuthState>(authViewModelProvider, (previous, next) {
       if (next.status == AuthStatus.error && next.errorMessage != null) {
@@ -147,7 +150,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         authState.status == AuthStatus.loading || _isBiometricLoginInProgress;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -159,14 +162,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 child: Column(
                   children: [
                     SizedBox(height: isLandscape ? 20 : 0),
-                    Image.asset(
-                      "assets/images/mylogo.png",
-                      height: isLandscape ? 90 : 150,
-                    ),
+                    AppLogo(height: isLandscape ? 90 : 150),
                     SizedBox(height: isLandscape ? 12 : 25),
-                    const Text(
+                    Text(
                       "WELCOME",
-                      style: TextStyle(fontSize: 27, letterSpacing: 3),
+                      style: TextStyle(
+                        fontSize: 27,
+                        letterSpacing: 3,
+                        color: colorScheme.onSurface.withValues(alpha: 0.78),
+                      ),
                     ),
                     SizedBox(height: isLandscape ? 18 : 30),
                     TextFormField(
@@ -224,7 +228,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     ),
                     const SizedBox(height: 20),
                     isLoading
-                        ? const CircularProgressIndicator()
+                        ? CircularProgressIndicator(
+                            color: colorScheme.secondary,
+                          )
                         : SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(

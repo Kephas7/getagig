@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:getagig/app/widgets/app_logo.dart';
 import 'package:getagig/core/utils/snackbar_untils.dart';
 import 'package:getagig/features/auth/presentation/state/auth_state.dart';
 import 'package:getagig/features/auth/presentation/view_model/auth_viewmodel.dart';
@@ -22,7 +23,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _agreedToTerms = false;
-  String _selectedRole = 'musician'; 
+  String _selectedRole = 'musician';
 
   @override
   void dispose() {
@@ -61,6 +62,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authViewModelProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final isLoading = authState.status == AuthStatus.loading;
 
     ref.listen<AuthState>(authViewModelProvider, (previous, next) {
@@ -79,7 +82,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     final isLandscape = orientation == Orientation.landscape;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
 
       body: SafeArea(
         child: Center(
@@ -92,16 +95,14 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 child: Column(
                   children: [
                     SizedBox(height: isLandscape ? 15 : 5),
-                    Image.asset(
-                      "assets/images/mylogo.png",
-                      height: isLandscape ? 90 : 130,
-                    ),
+                    AppLogo(height: isLandscape ? 90 : 130),
                     const SizedBox(height: 10),
                     Text(
                       "Start Gigging With Us",
                       style: TextStyle(
                         fontSize: isLandscape ? 22 : 26,
                         fontWeight: FontWeight.w500,
+                        color: colorScheme.onSurface.withValues(alpha: 0.8),
                       ),
                     ),
                     SizedBox(height: isLandscape ? 10 : 16),
@@ -113,7 +114,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                           'Sign up as:',
                           style: TextStyle(
                             fontSize: 16,
-                            color: Colors.grey[700],
+                            color: colorScheme.onSurface.withValues(
+                              alpha: 0.82,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -128,16 +131,16 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                       Icons.music_note,
                                       size: 18,
                                       color: _selectedRole == 'musician'
-                                          ? Colors.white
-                                          : Colors.black,
+                                          ? colorScheme.onPrimary
+                                          : colorScheme.onSurface,
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
                                       'Musician',
                                       style: TextStyle(
                                         color: _selectedRole == 'musician'
-                                            ? Colors.white
-                                            : Colors.black,
+                                            ? colorScheme.onPrimary
+                                            : colorScheme.onSurface,
                                       ),
                                     ),
                                   ],
@@ -148,10 +151,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                     _selectedRole = 'musician';
                                   });
                                 },
-                                selectedColor: Colors.black,
-                                backgroundColor: Colors.white,
+                                selectedColor: colorScheme.primary,
+                                backgroundColor: colorScheme.surface,
                                 shape: RoundedRectangleBorder(
-                                  side: BorderSide(color: Colors.black),
+                                  side: BorderSide(color: theme.dividerColor),
                                   borderRadius: BorderRadiusGeometry.circular(
                                     10,
                                   ),
@@ -169,16 +172,16 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                       Icons.event,
                                       size: 18,
                                       color: _selectedRole == 'organizer'
-                                          ? Colors.white
-                                          : Colors.black,
+                                          ? colorScheme.onPrimary
+                                          : colorScheme.onSurface,
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
                                       'Organizer',
                                       style: TextStyle(
                                         color: _selectedRole == 'organizer'
-                                            ? Colors.white
-                                            : Colors.black,
+                                            ? colorScheme.onPrimary
+                                            : colorScheme.onSurface,
                                       ),
                                     ),
                                   ],
@@ -189,10 +192,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                     _selectedRole = 'organizer';
                                   });
                                 },
-                                selectedColor: Colors.black,
-                                backgroundColor: Colors.white,
+                                selectedColor: colorScheme.primary,
+                                backgroundColor: colorScheme.surface,
                                 shape: RoundedRectangleBorder(
-                                  side: BorderSide(color: Colors.black),
+                                  side: BorderSide(color: theme.dividerColor),
                                   borderRadius: BorderRadiusGeometry.circular(
                                     10,
                                   ),
@@ -208,14 +211,15 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                               : 'Hiring musicians for events',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.grey[600],
+                            color: colorScheme.onSurface.withValues(
+                              alpha: 0.68,
+                            ),
                             fontStyle: FontStyle.italic,
                           ),
                         ),
                       ],
                     ),
 
-                    
                     TextFormField(
                       controller: _nameController,
                       decoration: const InputDecoration(labelText: 'Full Name'),
@@ -232,7 +236,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
                     SizedBox(height: isLandscape ? 10 : 16),
 
-                    
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
@@ -253,7 +256,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
                     SizedBox(height: isLandscape ? 10 : 16),
 
-                    
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
@@ -285,7 +287,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
                     SizedBox(height: isLandscape ? 10 : 16),
 
-                    
                     TextFormField(
                       controller: _confirmPasswordController,
                       obscureText: _obscureConfirmPassword,
@@ -316,7 +317,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       },
                     ),
 
-                    
                     CheckboxListTile(
                       value: _agreedToTerms,
                       onChanged: (value) {
@@ -333,7 +333,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
                     const SizedBox(height: 10),
 
-                    
                     isLoading
                         ? const CircularProgressIndicator()
                         : SizedBox(
@@ -360,4 +359,3 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     );
   }
 }
-

@@ -1,19 +1,24 @@
-﻿import 'package:flutter/material.dart';
-import 'package:getagig/app/routes/app_routes.dart';
-import 'package:getagig/features/auth/presentation/pages/login_page.dart';
+﻿import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:getagig/app/routes/route_constants.dart';
+import 'package:getagig/app/widgets/app_logo.dart';
+import 'package:getagig/core/services/storage/user_session_service.dart';
 import 'package:getagig/features/onboard/domain/entities/onboarding_items.dart';
 import 'package:getagig/features/onboard/presentation/widgets/next_button.dart';
 import 'package:getagig/features/onboard/presentation/widgets/onboarding_content.dart';
 import 'package:getagig/features/onboard/presentation/widgets/page_indicator.dart';
 
-class OnboardPage extends StatefulWidget {
+class OnboardPage extends ConsumerStatefulWidget {
   const OnboardPage({super.key});
 
   @override
-  State<OnboardPage> createState() => _OnboardPageState();
+  ConsumerState<OnboardPage> createState() => _OnboardPageState();
 }
 
-class _OnboardPageState extends State<OnboardPage> {
+class _OnboardPageState extends ConsumerState<OnboardPage> {
   final PageController _controller = PageController();
   int _currentPage = 0;
 
@@ -49,16 +54,18 @@ class _OnboardPageState extends State<OnboardPage> {
         curve: Curves.easeInOut,
       );
     } else {
-      _navigateToLogin();
+      unawaited(_navigateToLogin());
     }
   }
 
   void _skipOnboarding() {
-    _navigateToLogin();
+    unawaited(_navigateToLogin());
   }
 
-  void _navigateToLogin() {
-    AppRoutes.pushReplacement(context, const LoginPage());
+  Future<void> _navigateToLogin() async {
+    await ref.read(userSessionServiceProvider).markOnboardingSeen();
+    if (!mounted) return;
+    context.goNamed(RouteNames.login);
   }
 
   @override
@@ -99,8 +106,7 @@ class _OnboardPageState extends State<OnboardPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      if (isLargeScreen)
-                        Image.asset("assets/images/mylogo.png", height: 40),
+                      if (isLargeScreen) const AppLogo(height: 40),
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
@@ -160,4 +166,3 @@ class _OnboardPageState extends State<OnboardPage> {
     );
   }
 }
-
