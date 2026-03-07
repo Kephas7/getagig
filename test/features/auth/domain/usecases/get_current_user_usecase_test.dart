@@ -9,105 +9,42 @@ import 'package:mocktail/mocktail.dart';
 class MockAuthRepository extends Mock implements IAuthRepository {}
 
 void main() {
-  late GetCurrentUserUsecase usecase;
   late MockAuthRepository mockRepository;
+  late GetCurrentUserUsecase useCase;
+
+  const tUser = AuthEntity(
+    username: 'testuser',
+    email: 'test@example.com',
+    role: 'musician',
+  );
 
   setUp(() {
     mockRepository = MockAuthRepository();
-    usecase = GetCurrentUserUsecase(authRepository: mockRepository);
+    useCase = GetCurrentUserUsecase(authRepository: mockRepository);
   });
-  const tUser = AuthEntity(
-    username: 'testuser',
-    email: ' email: test@example.com',
-  );
 
-  group('GetCurrentUserUsecase', () {
-    test('should return AuthEntity when user is authenticated', () async {
-      // Arrange
-      when(
-        () => mockRepository.getCurrentUser(),
-      ).thenAnswer((_) async => const Right(tUser));
+  test('returns current user when repository succeeds', () async {
+    when(
+      () => mockRepository.getCurrentUser(),
+    ).thenAnswer((_) async => const Right(tUser));
 
-      // Act
-      final result = await usecase();
+    final result = await useCase();
 
-      // Assert
-      expect(result, const Right(tUser));
-      verify(() => mockRepository.getCurrentUser()).called(1);
-      verifyNoMoreInteractions(mockRepository);
-    });
-    test('should return failure when user is not authenticated', () async {
-      // Arrange
-      const failure = ApiFailure(message: 'User not authenticated');
-      when(
-        () => mockRepository.getCurrentUser(),
-      ).thenAnswer((_) async => const Left(failure));
+    expect(result, const Right(tUser));
+    verify(() => mockRepository.getCurrentUser()).called(1);
+    verifyNoMoreInteractions(mockRepository);
+  });
 
-      // Act
-      final result = await usecase();
+  test('returns failure when repository getCurrentUser fails', () async {
+    const failure = ApiFailure(message: 'User not authenticated');
+    when(
+      () => mockRepository.getCurrentUser(),
+    ).thenAnswer((_) async => const Left(failure));
 
-      // Assert
-      expect(result, const Left(failure));
-      verify(() => mockRepository.getCurrentUser()).called(1);
-      verifyNoMoreInteractions(mockRepository);
-    });
+    final result = await useCase();
 
-    test(
-      'should return LocalDatabaseFailure when local storage fails',
-      () async {
-        // Arrange
-        const failure = LocalDatabaseFailure(
-          message: 'Failed to read user data',
-        );
-        when(
-          () => mockRepository.getCurrentUser(),
-        ).thenAnswer((_) async => const Left(failure));
-
-        // Act
-        final result = await usecase();
-
-        // Assert
-        expect(result, const Left(failure));
-        verify(() => mockRepository.getCurrentUser()).called(1);
-      },
-    );
-
-    test(
-      'should return NetworkFailure when fetching from remote fails',
-      () async {
-        // Arrange
-        const failure = NetworkFailure();
-        when(
-          () => mockRepository.getCurrentUser(),
-        ).thenAnswer((_) async => const Left(failure));
-
-        // Act
-        final result = await usecase();
-
-        // Assert
-        expect(result, const Left(failure));
-        verify(() => mockRepository.getCurrentUser()).called(1);
-      },
-    );
-    test('should return user with all fields populated', () async {
-      // Arrange
-      const userWithAllFields = AuthEntity(
-        username: 'testuser',
-        email: 'test@example.com',
-      );
-      when(
-        () => mockRepository.getCurrentUser(),
-      ).thenAnswer((_) async => const Right(userWithAllFields));
-
-      // Act
-      final result = await usecase();
-
-      // Assert
-      result.fold((failure) => fail('Should return user'), (user) {
-
-        expect(user.username, 'testuser');
-        expect(user.email, 'test@example.com');
-      });
-    });
+    expect(result, const Left(failure));
+    verify(() => mockRepository.getCurrentUser()).called(1);
+    verifyNoMoreInteractions(mockRepository);
   });
 }

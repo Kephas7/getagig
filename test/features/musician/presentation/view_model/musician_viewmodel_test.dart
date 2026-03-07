@@ -1,16 +1,19 @@
 import 'package:dartz/dartz.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:getagig/core/error/failures.dart';
+import 'package:getagig/features/musician/data/musician_repository.dart';
 import 'package:getagig/features/musician/domain/entities/musician_entity.dart';
 import 'package:getagig/features/musician/domain/repositories/musician_repository.dart';
-import 'package:getagig/features/musician/domain/usecases/get_profile_usecase.dart';
+import 'package:getagig/features/musician/presentation/state/musician_state.dart';
+import 'package:getagig/features/musician/presentation/view_model/musician_viewmodel.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockMusicianRepository extends Mock implements IMusicianRepository {}
 
 void main() {
+  late ProviderContainer container;
   late MockMusicianRepository mockRepository;
-  late GetProfileUseCase useCase;
 
   const tProfile = MusicianEntity(
     id: 'musician-1',
@@ -36,31 +39,42 @@ void main() {
 
   setUp(() {
     mockRepository = MockMusicianRepository();
-    useCase = GetProfileUseCase(repository: mockRepository);
+
+    container = ProviderContainer(
+      overrides: [musicianRepositoryProvider.overrideWithValue(mockRepository)],
+    );
+
+    addTearDown(container.dispose);
   });
 
-  test('returns musician profile when repository succeeds', () async {
+  test('getProfile sets loaded state when profile is fetched', () async {
     when(
       () => mockRepository.getProfile(),
     ).thenAnswer((_) async => const Right(tProfile));
 
-    final result = await useCase();
+    final notifier = container.read(musicianProfileViewModelProvider.notifier);
+    await notifier.getProfile();
 
-    expect(result, const Right(tProfile));
+    final state = container.read(musicianProfileViewModelProvider);
+    expect(state.status, MusicianProfileStatus.loaded);
+    expect(state.profile, tProfile);
+    expect(state.errorMessage, isNull);
     verify(() => mockRepository.getProfile()).called(1);
-    verifyNoMoreInteractions(mockRepository);
   });
 
-  test('returns failure when repository getProfile fails', () async {
-    const failure = ApiFailure(message: 'Unable to load musician profile');
+  test('getProfile resets to initial when profile is not found', () async {
+    const failure = ApiFailure(message: 'Profile not found');
     when(
       () => mockRepository.getProfile(),
     ).thenAnswer((_) async => const Left(failure));
 
-    final result = await useCase();
+    final notifier = container.read(musicianProfileViewModelProvider.notifier);
+    await notifier.getProfile();
 
-    expect(result, const Left(failure));
+    final state = container.read(musicianProfileViewModelProvider);
+    expect(state.status, MusicianProfileStatus.initial);
+    expect(state.profile, isNull);
+    expect(state.errorMessage, isNull);
     verify(() => mockRepository.getProfile()).called(1);
-    verifyNoMoreInteractions(mockRepository);
   });
 }

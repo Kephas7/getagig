@@ -1,45 +1,46 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:getagig/core/error/failures.dart';
-import 'package:getagig/features/musician/domain/entities/musician_entity.dart';
-import 'package:getagig/features/musician/domain/repositories/musician_repository.dart';
-import 'package:getagig/features/musician/domain/usecases/get_profile_usecase.dart';
+import 'package:getagig/features/organizer/domain/entities/organizer_entity.dart';
+import 'package:getagig/features/organizer/domain/repositories/organizer_repository.dart';
+import 'package:getagig/features/organizer/domain/usecases/get_organizer_profile_usecase.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockMusicianRepository extends Mock implements IMusicianRepository {}
+class MockOrganizerRepository extends Mock implements IOrganizerRepository {}
 
 void main() {
-  late MockMusicianRepository mockRepository;
-  late GetProfileUseCase useCase;
+  late MockOrganizerRepository mockRepository;
+  late GetOrganizerProfileUseCase useCase;
 
-  const tProfile = MusicianEntity(
-    id: 'musician-1',
+  const tProfile = OrganizerEntity(
+    id: 'organizer-1',
     userId: 'user-1',
-    stageName: 'Stage One',
+    organizationName: 'Event House',
     profilePicture: null,
-    bio: 'Session guitarist',
-    phone: '9800000001',
+    bio: 'We produce live events',
+    contactPerson: 'Jane Doe',
+    phone: '9800000002',
+    email: 'events@example.com',
     location: 'Kathmandu',
-    genres: ['Rock'],
-    instruments: ['Guitar'],
-    experienceYears: 5,
-    hourlyRate: 3000,
+    organizationType: 'Events',
+    eventTypes: ['Concert'],
+    verificationDocuments: [],
+    website: null,
     photos: [],
     videos: [],
-    audioSamples: [],
     isVerified: false,
     verificationRequested: false,
-    isAvailable: true,
+    isActive: true,
     createdAt: '2026-01-01',
     updatedAt: '2026-01-02',
   );
 
   setUp(() {
-    mockRepository = MockMusicianRepository();
-    useCase = GetProfileUseCase(repository: mockRepository);
+    mockRepository = MockOrganizerRepository();
+    useCase = GetOrganizerProfileUseCase(repository: mockRepository);
   });
 
-  test('returns musician profile when repository succeeds', () async {
+  test('returns organizer profile when repository succeeds', () async {
     when(
       () => mockRepository.getProfile(),
     ).thenAnswer((_) async => const Right(tProfile));
@@ -52,7 +53,7 @@ void main() {
   });
 
   test('returns failure when repository getProfile fails', () async {
-    const failure = ApiFailure(message: 'Unable to load musician profile');
+    const failure = ApiFailure(message: 'Unable to load organizer profile');
     when(
       () => mockRepository.getProfile(),
     ).thenAnswer((_) async => const Left(failure));
