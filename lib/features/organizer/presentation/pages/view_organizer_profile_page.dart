@@ -15,7 +15,13 @@ import 'manage_organizer_media_page.dart';
 
 class ViewOrganizerProfilePage extends ConsumerStatefulWidget {
   final String? organizerId;
-  const ViewOrganizerProfilePage({super.key, this.organizerId});
+  final bool showAppBar;
+
+  const ViewOrganizerProfilePage({
+    super.key,
+    this.organizerId,
+    this.showAppBar = true,
+  });
 
   @override
   ConsumerState<ViewOrganizerProfilePage> createState() =>
@@ -153,6 +159,15 @@ class _ViewOrganizerProfilePageState
     );
   }
 
+  void _openEditProfile(OrganizerEntity organizer) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditOrganizerProfilePage(organizer: organizer),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final profileState = ref.watch(organizerProfileViewModelProvider);
@@ -168,6 +183,15 @@ class _ViewOrganizerProfilePageState
         );
       }
     });
+
+    final body = _buildBody(profileState);
+
+    if (!widget.showAppBar) {
+      return ColoredBox(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        child: body,
+      );
+    }
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -198,21 +222,12 @@ class _ViewOrganizerProfilePageState
                   color: colorScheme.onSurface,
                   size: 27,
                 ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => EditOrganizerProfilePage(
-                        organizer: profileState.profile!,
-                      ),
-                    ),
-                  );
-                },
+                onPressed: () => _openEditProfile(profileState.profile!),
               ),
             ),
         ],
       ),
-      body: _buildBody(profileState),
+      body: body,
     );
   }
 
@@ -347,46 +362,25 @@ class _ViewOrganizerProfilePageState
             color: Theme.of(context).colorScheme.secondary,
           ),
           const SizedBox(height: 18),
-          _buildSectionTitle('Media'),
-          Container(
-            decoration: AppShellStyles.glassCard(context, radius: 24),
-            child: Column(
-              children: [
-                _buildMediaTile(
-                  icon: Icons.photo_library_rounded,
-                  title: 'Photos',
-                  count: organizer.photos.length,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ManageOrganizerMediaPage(
-                          mediaType: OrganizerMediaType.photos,
-                          isOwner: _isOwnerView,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                _buildInnerDivider(indent: 64),
-                _buildMediaTile(
-                  icon: Icons.videocam_rounded,
-                  title: 'Videos',
-                  count: organizer.videos.length,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ManageOrganizerMediaPage(
-                          mediaType: OrganizerMediaType.videos,
-                          isOwner: _isOwnerView,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
+          _buildSectionTitle('Media Gallery'),
+          Column(
+            children: [
+              _buildOrganizerMediaGalleryCard(
+                title: 'Photos',
+                icon: Icons.photo_library_rounded,
+                mediaType: OrganizerMediaType.photos,
+                mediaValues: List<String>.from(organizer.photos),
+                accentColor: Theme.of(context).colorScheme.secondary,
+              ),
+              const SizedBox(height: 12),
+              _buildOrganizerMediaGalleryCard(
+                title: 'Videos',
+                icon: Icons.videocam_rounded,
+                mediaType: OrganizerMediaType.videos,
+                mediaValues: List<String>.from(organizer.videos),
+                accentColor: const Color(0xFF10B981),
+              ),
+            ],
           ),
           const SizedBox(height: 18),
           _buildSectionTitle('Verification Documents'),
@@ -560,11 +554,25 @@ class _ViewOrganizerProfilePageState
             ],
           ),
           const SizedBox(height: 14),
-          if (organizer.isVerified || organizer.verificationRequested)
-            _buildVerificationPill(
-              isVerified: organizer.isVerified,
-              isPending: organizer.verificationRequested,
-            ),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            alignment: WrapAlignment.center,
+            children: [
+              if (organizer.isVerified || organizer.verificationRequested)
+                _buildVerificationPill(
+                  isVerified: organizer.isVerified,
+                  isPending: organizer.verificationRequested,
+                ),
+              if (_isOwnerView && !widget.showAppBar)
+                _buildHeroActionPill(
+                  label: 'EDIT PROFILE',
+                  icon: Icons.edit_note_rounded,
+                  color: colorScheme.secondary,
+                  onTap: () => _openEditProfile(organizer),
+                ),
+            ],
+          ),
           if (_isOwnerView &&
               !organizer.isVerified &&
               !organizer.verificationRequested) ...[
@@ -620,6 +628,47 @@ class _ViewOrganizerProfilePageState
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildHeroActionPill({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: color.withValues(
+              alpha: AppShellStyles.isDark(context) ? 0.22 : 0.12,
+            ),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: color.withValues(alpha: 0.32)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.65,
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -904,52 +953,266 @@ class _ViewOrganizerProfilePageState
     );
   }
 
-  Widget _buildMediaTile({
-    required IconData icon,
+  void _openOrganizerMediaGallery(OrganizerMediaType mediaType) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ManageOrganizerMediaPage(
+          mediaType: mediaType,
+          isOwner: _isOwnerView,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOrganizerMediaGalleryCard({
     required String title,
-    required int count,
-    required VoidCallback onTap,
+    required IconData icon,
+    required OrganizerMediaType mediaType,
+    required List<String> mediaValues,
+    required Color accentColor,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
+    final values = mediaValues
+        .where((value) => value.trim().isNotEmpty)
+        .toList(growable: false);
 
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      leading: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: colorScheme.secondary.withValues(alpha: 0.14),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Icon(icon, color: colorScheme.secondary, size: 20),
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-          color: colorScheme.onSurface,
-          fontWeight: FontWeight.w700,
-          fontSize: 15,
-        ),
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+      decoration: AppShellStyles.glassCard(context, radius: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '$count',
-            style: TextStyle(
-              color: AppShellStyles.mutedText(context),
-              fontWeight: FontWeight.w800,
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(
+                    alpha: AppShellStyles.isDark(context) ? 0.22 : 0.12,
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: accentColor, size: 18),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _mediaLabel(values.length),
+                      style: TextStyle(
+                        color: AppShellStyles.mutedText(context),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              TextButton(
+                onPressed: () => _openOrganizerMediaGallery(mediaType),
+                child: const Text('View all'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (values.isEmpty)
+            _buildOrganizerGalleryPlaceholder(
+              label: 'No $title yet',
+              icon: icon,
+              accentColor: accentColor,
+            )
+          else
+            _buildOrganizerMediaPreviewGrid(
+              mediaType: mediaType,
+              mediaValues: values,
+              accentColor: accentColor,
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrganizerMediaPreviewGrid({
+    required OrganizerMediaType mediaType,
+    required List<String> mediaValues,
+    required Color accentColor,
+  }) {
+    const int previewLimit = 4;
+    final previewValues = mediaValues
+        .take(previewLimit)
+        .toList(growable: false);
+    final hiddenCount = mediaValues.length - previewValues.length;
+    final tileCount = previewValues.length + (hiddenCount > 0 ? 1 : 0);
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: tileCount,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: 1.08,
+      ),
+      itemBuilder: (context, index) {
+        if (hiddenCount > 0 && index == previewValues.length) {
+          return InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () => _openOrganizerMediaGallery(mediaType),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                color: AppShellStyles.mutedSurface(context),
+                border: Border.all(color: AppShellStyles.border(context)),
+              ),
+              child: Center(
+                child: Text(
+                  '+$hiddenCount',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
+        return _buildOrganizerMediaPreviewTile(
+          mediaType: mediaType,
+          rawValue: previewValues[index],
+          accentColor: accentColor,
+          onTap: () => _openOrganizerMediaGallery(mediaType),
+        );
+      },
+    );
+  }
+
+  Widget _buildOrganizerMediaPreviewTile({
+    required OrganizerMediaType mediaType,
+    required String rawValue,
+    required Color accentColor,
+    required VoidCallback onTap,
+  }) {
+    final displayUrl = switch (mediaType) {
+      OrganizerMediaType.photos => ApiEndpoints.buildImageUrl(rawValue),
+      OrganizerMediaType.videos => ApiEndpoints.buildVideoUrl(rawValue),
+      OrganizerMediaType.documents => rawValue,
+    };
+
+    if (mediaType == OrganizerMediaType.photos && displayUrl.isNotEmpty) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(14),
+          child: CachedNetworkImage(
+            imageUrl: displayUrl,
+            fit: BoxFit.cover,
+            placeholder: (_, url) => Container(
+              color: AppShellStyles.mutedSurface(context),
+              child: const Center(
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+            errorWidget: (_, url, error) => _buildOrganizerGalleryPlaceholder(
+              label: 'Preview unavailable',
+              icon: Icons.broken_image_rounded,
+              accentColor: accentColor,
             ),
           ),
+        ),
+      );
+    }
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          color: AppShellStyles.mutedSurface(context),
+          border: Border.all(color: AppShellStyles.border(context)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.play_circle_fill_rounded, color: accentColor, size: 28),
+            const SizedBox(height: 8),
+            Text(
+              _mediaFilename(rawValue),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOrganizerGalleryPlaceholder({
+    required String label,
+    required IconData icon,
+    required Color accentColor,
+  }) {
+    return Container(
+      height: 84,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        color: AppShellStyles.mutedSurface(context),
+        border: Border.all(color: AppShellStyles.border(context)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 18, color: accentColor),
           const SizedBox(width: 8),
-          Icon(
-            Icons.arrow_forward_ios_rounded,
-            size: 14,
-            color: AppShellStyles.mutedText(context),
+          Text(
+            label,
+            style: TextStyle(
+              color: AppShellStyles.mutedText(context),
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),
-      onTap: onTap,
     );
+  }
+
+  String _mediaLabel(int count) {
+    return '$count item${count == 1 ? '' : 's'}';
+  }
+
+  String _mediaFilename(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return 'Untitled';
+    }
+
+    final segments = trimmed.split('/');
+    return segments.isEmpty ? trimmed : segments.last;
   }
 
   Widget _buildInnerDivider({double indent = 0}) {

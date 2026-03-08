@@ -28,7 +28,7 @@ class _GigApplicationsPageState extends ConsumerState<GigApplicationsPage> {
                 application.musician?.id ??
                 '')
             .trim();
-    final applicationId = application.id ?? recipientUserId ?? 'unknown';
+    final applicationId = application.id ?? recipientUserId;
 
     if (recipientUserId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -85,6 +85,7 @@ class _GigApplicationsPageState extends ConsumerState<GigApplicationsPage> {
       gigApplicationsProvider(widget.gig.id),
     );
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -92,10 +93,10 @@ class _GigApplicationsPageState extends ConsumerState<GigApplicationsPage> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Applications',
               style: TextStyle(
-                color: Color(0xFF1A1B61),
+                color: colorScheme.onSurface,
                 fontWeight: FontWeight.w900,
                 fontSize: 20,
               ),
@@ -103,14 +104,14 @@ class _GigApplicationsPageState extends ConsumerState<GigApplicationsPage> {
             Text(
               widget.gig.title,
               style: TextStyle(
-                color: Colors.grey[500],
+                color: colorScheme.onSurfaceVariant,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ],
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: colorScheme.surface,
         elevation: 0,
       ),
       body: AnimatedSwitcher(
@@ -135,32 +136,32 @@ class _GigApplicationsPageState extends ConsumerState<GigApplicationsPage> {
                     Container(
                       padding: const EdgeInsets.all(32),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF6366F1).withValues(alpha: 0.05),
+                        color: colorScheme.secondary.withValues(alpha: 0.08),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.inbox_rounded,
                         size: 72,
-                        color: Color(0xFF6366F1),
+                        color: colorScheme.secondary,
                       ),
                     ),
                     const SizedBox(height: 32),
-                    const Text(
+                    Text(
                       'No applications yet',
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w900,
-                        color: Color(0xFF1A1B61),
+                        color: colorScheme.onSurface,
                         letterSpacing: -0.5,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       'When musicians apply to this gig,\nthey will appear here.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 15,
-                        color: Colors.black45,
+                        color: colorScheme.onSurfaceVariant,
                         height: 1.5,
                         fontWeight: FontWeight.w500,
                       ),
@@ -227,13 +228,13 @@ class _GigApplicationsPageState extends ConsumerState<GigApplicationsPage> {
               ],
             );
           },
-          loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFF1A1B61)),
+          loading: () => Center(
+            child: CircularProgressIndicator(color: colorScheme.secondary),
           ),
           error: (err, stack) => Center(
             child: Text(
               'Error: $err',
-              style: const TextStyle(color: Colors.red),
+              style: TextStyle(color: colorScheme.error),
             ),
           ),
         ),
@@ -257,6 +258,8 @@ class _ApplicationCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final dark = Theme.of(context).brightness == Brightness.dark;
     final app = application;
     final musicianName = app.musician?.username ?? 'Unknown Musician';
     final musicianId = (app.musicianId ?? app.musician?.id ?? '').trim();
@@ -284,16 +287,17 @@ class _ApplicationCard extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
+          if (!dark)
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
         ],
-        border: Border.all(color: Colors.grey[100]!, width: 1.5),
+        border: Border.all(color: colorScheme.outlineVariant, width: 1.5),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -327,19 +331,19 @@ class _ApplicationCard extends ConsumerWidget {
                             shape: BoxShape.circle,
                             gradient: LinearGradient(
                               colors: [
-                                const Color(0xFF6366F1).withValues(alpha: 0.1),
-                                const Color(0xFF1A1B61).withValues(alpha: 0.1),
+                                colorScheme.secondary.withValues(alpha: 0.14),
+                                colorScheme.primary.withValues(alpha: 0.12),
                               ],
                             ),
                           ),
                           child: Center(
                             child: Text(
                               musicianName[0].toUpperCase(),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 decoration: TextDecoration.none,
                                 fontWeight: FontWeight.w900,
                                 fontSize: 20,
-                                color: Color(0xFF1A1B61),
+                                color: colorScheme.onSurface,
                               ),
                             ),
                           ),
@@ -351,16 +355,16 @@ class _ApplicationCard extends ConsumerWidget {
                         children: [
                           Text(
                             musicianName,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.w900,
                               fontSize: 18,
-                              color: Color(0xFF1A1B61),
+                              color: colorScheme.onSurface,
                             ),
                           ),
                           Text(
                             'View Profile',
                             style: TextStyle(
-                              color: Colors.indigo[400],
+                              color: colorScheme.secondary,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
@@ -392,11 +396,11 @@ class _ApplicationCard extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
+            Text(
               'COVER LETTER',
               style: TextStyle(
                 fontWeight: FontWeight.w900,
-                color: Colors.black26,
+                color: colorScheme.onSurfaceVariant,
                 fontSize: 10,
                 letterSpacing: 1,
               ),
@@ -406,14 +410,14 @@ class _ApplicationCard extends ConsumerWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey[50],
+                color: colorScheme.surfaceContainerLowest,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.grey[100]!),
+                border: Border.all(color: colorScheme.outlineVariant),
               ),
               child: Text(
                 app.coverLetter,
-                style: const TextStyle(
-                  color: Color(0xFF1A1B61),
+                style: TextStyle(
+                  color: colorScheme.onSurface,
                   fontSize: 14,
                   height: 1.5,
                   fontWeight: FontWeight.w500,
@@ -464,9 +468,9 @@ class _ApplicationCard extends ConsumerWidget {
                             }
                           : null,
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFFEF4444),
+                        foregroundColor: colorScheme.error,
                         side: BorderSide(
-                          color: const Color(0xFFEF4444).withValues(alpha: 0.2),
+                          color: colorScheme.error.withValues(alpha: 0.3),
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
@@ -496,8 +500,8 @@ class _ApplicationCard extends ConsumerWidget {
                             }
                           : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF10B981),
-                        foregroundColor: Colors.white,
+                        backgroundColor: colorScheme.secondary,
+                        foregroundColor: colorScheme.onSecondary,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),

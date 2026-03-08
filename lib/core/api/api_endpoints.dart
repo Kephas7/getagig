@@ -8,7 +8,7 @@ class ApiEndpoints {
   // Configuration
   static const String _ipAddress = String.fromEnvironment(
     'API_IP_ADDRESS',
-    defaultValue: '192.168.1.15',
+    defaultValue: '192.168.1.3',
   );
   static const int _port = 5050;
   static const Duration _hostProbeTimeout = Duration(milliseconds: 700);

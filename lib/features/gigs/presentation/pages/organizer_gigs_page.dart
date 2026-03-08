@@ -280,9 +280,11 @@ class _OrganizerGigsPageState extends ConsumerState<OrganizerGigsPage> {
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: canPostGig
-                        ? const Color(0xFF10B981)
-                        : Colors.grey[600],
-                    foregroundColor: Colors.white,
+                        ? colorScheme.secondary
+                        : colorScheme.surfaceContainerHighest,
+                    foregroundColor: canPostGig
+                        ? colorScheme.onSecondary
+                        : colorScheme.onSurfaceVariant,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 14,

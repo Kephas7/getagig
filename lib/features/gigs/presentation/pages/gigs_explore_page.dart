@@ -393,8 +393,8 @@ class _EmptyState extends StatelessWidget {
             ElevatedButton(
               onPressed: onClearFilters,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black87,
-                foregroundColor: Colors.white,
+                backgroundColor: colorScheme.secondary,
+                foregroundColor: colorScheme.onSecondary,
               ),
               child: const Text('Clear Filters'),
             ),

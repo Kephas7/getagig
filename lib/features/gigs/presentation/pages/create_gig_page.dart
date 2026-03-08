@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:getagig/app/theme/app_shell_styles.dart';
 import 'package:intl/intl.dart';
 import '../view_model/organizer_gigs_viewmodel.dart';
 
@@ -129,18 +130,21 @@ class _CreateGigPageState extends ConsumerState<CreateGigPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Post a New Gig',
           style: TextStyle(
-            color: Color(0xFF1A1B61),
+            color: colorScheme.onSurface,
             fontWeight: FontWeight.w900,
             fontSize: 22,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: colorScheme.surface,
         elevation: 0,
         centerTitle: true,
       ),
@@ -218,14 +222,18 @@ class _CreateGigPageState extends ConsumerState<CreateGigPage> {
                     vertical: 20,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppShellStyles.cardSurface(context),
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.grey[100]!, width: 1.5),
+                    border: Border.all(
+                      color: AppShellStyles.border(context),
+                      width: 1.5,
+                    ),
                     boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.02),
-                        blurRadius: 10,
-                      ),
+                      if (!dark)
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.02),
+                          blurRadius: 10,
+                        ),
                     ],
                   ),
                   child: Row(
@@ -233,12 +241,12 @@ class _CreateGigPageState extends ConsumerState<CreateGigPage> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF6366F1).withOpacity(0.1),
+                          color: colorScheme.secondary.withValues(alpha: 0.14),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.event_rounded,
-                          color: Color(0xFF6366F1),
+                          color: colorScheme.secondary,
                           size: 20,
                         ),
                       ),
@@ -249,16 +257,16 @@ class _CreateGigPageState extends ConsumerState<CreateGigPage> {
                             : DateFormat('MMMM d, yyyy').format(_eventDate!),
                         style: TextStyle(
                           color: _eventDate == null
-                              ? Colors.black26
-                              : const Color(0xFF1A1B61),
+                              ? colorScheme.onSurfaceVariant
+                              : colorScheme.onSurface,
                           fontWeight: FontWeight.w700,
                           fontSize: 16,
                         ),
                       ),
                       const Spacer(),
-                      const Icon(
+                      Icon(
                         Icons.arrow_drop_down_rounded,
-                        color: Colors.black26,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ],
                   ),
@@ -274,14 +282,18 @@ class _CreateGigPageState extends ConsumerState<CreateGigPage> {
                     vertical: 20,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppShellStyles.cardSurface(context),
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.grey[100]!, width: 1.5),
+                    border: Border.all(
+                      color: AppShellStyles.border(context),
+                      width: 1.5,
+                    ),
                     boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.02),
-                        blurRadius: 10,
-                      ),
+                      if (!dark)
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.02),
+                          blurRadius: 10,
+                        ),
                     ],
                   ),
                   child: Row(
@@ -289,12 +301,12 @@ class _CreateGigPageState extends ConsumerState<CreateGigPage> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF6366F1).withOpacity(0.1),
+                          color: colorScheme.secondary.withValues(alpha: 0.14),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.calendar_today_rounded,
-                          color: Color(0xFF6366F1),
+                          color: colorScheme.secondary,
                           size: 20,
                         ),
                       ),
@@ -305,16 +317,16 @@ class _CreateGigPageState extends ConsumerState<CreateGigPage> {
                             : DateFormat('MMMM d, yyyy').format(_deadline!),
                         style: TextStyle(
                           color: _deadline == null
-                              ? Colors.black26
-                              : const Color(0xFF1A1B61),
+                              ? colorScheme.onSurfaceVariant
+                              : colorScheme.onSurface,
                           fontWeight: FontWeight.w700,
                           fontSize: 16,
                         ),
                       ),
                       const Spacer(),
-                      const Icon(
+                      Icon(
                         Icons.arrow_drop_down_rounded,
-                        color: Colors.black26,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ],
                   ),
@@ -326,7 +338,7 @@ class _CreateGigPageState extends ConsumerState<CreateGigPage> {
                 decoration: BoxDecoration(
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF10B981).withOpacity(0.2),
+                      color: colorScheme.secondary.withValues(alpha: 0.2),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -335,8 +347,8 @@ class _CreateGigPageState extends ConsumerState<CreateGigPage> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _submit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF10B981),
-                    foregroundColor: Colors.white,
+                    backgroundColor: colorScheme.secondary,
+                    foregroundColor: colorScheme.onSecondary,
                     padding: const EdgeInsets.symmetric(vertical: 20),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
@@ -344,11 +356,11 @@ class _CreateGigPageState extends ConsumerState<CreateGigPage> {
                     elevation: 0,
                   ),
                   child: _isLoading
-                      ? const SizedBox(
+                      ? SizedBox(
                           height: 20,
                           width: 20,
                           child: CircularProgressIndicator(
-                            color: Colors.white,
+                            color: colorScheme.onSecondary,
                             strokeWidth: 2,
                           ),
                         )
@@ -375,10 +387,10 @@ class _CreateGigPageState extends ConsumerState<CreateGigPage> {
       padding: const EdgeInsets.only(bottom: 12, left: 4),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w900,
-          color: Colors.black26,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
           letterSpacing: 1.5,
         ),
       ),
@@ -389,11 +401,15 @@ class _CreateGigPageState extends ConsumerState<CreateGigPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppShellStyles.cardSurface(context),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.grey[100]!, width: 1.5),
+        border: Border.all(color: AppShellStyles.border(context), width: 1.5),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 15),
+          if (!AppShellStyles.isDark(context))
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 15,
+            ),
         ],
       ),
       child: Column(children: children),
@@ -414,30 +430,37 @@ class _CreateGigPageState extends ConsumerState<CreateGigPage> {
       keyboardType: keyboardType,
       validator:
           validator ?? (v) => v!.isEmpty ? 'This field is required' : null,
-      style: const TextStyle(
-        color: Color(0xFF1A1B61),
+      style: TextStyle(
+        color: Theme.of(context).colorScheme.onSurface,
         fontWeight: FontWeight.w600,
       ),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(
-          color: Colors.black26,
+        labelStyle: TextStyle(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
           fontWeight: FontWeight.w600,
         ),
-        prefixIcon: Icon(icon, color: Colors.indigo[200], size: 22),
+        prefixIcon: Icon(
+          icon,
+          color: Theme.of(context).colorScheme.secondary,
+          size: 22,
+        ),
         filled: true,
-        fillColor: const Color(0xFFFBFBFF),
+        fillColor: AppShellStyles.mutedSurface(context),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey[100]!),
+          borderSide: BorderSide(color: AppShellStyles.border(context)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey[100]!),
+          borderSide: BorderSide(color: AppShellStyles.border(context)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.secondary,
+            width: 1.5,
+          ),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,

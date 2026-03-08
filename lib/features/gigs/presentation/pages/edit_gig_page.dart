@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:getagig/app/theme/app_shell_styles.dart';
 import 'package:intl/intl.dart';
 import '../../domain/entities/gig_entity.dart';
 import '../view_model/organizer_gigs_viewmodel.dart';
@@ -158,16 +159,15 @@ class _EditGigPageState extends ConsumerState<EditGigPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
-          'Edit Gig',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.white,
+        title: Text('Edit Gig', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: colorScheme.surface,
         elevation: 0,
-        foregroundColor: Colors.black,
+        foregroundColor: colorScheme.onSurface,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -187,15 +187,17 @@ class _EditGigPageState extends ConsumerState<EditGigPage> {
                 }).toList(),
                 onChanged: (v) => setState(() => _status = v!),
                 decoration: InputDecoration(
-                  prefixIcon: const Icon(
+                  prefixIcon: Icon(
                     Icons.info_outline,
-                    color: Colors.black45,
+                    color: colorScheme.onSurfaceVariant,
                   ),
                   filled: true,
-                  fillColor: Colors.grey[50],
+                  fillColor: AppShellStyles.mutedSurface(context),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey[200]!),
+                    borderSide: BorderSide(
+                      color: AppShellStyles.border(context),
+                    ),
                   ),
                 ),
               ),
@@ -259,19 +261,19 @@ class _EditGigPageState extends ConsumerState<EditGigPage> {
                     vertical: 20,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.grey[50],
+                    color: AppShellStyles.mutedSurface(context),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey[200]!),
+                    border: Border.all(color: AppShellStyles.border(context)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.event, color: Colors.indigo),
+                      Icon(Icons.event, color: colorScheme.secondary),
                       const SizedBox(width: 12),
                       Text(
                         _eventDate == null
                             ? 'Select Event Date'
                             : DateFormat('yyyy-MM-dd').format(_eventDate!),
-                        style: const TextStyle(color: Colors.black87),
+                        style: TextStyle(color: colorScheme.onSurface),
                       ),
                     ],
                   ),
@@ -286,19 +288,19 @@ class _EditGigPageState extends ConsumerState<EditGigPage> {
                     vertical: 20,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.grey[50],
+                    color: AppShellStyles.mutedSurface(context),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey[200]!),
+                    border: Border.all(color: AppShellStyles.border(context)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.calendar_today, color: Colors.blue),
+                      Icon(Icons.calendar_today, color: colorScheme.secondary),
                       const SizedBox(width: 12),
                       Text(
                         _deadline == null
                             ? 'Select Application Deadline'
                             : DateFormat('yyyy-MM-dd').format(_deadline!),
-                        style: const TextStyle(color: Colors.black87),
+                        style: TextStyle(color: colorScheme.onSurface),
                       ),
                     ],
                   ),
@@ -311,8 +313,8 @@ class _EditGigPageState extends ConsumerState<EditGigPage> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _submit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black87,
-                    foregroundColor: Colors.white,
+                    backgroundColor: colorScheme.secondary,
+                    foregroundColor: colorScheme.onSecondary,
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -320,11 +322,11 @@ class _EditGigPageState extends ConsumerState<EditGigPage> {
                     elevation: 0,
                   ),
                   child: _isLoading
-                      ? const SizedBox(
+                      ? SizedBox(
                           height: 20,
                           width: 20,
                           child: CircularProgressIndicator(
-                            color: Colors.white,
+                            color: colorScheme.onSecondary,
                             strokeWidth: 2,
                           ),
                         )
@@ -350,10 +352,10 @@ class _EditGigPageState extends ConsumerState<EditGigPage> {
       padding: const EdgeInsets.only(bottom: 16),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.bold,
-          color: Colors.black87,
+          color: Theme.of(context).colorScheme.onSurface,
         ),
       ),
     );
@@ -375,20 +377,25 @@ class _EditGigPageState extends ConsumerState<EditGigPage> {
           validator ?? (v) => v!.isEmpty ? 'This field is required' : null,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, color: Colors.black45),
+        prefixIcon: Icon(
+          icon,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
         filled: true,
-        fillColor: Colors.grey[50],
+        fillColor: AppShellStyles.mutedSurface(context),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[200]!),
+          borderSide: BorderSide(color: AppShellStyles.border(context)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[200]!),
+          borderSide: BorderSide(color: AppShellStyles.border(context)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.black87),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.secondary,
+          ),
         ),
       ),
     );

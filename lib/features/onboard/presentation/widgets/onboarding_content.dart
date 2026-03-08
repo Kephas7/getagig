@@ -1,7 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:getagig/features/onboard/domain/entities/onboarding_items.dart';
 
-
 class OnboardingContent extends StatelessWidget {
   final OnboardingItem item;
   final Orientation orientation;
@@ -20,6 +19,7 @@ class OnboardingContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final size = MediaQuery.of(context).size;
     final isLandscape = orientation == Orientation.landscape;
 
@@ -37,9 +37,7 @@ class OnboardingContent extends StatelessWidget {
           children: [
             // Image Container
             Container(
-              height: isLandscape
-                  ? size.height * 0.4
-                  : size.height * 0.35,
+              height: isLandscape ? size.height * 0.4 : size.height * 0.35,
               margin: EdgeInsets.only(
                 bottom: isLandscape ? 20 : 40,
                 top: isLandscape ? 10 : 30,
@@ -53,9 +51,7 @@ class OnboardingContent extends StatelessWidget {
 
             // Title
             Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: isSmallScreen ? 10 : 0,
-              ),
+              padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 10 : 0),
               child: Text(
                 item.title,
                 textAlign: TextAlign.center,
@@ -63,10 +59,10 @@ class OnboardingContent extends StatelessWidget {
                   fontSize: isLargeScreen
                       ? 32
                       : isLandscape
-                          ? 24
-                          : isSmallScreen
-                              ? 22
-                              : 28,
+                      ? 24
+                      : isSmallScreen
+                      ? 22
+                      : 28,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Urbanist-Bold',
                   height: 1.2,
@@ -82,8 +78,8 @@ class OnboardingContent extends StatelessWidget {
                 horizontal: isSmallScreen
                     ? 10
                     : isLandscape
-                        ? 40
-                        : 30,
+                    ? 40
+                    : 30,
               ),
               child: Text(
                 item.subtitle,
@@ -92,10 +88,10 @@ class OnboardingContent extends StatelessWidget {
                   fontSize: isLargeScreen
                       ? 18
                       : isSmallScreen
-                          ? 14
-                          : 16,
+                      ? 14
+                      : 16,
                   fontFamily: 'Urbanist-Medium',
-                  color: Colors.grey[700],
+                  color: colorScheme.onSurfaceVariant,
                   height: 1.5,
                 ),
               ),
@@ -105,8 +101,8 @@ class OnboardingContent extends StatelessWidget {
               height: isLandscape
                   ? 40
                   : isLargeScreen
-                      ? 60
-                      : 30,
+                  ? 60
+                  : 30,
             ),
           ],
         ),
@@ -114,4 +110,3 @@ class OnboardingContent extends StatelessWidget {
     );
   }
 }
-

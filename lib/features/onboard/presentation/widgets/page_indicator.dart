@@ -4,20 +4,25 @@ class PageIndicator extends StatelessWidget {
   final int itemCount;
   final int currentPage;
   final bool isSmallScreen;
-  final Color activeColor;
-  final Color inactiveColor;
+  final Color? activeColor;
+  final Color? inactiveColor;
 
   const PageIndicator({
     super.key,
     required this.itemCount,
     required this.currentPage,
     required this.isSmallScreen,
-    this.activeColor = Colors.black,
-    this.inactiveColor = Colors.grey,
+    this.activeColor,
+    this.inactiveColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final resolvedActiveColor = activeColor ?? colorScheme.secondary;
+    final resolvedInactiveColor =
+        inactiveColor ?? colorScheme.onSurfaceVariant.withValues(alpha: 0.35);
+
     return Container(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).orientation == Orientation.landscape
@@ -42,12 +47,14 @@ class PageIndicator extends StatelessWidget {
                 : (isSmallScreen ? 6 : 8),
             height: isSmallScreen ? 6 : 8,
             decoration: BoxDecoration(
-              color: currentPage == index ? activeColor : inactiveColor,
+              color: currentPage == index
+                  ? resolvedActiveColor
+                  : resolvedInactiveColor,
               borderRadius: BorderRadius.circular(10),
               boxShadow: currentPage == index
                   ? [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: resolvedActiveColor.withValues(alpha: 0.25),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -60,4 +67,3 @@ class PageIndicator extends StatelessWidget {
     );
   }
 }
-

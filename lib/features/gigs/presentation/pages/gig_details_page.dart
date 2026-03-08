@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:getagig/app/theme/app_shell_styles.dart';
 import 'package:getagig/features/applications/presentation/view_model/my_applications_viewmodel.dart';
 import 'package:getagig/features/gigs/domain/entities/gig_entity.dart';
 import 'package:getagig/features/organizer/presentation/pages/view_organizer_profile_page.dart';
@@ -23,17 +24,22 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
   @override
   Widget build(BuildContext context) {
     final gig = widget.gig;
+    final colorScheme = Theme.of(context).colorScheme;
+    final dark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Gig Details',
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: colorScheme.onSurface,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: colorScheme.surface,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        iconTheme: IconThemeData(color: colorScheme.onSurface),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -44,8 +50,10 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
               width: double.infinity,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.grey[50],
-                border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
+                color: AppShellStyles.mutedSurface(context),
+                border: Border(
+                  bottom: BorderSide(color: AppShellStyles.border(context)),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -56,13 +64,13 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.black87,
+                      color: colorScheme.secondaryContainer,
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       gig.eventType.toUpperCase(),
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: colorScheme.onSecondaryContainer,
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1,
@@ -72,10 +80,10 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
                   const SizedBox(height: 16),
                   Text(
                     gig.title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
-                      color: Colors.black87,
+                      color: colorScheme.onSurface,
                       height: 1.2,
                     ),
                   ),
@@ -85,26 +93,14 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
                       Icon(
                         Icons.location_on,
                         size: 20,
-                        color: Colors.grey[600],
+                        color: colorScheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: 8),
                       Text(
                         gig.location,
-                        style: TextStyle(fontSize: 16, color: Colors.grey[800]),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Icon(Icons.payments, size: 20, color: Colors.green[600]),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Rs. ${gig.payRate}',
                         style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green[700],
+                          fontSize: 16,
+                          color: colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -112,11 +108,37 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      Icon(Icons.person, size: 20, color: Colors.blue[600]),
+                      const Icon(
+                        Icons.payments,
+                        size: 20,
+                        color: Color(0xFF10B981),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Rs. ${gig.payRate}',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF10B981),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.person,
+                        size: 20,
+                        color: colorScheme.secondary,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         gig.organizerName,
-                        style: TextStyle(fontSize: 16, color: Colors.grey[800]),
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       const SizedBox(width: 8),
                       if (gig.organizerId != null)
@@ -150,12 +172,12 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Description',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -163,19 +185,19 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
                     gig.description,
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.grey[800],
+                      color: colorScheme.onSurfaceVariant,
                       height: 1.6,
                     ),
                   ),
                   const SizedBox(height: 32),
 
                   if (gig.genres.isNotEmpty) ...[
-                    const Text(
+                    Text(
                       'Genres',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -186,8 +208,10 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
                           .map(
                             (g) => Chip(
                               label: Text(g),
-                              backgroundColor: Colors.blue[50],
-                              side: BorderSide(color: Colors.blue[200]!),
+                              backgroundColor: colorScheme.secondaryContainer,
+                              side: BorderSide(
+                                color: colorScheme.outlineVariant,
+                              ),
                             ),
                           )
                           .toList(),
@@ -196,12 +220,12 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
                   ],
 
                   if (gig.instruments.isNotEmpty) ...[
-                    const Text(
+                    Text(
                       'Instruments Required',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -212,8 +236,11 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
                           .map(
                             (i) => Chip(
                               label: Text(i),
-                              backgroundColor: Colors.orange[50],
-                              side: BorderSide(color: Colors.orange[200]!),
+                              backgroundColor:
+                                  colorScheme.surfaceContainerHighest,
+                              side: BorderSide(
+                                color: colorScheme.outlineVariant,
+                              ),
                             ),
                           )
                           .toList(),
@@ -226,18 +253,27 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
 
                   Row(
                     children: [
-                      Icon(Icons.event_available, color: Colors.grey[600]),
+                      Icon(
+                        Icons.event_available,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         'Deadline: ${gig.deadline?.toLocal().toString().split(' ')[0] ?? '—'}',
-                        style: TextStyle(fontSize: 16, color: Colors.grey[800]),
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(Icons.info_outline, color: Colors.grey[600]),
+                      Icon(
+                        Icons.info_outline,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         'Status: ${gig.status.toUpperCase()}',
@@ -245,8 +281,8 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: gig.status == 'open'
-                              ? Colors.green
-                              : Colors.red,
+                              ? const Color(0xFF10B981)
+                              : colorScheme.error,
                         ),
                       ),
                     ],
@@ -263,13 +299,14 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: colorScheme.surface,
             boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, -5),
-              ),
+              if (!dark)
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -5),
+                ),
             ],
           ),
           child: Column(
@@ -285,8 +322,8 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
                       onPressed: () =>
                           _messageOrganizer(context, ref, gig.organizerId!),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.black87,
-                        side: const BorderSide(color: Colors.black87),
+                        foregroundColor: colorScheme.secondary,
+                        side: BorderSide(color: colorScheme.secondary),
                         minimumSize: const Size(double.infinity, 48),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -307,8 +344,8 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
                   ? ElevatedButton(
                       onPressed: () => _showApplyModal(context),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black87,
-                        foregroundColor: Colors.white,
+                        backgroundColor: colorScheme.secondary,
+                        foregroundColor: colorScheme.onSecondary,
                         minimumSize: const Size(double.infinity, 56),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -326,14 +363,14 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
                   : Container(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       decoration: BoxDecoration(
-                        color: Colors.grey[200],
+                        color: colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Text(
+                      child: Text(
                         'This gig is no longer open.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Colors.grey,
+                          color: colorScheme.onSurfaceVariant,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
@@ -366,6 +403,8 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
         recipientUserId = organizerProfile.userId;
       }
     });
+
+    if (!context.mounted) return;
 
     // Start loading
     ScaffoldMessenger.of(context).showSnackBar(
@@ -415,13 +454,15 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
   }
 
   void _showApplyModal(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: EdgeInsets.only(
@@ -437,12 +478,12 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Apply for Gig',
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 IconButton(
@@ -452,12 +493,12 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
               ],
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Cover Letter',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 8),
@@ -466,20 +507,20 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
               maxLines: 5,
               decoration: InputDecoration(
                 hintText: 'Why are you a good fit for this gig?',
-                hintStyle: TextStyle(color: Colors.grey[400]),
+                hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
                 filled: true,
-                fillColor: Colors.grey[50],
+                fillColor: AppShellStyles.mutedSurface(context),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
+                  borderSide: BorderSide(color: colorScheme.outlineVariant),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
+                  borderSide: BorderSide(color: colorScheme.outlineVariant),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.black87),
+                  borderSide: BorderSide(color: colorScheme.secondary),
                 ),
               ),
             ),
@@ -489,20 +530,20 @@ class _GigDetailsPageState extends ConsumerState<GigDetailsPage> {
               child: ElevatedButton(
                 onPressed: _isApplying ? null : _submitApplication,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black87,
-                  foregroundColor: Colors.white,
+                  backgroundColor: colorScheme.secondary,
+                  foregroundColor: colorScheme.onSecondary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  disabledBackgroundColor: Colors.grey[300],
+                  disabledBackgroundColor: colorScheme.surfaceContainerHighest,
                 ),
                 child: _isApplying
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 20,
                         width: 20,
                         child: CircularProgressIndicator(
-                          color: Colors.white,
+                          color: colorScheme.onSecondary,
                           strokeWidth: 2,
                         ),
                       )

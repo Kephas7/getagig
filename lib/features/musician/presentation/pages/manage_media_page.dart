@@ -15,11 +15,13 @@ enum MediaType { photos, videos, audio }
 class ManageMediaPage extends ConsumerStatefulWidget {
   final MediaType mediaType;
   final List<String> mediaUrls;
+  final bool isOwner;
 
   const ManageMediaPage({
     super.key,
     required this.mediaType,
     required this.mediaUrls,
+    this.isOwner = true,
   });
 
   @override
@@ -72,6 +74,10 @@ class _ManageMediaPageState extends ConsumerState<ManageMediaPage> {
   }
 
   Future<void> _showSourceSelectionDialog(WidgetRef ref) async {
+    if (!widget.isOwner) {
+      return;
+    }
+
     // For audio, show different options
     if (widget.mediaType == MediaType.audio) {
       _pickAudioFiles(ref);
@@ -327,6 +333,10 @@ class _ManageMediaPageState extends ConsumerState<ManageMediaPage> {
   }
 
   Future<void> _deleteMedia(String url) async {
+    if (!widget.isOwner) {
+      return;
+    }
+
     String filename = url;
     if (url.contains('/')) {
       filename = url.split('/').last;
@@ -370,12 +380,14 @@ class _ManageMediaPageState extends ConsumerState<ManageMediaPage> {
             builder: (context) => VideoGalleryViewer(
               videoUrls: urls,
               initialIndex: index,
-              isOwner: true,
-              onDelete: (deletedIndex) {
-                if (deletedIndex < urls.length) {
-                  _deleteMedia(urls[deletedIndex]);
-                }
-              },
+              isOwner: widget.isOwner,
+              onDelete: widget.isOwner
+                  ? (deletedIndex) {
+                      if (deletedIndex < urls.length) {
+                        _deleteMedia(urls[deletedIndex]);
+                      }
+                    }
+                  : null,
             ),
           ),
         );
@@ -388,12 +400,14 @@ class _ManageMediaPageState extends ConsumerState<ManageMediaPage> {
             builder: (context) => AudioGalleryViewer(
               audioUrls: urls,
               initialIndex: index,
-              isOwner: true,
-              onDelete: (deletedIndex) {
-                if (deletedIndex < urls.length) {
-                  _deleteMedia(urls[deletedIndex]);
-                }
-              },
+              isOwner: widget.isOwner,
+              onDelete: widget.isOwner
+                  ? (deletedIndex) {
+                      if (deletedIndex < urls.length) {
+                        _deleteMedia(urls[deletedIndex]);
+                      }
+                    }
+                  : null,
             ),
           ),
         );
@@ -455,7 +469,8 @@ class _ManageMediaPageState extends ConsumerState<ManageMediaPage> {
       body: profileState.status == MusicianProfileStatus.loading
           ? const Center(child: CircularProgressIndicator())
           : _buildBody(profileState),
-      floatingActionButton: _getCurrentMediaCount() < _maxCount
+      floatingActionButton:
+          widget.isOwner && _getCurrentMediaCount() < _maxCount
           ? FloatingActionButton.extended(
               onPressed: () => _showSourceSelectionDialog(ref),
               icon: Icon(
@@ -513,15 +528,24 @@ class _ManageMediaPageState extends ConsumerState<ManageMediaPage> {
             style: TextStyle(fontSize: 16, color: Colors.grey[600]),
           ),
           const SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: () => _showSourceSelectionDialog(ref),
-            icon: const Icon(Icons.add),
-            label: Text('Upload $_title'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-              textStyle: const TextStyle(fontSize: 16),
+          if (widget.isOwner)
+            ElevatedButton.icon(
+              onPressed: () => _showSourceSelectionDialog(ref),
+              icon: const Icon(Icons.add),
+              label: Text('Upload $_title'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+                textStyle: const TextStyle(fontSize: 16),
+              ),
+            )
+          else
+            Text(
+              'No media uploaded yet',
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
-          ),
         ],
       ),
     );
@@ -584,28 +608,33 @@ class _ManageMediaPageState extends ConsumerState<ManageMediaPage> {
             ),
 
           // Delete button
-          Positioned(
-            top: 8,
-            right: 8,
-            child: InkWell(
-              onTap: () => _showDeleteConfirmation(url),
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+          if (widget.isOwner)
+            Positioned(
+              top: 8,
+              right: 8,
+              child: InkWell(
+                onTap: () => _showDeleteConfirmation(url),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.delete,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
-                child: const Icon(Icons.delete, color: Colors.white, size: 20),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -677,6 +706,10 @@ class _ManageMediaPageState extends ConsumerState<ManageMediaPage> {
   }
 
   void _showDeleteConfirmation(String url) {
+    if (!widget.isOwner) {
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -731,4 +764,3 @@ class _ManageMediaPageState extends ConsumerState<ManageMediaPage> {
     }).toList();
   }
 }
-

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:getagig/app/theme/app_shell_styles.dart';
 import 'package:getagig/app/widgets/app_logo.dart';
 import 'package:getagig/core/controllers/shake_refresh_controller.dart';
+import 'package:getagig/features/dashboard/presentation/widgets/dashboard_app_drawer.dart';
 import 'package:getagig/features/messaging/presentation/pages/messages_page.dart';
 import 'package:getagig/features/musician/presentation/pages/profile.dart';
 import 'package:getagig/features/gigs/presentation/pages/organizer_gigs_page.dart';
@@ -54,16 +55,21 @@ class _OrganizerDashboardPageState
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
+      drawer: const DashboardAppDrawer(),
       appBar: AppBar(
         backgroundColor: colorScheme.surface,
         surfaceTintColor: Colors.transparent,
         scrolledUnderElevation: 0,
         elevation: 0,
-        automaticallyImplyLeading: false,
-        title: Padding(
-          padding: const EdgeInsets.only(left: 4),
-          child: const AppLogo(height: 48),
+        centerTitle: true,
+        leading: Builder(
+          builder: (drawerContext) => IconButton(
+            icon: Icon(Icons.menu_rounded, color: colorScheme.onSurface),
+            tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+            onPressed: () => Scaffold.of(drawerContext).openDrawer(),
+          ),
         ),
+        title: const AppLogo(height: 48),
         actions: [
           const _NotificationIconButtonWithBadge(),
           const SizedBox(width: 16),

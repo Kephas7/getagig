@@ -18,6 +18,8 @@ class OnboardingNextButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Padding(
       padding: EdgeInsets.fromLTRB(
         contentPadding,
@@ -26,27 +28,25 @@ class OnboardingNextButton extends StatelessWidget {
         isLandscape
             ? 16
             : isLargeScreen
-                ? 40
-                : 30,
+            ? 40
+            : 30,
       ),
       child: SizedBox(
         width: double.infinity,
         child: ElevatedButton(
           onPressed: onPressed,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.black,
-            foregroundColor: Colors.white,
+            backgroundColor: colorScheme.secondary,
+            foregroundColor: colorScheme.onSecondary,
             padding: EdgeInsets.symmetric(
               vertical: isLargeScreen ? 18 : 16,
               horizontal: 24,
             ),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(
-                isLargeScreen ? 12 : 8,
-              ),
+              borderRadius: BorderRadius.circular(isLargeScreen ? 12 : 8),
             ),
             elevation: 2,
-            shadowColor: Colors.black.withOpacity(0.3),
+            shadowColor: colorScheme.secondary.withValues(alpha: 0.35),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -73,4 +73,3 @@ class OnboardingNextButton extends StatelessWidget {
     );
   }
 }
-

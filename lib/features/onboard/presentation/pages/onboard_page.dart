@@ -76,6 +76,7 @@ class _OnboardPageState extends ConsumerState<OnboardPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final mediaQuery = MediaQuery.of(context);
     final size = mediaQuery.size;
     final orientation = mediaQuery.orientation;
@@ -90,7 +91,7 @@ class _OnboardPageState extends ConsumerState<OnboardPage> {
         : 20;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -114,7 +115,7 @@ class _OnboardPageState extends ConsumerState<OnboardPage> {
                           child: Text(
                             "Skip",
                             style: TextStyle(
-                              color: Colors.black,
+                              color: colorScheme.onSurfaceVariant,
                               fontFamily: 'Urbanist-Medium',
                               fontSize: isSmallScreen ? 14 : 16,
                             ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:getagig/app/theme/app_shell_styles.dart';
 import 'package:getagig/core/api/api_endpoints.dart';
 import 'package:getagig/features/admin/domain/entities/admin_user_entity.dart';
 import 'package:getagig/features/admin/presentation/view_model/admin_users_viewmodel.dart';
@@ -9,6 +10,20 @@ import 'package:getagig/features/organizer/presentation/pages/view_organizer_pro
 import 'package:intl/intl.dart';
 
 enum _AdminUserFilter { all, musician, organizer, pending }
+
+class _AdminMetricData {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  const _AdminMetricData({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+}
 
 class AdminDashboardPage extends ConsumerStatefulWidget {
   const AdminDashboardPage({super.key});
@@ -26,119 +41,389 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   @override
   Widget build(BuildContext context) {
     final usersAsync = ref.watch(adminUsersProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: colorScheme.surface,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         elevation: 0,
-        title: const Text(
-          'Admin Dashboard',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w800,
-            color: Colors.black87,
-          ),
+        titleSpacing: 16,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Admin Control Center',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                color: colorScheme.onSurface,
+              ),
+            ),
+            Text(
+              'Users, roles and verification',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
         ),
         actions: [
-          IconButton(
-            onPressed: _isCreatingUser ? null : _onCreateUser,
-            icon: const Icon(Icons.person_add_alt_1_outlined),
+          _buildAppBarAction(
+            icon: Icons.person_add_alt_1_rounded,
             tooltip: 'Create user',
-          ),
-          IconButton(
-            onPressed: _isLoggingOut ? null : _onLogout,
-            icon: _isLoggingOut
+            onPressed: _isCreatingUser ? null : _onCreateUser,
+            replacementIcon: _isCreatingUser
                 ? const SizedBox(
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.logout_rounded),
-            tooltip: 'Logout',
+                : null,
           ),
-          IconButton(
-            onPressed: () {
-              ref.read(adminUsersProvider.notifier).refresh();
-            },
-            icon: const Icon(Icons.refresh),
+          _buildAppBarAction(
+            icon: Icons.refresh_rounded,
+            tooltip: 'Refresh',
+            onPressed: () => ref.read(adminUsersProvider.notifier).refresh(),
+          ),
+          _buildAppBarAction(
+            icon: Icons.logout_rounded,
+            tooltip: 'Logout',
+            onPressed: _isLoggingOut ? null : _onLogout,
+            replacementIcon: _isLoggingOut
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : null,
           ),
           const SizedBox(width: 8),
         ],
       ),
-      body: usersAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => _buildErrorState(error.toString()),
-        data: (users) => _buildContent(users),
+      body: DecoratedBox(
+        decoration: AppShellStyles.pageBackground(context),
+        child: usersAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, _) => _buildErrorState(error.toString()),
+          data: (users) => _buildContent(users),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAppBarAction({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback? onPressed,
+    Widget? replacementIcon,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerLow,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.6),
+          ),
+        ),
+        child: IconButton(
+          tooltip: tooltip,
+          onPressed: onPressed,
+          icon: replacementIcon ?? Icon(icon),
+          color: colorScheme.onSurface,
+          iconSize: 20,
+        ),
       ),
     );
   }
 
   Widget _buildErrorState(String message) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.redAccent),
-            const SizedBox(height: 12),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.black54),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => ref.read(adminUsersProvider.notifier).refresh(),
-              child: const Text('Retry'),
-            ),
-          ],
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
+      children: [
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: AppShellStyles.glassCard(context, radius: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline, size: 48, color: colorScheme.error),
+              const SizedBox(height: 12),
+              Text(
+                'Unable to load users',
+                style: TextStyle(
+                  color: colorScheme.onSurface,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: colorScheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () =>
+                    ref.read(adminUsersProvider.notifier).refresh(),
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Retry'),
+              ),
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
   Widget _buildContent(List<AdminUserEntity> users) {
+    final colorScheme = Theme.of(context).colorScheme;
     final filteredUsers = _filterUsers(users);
+    final musicianCount = users
+        .where((user) => user.role.toLowerCase() == 'musician')
+        .length;
+    final organizerCount = users
+        .where((user) => user.role.toLowerCase() == 'organizer')
+        .length;
+    final pendingCount = users
+        .where(
+          (user) =>
+              user.isVerifiableRole &&
+              !user.isVerified &&
+              user.verificationRequested,
+        )
+        .length;
+    final verifiedCount = users
+        .where((user) => user.isVerifiableRole && user.isVerified)
+        .length;
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-          child: _buildFilterChips(users),
-        ),
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: () => ref.read(adminUsersProvider.notifier).refresh(),
-            child: filteredUsers.isEmpty
-                ? ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    children: const [
-                      SizedBox(height: 120),
-                      Center(
-                        child: Text(
-                          'No users found for this filter.',
-                          style: TextStyle(
-                            color: Colors.black54,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                    itemCount: filteredUsers.length,
-                    itemBuilder: (context, index) {
-                      final user = filteredUsers[index];
-                      return _buildUserCard(user);
-                    },
-                  ),
+    return RefreshIndicator(
+      onRefresh: () => ref.read(adminUsersProvider.notifier).refresh(),
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+        children: [
+          _buildOverviewCard(
+            totalUsers: users.length,
+            musicianCount: musicianCount,
+            organizerCount: organizerCount,
+            pendingCount: pendingCount,
+            verifiedCount: verifiedCount,
           ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+            decoration: AppShellStyles.glassCard(context, radius: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.filter_alt_outlined,
+                      size: 18,
+                      color: colorScheme.secondary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Filter Users',
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${filteredUsers.length}/${users.length}',
+                      style: TextStyle(
+                        color: colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                _buildFilterChips(users),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          if (filteredUsers.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: AppShellStyles.glassCard(context, radius: 20),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.search_off_rounded,
+                    size: 40,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'No users found for this filter.',
+                    style: TextStyle(
+                      color: colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            ...filteredUsers.map(_buildUserCard),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOverviewCard({
+    required int totalUsers,
+    required int musicianCount,
+    required int organizerCount,
+    required int pendingCount,
+    required int verifiedCount,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final cardItems = [
+      _AdminMetricData(
+        label: 'Total Users',
+        value: '$totalUsers',
+        icon: Icons.groups_rounded,
+        color: colorScheme.secondary,
+      ),
+      _AdminMetricData(
+        label: 'Musicians',
+        value: '$musicianCount',
+        icon: Icons.music_note_rounded,
+        color: const Color(0xFF4F8CFF),
+      ),
+      _AdminMetricData(
+        label: 'Organizers',
+        value: '$organizerCount',
+        icon: Icons.business_center_rounded,
+        color: const Color(0xFF10B981),
+      ),
+      _AdminMetricData(
+        label: 'Pending Reviews',
+        value: '$pendingCount',
+        icon: Icons.pending_actions_rounded,
+        color: const Color(0xFFF59E0B),
+      ),
+      _AdminMetricData(
+        label: 'Verified',
+        value: '$verifiedCount',
+        icon: Icons.verified_rounded,
+        color: const Color(0xFF10B981),
+      ),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      decoration: AppShellStyles.glassCard(
+        context,
+        radius: 24,
+        tint: colorScheme.secondary,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Platform Snapshot',
+            style: TextStyle(
+              color: colorScheme.onSurface,
+              fontSize: 17,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Quick overview of account and verification health',
+            style: TextStyle(
+              color: colorScheme.onSurfaceVariant,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 12),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final crossAxisCount = constraints.maxWidth > 560 ? 5 : 2;
+              final spacing = 10.0;
+              final itemWidth =
+                  (constraints.maxWidth - ((crossAxisCount - 1) * spacing)) /
+                  crossAxisCount;
+
+              return Wrap(
+                spacing: spacing,
+                runSpacing: spacing,
+                children: cardItems
+                    .map(
+                      (item) => _buildMetricTile(item: item, width: itemWidth),
+                    )
+                    .toList(growable: false),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetricTile({
+    required _AdminMetricData item,
+    required double width,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return SizedBox(
+      width: width,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+        decoration: BoxDecoration(
+          color: item.color.withValues(
+            alpha: AppShellStyles.isDark(context) ? 0.2 : 0.1,
+          ),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: item.color.withValues(alpha: 0.3)),
         ),
-      ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(item.icon, size: 17, color: item.color),
+            const SizedBox(height: 8),
+            Text(
+              item.value,
+              style: TextStyle(
+                color: colorScheme.onSurface,
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              item.label,
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -190,14 +475,45 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
     required String label,
     required _AdminUserFilter filter,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final selected = _selectedFilter == filter;
+
+    IconData icon;
+    switch (filter) {
+      case _AdminUserFilter.all:
+        icon = Icons.groups_rounded;
+        break;
+      case _AdminUserFilter.musician:
+        icon = Icons.music_note_rounded;
+        break;
+      case _AdminUserFilter.organizer:
+        icon = Icons.business_center_rounded;
+        break;
+      case _AdminUserFilter.pending:
+        icon = Icons.pending_actions_rounded;
+        break;
+    }
+
     return ChoiceChip(
       label: Text(label),
-      selected: _selectedFilter == filter,
-      selectedColor: Colors.black87,
+      avatar: Icon(
+        icon,
+        size: 16,
+        color: selected
+            ? colorScheme.onSecondaryContainer
+            : colorScheme.secondary,
+      ),
+      selected: selected,
+      showCheckmark: false,
+      backgroundColor: colorScheme.surfaceContainerLow,
+      selectedColor: colorScheme.secondaryContainer,
       labelStyle: TextStyle(
-        color: _selectedFilter == filter ? Colors.white : Colors.black87,
+        color: selected
+            ? colorScheme.onSecondaryContainer
+            : colorScheme.onSurface,
         fontWeight: FontWeight.w600,
       ),
+      side: BorderSide(color: colorScheme.outlineVariant),
       onSelected: (_) {
         setState(() {
           _selectedFilter = filter;
@@ -209,13 +525,15 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   Widget _buildUserCard(AdminUserEntity user) {
     final isBusy = _busyUserId == user.id;
     final avatarUrl = ApiEndpoints.buildProfilePictureUrl(user.profilePicture);
+    final colorScheme = Theme.of(context).colorScheme;
+    final roleColor = _roleColor(user.role);
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: Colors.grey.shade200),
+      decoration: AppShellStyles.glassCard(
+        context,
+        radius: 20,
+        highlighted: isBusy,
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -227,15 +545,15 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
               children: [
                 CircleAvatar(
                   radius: 22,
-                  backgroundColor: Colors.grey.shade200,
+                  backgroundColor: roleColor.withValues(alpha: 0.2),
                   backgroundImage: avatarUrl.isNotEmpty
                       ? NetworkImage(avatarUrl)
                       : null,
                   child: avatarUrl.isEmpty
                       ? Text(
                           _initialsFromName(user.username),
-                          style: const TextStyle(
-                            color: Colors.black87,
+                          style: TextStyle(
+                            color: roleColor,
                             fontWeight: FontWeight.bold,
                           ),
                         )
@@ -248,60 +566,37 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                     children: [
                       Text(
                         user.username,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
+                          color: colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         user.email,
-                        style: const TextStyle(
-                          color: Colors.black54,
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
                           fontSize: 13,
                         ),
                       ),
                       const SizedBox(height: 6),
                       Text(
                         'Joined ${_formatDate(user.createdAt)}',
-                        style: const TextStyle(
-                          color: Colors.black45,
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
                           fontSize: 12,
                         ),
                       ),
                     ],
                   ),
                 ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (_canViewProfile(user))
-                      IconButton(
-                        onPressed: isBusy ? null : () => _onViewProfile(user),
-                        icon: const Icon(
-                          Icons.visibility_outlined,
-                          color: Colors.blueGrey,
-                        ),
-                        tooltip: 'View profile',
-                      ),
-                    IconButton(
-                      onPressed: isBusy ? null : () => _onEditUser(user),
-                      icon: const Icon(
-                        Icons.edit_outlined,
-                        color: Colors.blueAccent,
-                      ),
-                      tooltip: 'Edit user',
-                    ),
-                    IconButton(
-                      onPressed: isBusy ? null : () => _onDeleteUser(user),
-                      icon: const Icon(
-                        Icons.delete_outline,
-                        color: Colors.redAccent,
-                      ),
-                      tooltip: 'Delete user',
-                    ),
-                  ],
-                ),
+                if (isBusy)
+                  const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
               ],
             ),
             const SizedBox(height: 10),
@@ -309,31 +604,77 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                _buildPill(
-                  label: user.role.toUpperCase(),
-                  color: _roleColor(user.role),
-                ),
+                _buildPill(label: user.role.toUpperCase(), color: roleColor),
                 if (user.isVerifiableRole)
                   _buildPill(
                     label: _verificationLabel(user),
                     color: _verificationColor(user),
                   ),
+                if (_canViewProfile(user))
+                  _buildPill(
+                    label: 'PROFILE LINKED',
+                    color: colorScheme.secondary,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                if (_canViewProfile(user))
+                  _buildActionButton(
+                    label: 'View',
+                    icon: Icons.visibility_outlined,
+                    onPressed: isBusy ? null : () => _onViewProfile(user),
+                    color: colorScheme.secondary,
+                  ),
+                _buildActionButton(
+                  label: 'Edit',
+                  icon: Icons.edit_outlined,
+                  onPressed: isBusy ? null : () => _onEditUser(user),
+                  color: colorScheme.primary,
+                ),
+                _buildActionButton(
+                  label: 'Delete',
+                  icon: Icons.delete_outline,
+                  onPressed: isBusy ? null : () => _onDeleteUser(user),
+                  color: colorScheme.error,
+                ),
               ],
             ),
             if (user.isVerifiableRole) ...[
               const SizedBox(height: 12),
               if (user.isVerified)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: OutlinedButton.icon(
-                    onPressed: isBusy
-                        ? null
-                        : () => _onVerificationAction(
-                            user: user,
-                            isVerified: false,
-                          ),
-                    icon: const Icon(Icons.verified_user_outlined),
-                    label: const Text('Mark as unverified'),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'User is currently verified.',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        onPressed: isBusy
+                            ? null
+                            : () => _onVerificationAction(
+                                user: user,
+                                isVerified: false,
+                              ),
+                        icon: const Icon(Icons.verified_user_outlined),
+                        label: const Text('Mark as unverified'),
+                      ),
+                    ],
                   ),
                 )
               else if (user.verificationRequested)
@@ -361,17 +702,56 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                   ],
                 )
               else
-                const Text(
-                  'No verification request submitted.',
-                  style: TextStyle(
-                    color: Colors.black45,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: colorScheme.outlineVariant),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline_rounded,
+                        size: 16,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'No verification request submitted yet.',
+                          style: TextStyle(
+                            color: colorScheme.onSurfaceVariant,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required String label,
+    required IconData icon,
+    required VoidCallback? onPressed,
+    required Color color,
+  }) {
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 16),
+      label: Text(label),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: color,
+        side: BorderSide(color: color.withValues(alpha: 0.35)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -909,6 +1289,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.28)),
       ),
       child: Text(
         label,
@@ -924,13 +1305,13 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   Color _roleColor(String role) {
     switch (role.toLowerCase()) {
       case 'admin':
-        return Colors.redAccent;
+        return const Color(0xFFEF4444);
       case 'organizer':
-        return Colors.green;
+        return const Color(0xFF10B981);
       case 'musician':
-        return Colors.purple;
+        return const Color(0xFF4F8CFF);
       default:
-        return Colors.blueGrey;
+        return const Color(0xFF94A3B8);
     }
   }
 
@@ -941,9 +1322,9 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   }
 
   Color _verificationColor(AdminUserEntity user) {
-    if (user.isVerified) return Colors.green;
-    if (user.verificationRequested) return Colors.orange;
-    return Colors.grey;
+    if (user.isVerified) return const Color(0xFF10B981);
+    if (user.verificationRequested) return const Color(0xFFF59E0B);
+    return const Color(0xFF94A3B8);
   }
 
   String _formatDate(DateTime? date) {

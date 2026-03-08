@@ -18,7 +18,9 @@ import 'edit_profile_page.dart';
 
 class ViewProfilePage extends ConsumerStatefulWidget {
   final String? musicianId;
-  const ViewProfilePage({super.key, this.musicianId});
+  final bool showAppBar;
+
+  const ViewProfilePage({super.key, this.musicianId, this.showAppBar = true});
 
   @override
   ConsumerState<ViewProfilePage> createState() => _ViewProfilePageState();
@@ -209,6 +211,15 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
     );
   }
 
+  void _openEditProfile(MusicianEntity musician) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditProfilePage(musician: musician),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final profileState = ref.watch(musicianProfileViewModelProvider);
@@ -224,6 +235,15 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
         );
       }
     });
+
+    final body = _buildBody(profileState);
+
+    if (!widget.showAppBar) {
+      return ColoredBox(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        child: body,
+      );
+    }
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -254,20 +274,12 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
                   color: colorScheme.onSurface,
                   size: 28,
                 ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          EditProfilePage(musician: profileState.profile!),
-                    ),
-                  );
-                },
+                onPressed: () => _openEditProfile(profileState.profile!),
               ),
             ),
         ],
       ),
-      body: _buildBody(profileState),
+      body: body,
     );
   }
 
@@ -332,6 +344,20 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         children: [
           _buildHeroHeader(musician: musician, locationText: locationText),
+          if (_isOwnerView) ...[
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: _buildAvailabilityToggle(
+                available: musician.isAvailable,
+                onChanged: (value) {
+                  ref
+                      .read(musicianProfileViewModelProvider.notifier)
+                      .updateAvailability(value);
+                },
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
           if (musician.bio != null && musician.bio!.trim().isNotEmpty) ...[
             _buildSectionTitle('About'),
@@ -388,94 +414,76 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
             color: const Color(0xFFF59E0B),
           ),
           const SizedBox(height: 18),
-          _buildSectionTitle('Portfolio'),
-          Container(
-            decoration: AppShellStyles.glassCard(context, radius: 24),
-            child: Column(
-              children: [
-                _buildMediaTile(
-                  icon: Icons.photo_library_rounded,
-                  title: 'Photos',
-                  count: musician.photos.length,
-                  color: Theme.of(context).colorScheme.secondary,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ManageMediaPage(
-                          mediaType: MediaType.photos,
-                          mediaUrls: musician.photos.cast<String>(),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                _buildMediaTile(
-                  icon: Icons.videocam_rounded,
-                  title: 'Videos',
-                  count: musician.videos.length,
-                  color: const Color(0xFF10B981),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ManageMediaPage(
-                          mediaType: MediaType.videos,
-                          mediaUrls: musician.videos.cast<String>(),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                _buildMediaTile(
-                  icon: Icons.audiotrack_rounded,
-                  title: 'Audio Samples',
-                  count: musician.audioSamples.length,
-                  color: const Color(0xFFF59E0B),
-                  isLast: true,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ManageMediaPage(
-                          mediaType: MediaType.audio,
-                          mediaUrls: musician.audioSamples.cast<String>(),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
+          _buildSectionTitle('Portfolio & Media'),
+          Column(
+            children: [
+              _buildMediaGalleryCard(
+                title: 'Photos',
+                icon: Icons.photo_library_rounded,
+                mediaType: MediaType.photos,
+                mediaValues: List<String>.from(musician.photos),
+                accentColor: Theme.of(context).colorScheme.secondary,
+              ),
+              const SizedBox(height: 12),
+              _buildMediaGalleryCard(
+                title: 'Videos',
+                icon: Icons.videocam_rounded,
+                mediaType: MediaType.videos,
+                mediaValues: List<String>.from(musician.videos),
+                accentColor: const Color(0xFF10B981),
+              ),
+              const SizedBox(height: 12),
+              _buildMediaGalleryCard(
+                title: 'Audio Samples',
+                icon: Icons.audiotrack_rounded,
+                mediaType: MediaType.audio,
+                mediaValues: List<String>.from(musician.audioSamples),
+                accentColor: const Color(0xFFF59E0B),
+              ),
+            ],
           ),
-          if (_isOwnerView) ...[
-            const SizedBox(height: 18),
-            FilledButton.icon(
-              onPressed: () {
-                ref
-                    .read(musicianProfileViewModelProvider.notifier)
-                    .updateAvailability(!musician.isAvailable);
-              },
-              icon: Icon(
-                musician.isAvailable
-                    ? Icons.pause_circle_outline_rounded
-                    : Icons.check_circle_rounded,
-              ),
-              label: Text(
-                musician.isAvailable
-                    ? 'Mark as Unavailable'
-                    : 'Mark as Available',
-              ),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(50),
-                backgroundColor: musician.isAvailable
-                    ? AppShellStyles.mutedText(context)
-                    : const Color(0xFF10B981),
-                foregroundColor: Colors.white,
-              ),
-            ),
-          ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildHeroActionPill({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: color.withValues(
+              alpha: AppShellStyles.isDark(context) ? 0.22 : 0.12,
+            ),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: color.withValues(alpha: 0.32)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.65,
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -496,6 +504,18 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
       ),
       child: Column(
         children: [
+          if (_isOwnerView && !widget.showAppBar) ...[
+            Align(
+              alignment: Alignment.centerRight,
+              child: _buildHeroActionPill(
+                label: 'EDIT PROFILE',
+                icon: Icons.edit_note_rounded,
+                color: colorScheme.secondary,
+                onTap: () => _openEditProfile(musician),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
           Hero(
             tag: 'profile_${widget.musicianId ?? "my_profile"}',
             child: Stack(
@@ -671,6 +691,50 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
               letterSpacing: 0.65,
               fontSize: 11,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvailabilityToggle({
+    required bool available,
+    required ValueChanged<bool> onChanged,
+  }) {
+    final activeColor = available
+        ? const Color(0xFF10B981)
+        : AppShellStyles.mutedText(context);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: activeColor.withValues(
+          alpha: AppShellStyles.isDark(context) ? 0.22 : 0.12,
+        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: activeColor.withValues(alpha: 0.32)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.event_available_rounded, size: 16, color: activeColor),
+          const SizedBox(width: 8),
+          Text(
+            'Available for gigs',
+            style: TextStyle(
+              color: activeColor,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.2,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Switch.adaptive(
+            value: available,
+            onChanged: onChanged,
+            activeThumbColor: const Color(0xFF10B981),
+            activeTrackColor: const Color(0xFF10B981).withValues(alpha: 0.45),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
         ],
       ),
@@ -887,70 +951,284 @@ class _ViewProfilePageState extends ConsumerState<ViewProfilePage> {
     );
   }
 
-  Widget _buildMediaTile({
-    required IconData icon,
+  void _openMusicianMediaGallery({
+    required MediaType mediaType,
+    required List<String> mediaValues,
+  }) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ManageMediaPage(
+          mediaType: mediaType,
+          mediaUrls: mediaValues,
+          isOwner: _isOwnerView,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMediaGalleryCard({
     required String title,
-    required int count,
-    required Color color,
-    bool isLast = false,
-    required VoidCallback onTap,
+    required IconData icon,
+    required MediaType mediaType,
+    required List<String> mediaValues,
+    required Color accentColor,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
+    final values = mediaValues
+        .where((value) => value.trim().isNotEmpty)
+        .toList(growable: false);
 
-    return Column(
-      children: [
-        ListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 6,
-          ),
-          leading: Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withValues(
-                alpha: AppShellStyles.isDark(context) ? 0.22 : 0.12,
-              ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          title: Text(
-            title,
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 15,
-              color: colorScheme.onSurface,
-            ),
-          ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+      decoration: AppShellStyles.glassCard(context, radius: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Text(
-                '$count items',
-                style: TextStyle(
-                  color: AppShellStyles.mutedText(context),
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
+              Container(
+                padding: const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(
+                    alpha: AppShellStyles.isDark(context) ? 0.22 : 0.12,
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: accentColor, size: 18),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _mediaLabel(values.length),
+                      style: TextStyle(
+                        color: AppShellStyles.mutedText(context),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 8),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 14,
-                color: AppShellStyles.mutedText(context),
+              TextButton(
+                onPressed: () => _openMusicianMediaGallery(
+                  mediaType: mediaType,
+                  mediaValues: values,
+                ),
+                child: const Text('View all'),
               ),
             ],
           ),
-          onTap: onTap,
-        ),
-        if (!isLast)
-          Divider(
-            height: 1,
-            indent: 66,
-            endIndent: 16,
-            color: AppShellStyles.border(context),
-          ),
-      ],
+          const SizedBox(height: 12),
+          if (values.isEmpty)
+            _buildGalleryPlaceholder(
+              label: 'No $title yet',
+              icon: icon,
+              accentColor: accentColor,
+            )
+          else
+            _buildMediaPreviewGrid(
+              mediaType: mediaType,
+              mediaValues: values,
+              accentColor: accentColor,
+            ),
+        ],
+      ),
     );
+  }
+
+  Widget _buildMediaPreviewGrid({
+    required MediaType mediaType,
+    required List<String> mediaValues,
+    required Color accentColor,
+  }) {
+    const int previewLimit = 4;
+    final previewValues = mediaValues
+        .take(previewLimit)
+        .toList(growable: false);
+    final hiddenCount = mediaValues.length - previewValues.length;
+    final tileCount = previewValues.length + (hiddenCount > 0 ? 1 : 0);
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: tileCount,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: 1.08,
+      ),
+      itemBuilder: (context, index) {
+        if (hiddenCount > 0 && index == previewValues.length) {
+          return InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () => _openMusicianMediaGallery(
+              mediaType: mediaType,
+              mediaValues: mediaValues,
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                color: AppShellStyles.mutedSurface(context),
+                border: Border.all(color: AppShellStyles.border(context)),
+              ),
+              child: Center(
+                child: Text(
+                  '+$hiddenCount',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
+        return _buildMediaPreviewTile(
+          mediaType: mediaType,
+          rawValue: previewValues[index],
+          accentColor: accentColor,
+          onTap: () => _openMusicianMediaGallery(
+            mediaType: mediaType,
+            mediaValues: mediaValues,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMediaPreviewTile({
+    required MediaType mediaType,
+    required String rawValue,
+    required Color accentColor,
+    required VoidCallback onTap,
+  }) {
+    final displayUrl = switch (mediaType) {
+      MediaType.photos => ApiEndpoints.buildImageUrl(rawValue),
+      MediaType.videos => ApiEndpoints.buildVideoUrl(rawValue),
+      MediaType.audio => ApiEndpoints.buildAudioUrl(rawValue),
+    };
+
+    final mediaIcon = switch (mediaType) {
+      MediaType.photos => Icons.photo_rounded,
+      MediaType.videos => Icons.play_circle_fill_rounded,
+      MediaType.audio => Icons.audiotrack_rounded,
+    };
+
+    if (mediaType == MediaType.photos && displayUrl.isNotEmpty) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(14),
+          child: CachedNetworkImage(
+            imageUrl: displayUrl,
+            fit: BoxFit.cover,
+            placeholder: (_, url) => Container(
+              color: AppShellStyles.mutedSurface(context),
+              child: const Center(
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+            errorWidget: (_, url, error) => _buildGalleryPlaceholder(
+              label: 'Preview unavailable',
+              icon: Icons.broken_image_rounded,
+              accentColor: accentColor,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          color: AppShellStyles.mutedSurface(context),
+          border: Border.all(color: AppShellStyles.border(context)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(mediaIcon, color: accentColor, size: 28),
+            const SizedBox(height: 8),
+            Text(
+              _mediaFilename(rawValue),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGalleryPlaceholder({
+    required String label,
+    required IconData icon,
+    required Color accentColor,
+  }) {
+    return Container(
+      height: 84,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        color: AppShellStyles.mutedSurface(context),
+        border: Border.all(color: AppShellStyles.border(context)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 18, color: accentColor),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(
+              color: AppShellStyles.mutedText(context),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _mediaLabel(int count) {
+    return '$count item${count == 1 ? '' : 's'}';
+  }
+
+  String _mediaFilename(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return 'Untitled';
+    }
+
+    final segments = trimmed.split('/');
+    return segments.isEmpty ? trimmed : segments.last;
   }
 }

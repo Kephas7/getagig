@@ -23,27 +23,29 @@ class _SplashPageState extends ConsumerState<SplashPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     // Navigation is handled automatically by RouterNotifier and GoRouter
     // based on the authViewModelProvider state.
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const AppLogo(height: 150, width: 150, forceLight: true),
             const SizedBox(height: 20),
-            const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(colorScheme.secondary),
             ),
             const SizedBox(height: 10),
-            const Text(
+            Text(
               'Get-a-Gig',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Colors.blue,
+                color: colorScheme.secondary,
               ),
             ),
           ],
