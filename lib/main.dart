@@ -12,18 +12,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase and register background message handler
   await Firebase.initializeApp();
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-  // initialize Hive or other services if needed
   await HiveService().init();
 
-  // Auto-resolve backend host (emulator vs physical device)
   await ApiEndpoints.initialize();
 
-  // Initialize SharedPreferences : because this is async operation
-  // but riverpod providers are sync so we need to initialize it here
   final sharedPreferences = await SharedPreferences.getInstance();
   runApp(
     ProviderScope(

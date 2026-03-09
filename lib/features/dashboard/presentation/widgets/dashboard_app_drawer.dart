@@ -376,21 +376,22 @@ class _DashboardAppDrawerState extends ConsumerState<DashboardAppDrawer> {
                 childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
                 children: [
                   SegmentedButton<ThemeMode>(
+                    showSelectedIcon: false,
                     segments: const [
                       ButtonSegment<ThemeMode>(
                         value: ThemeMode.system,
-                        label: Text('System'),
                         icon: Icon(Icons.brightness_auto_outlined),
+                        tooltip: 'System theme',
                       ),
                       ButtonSegment<ThemeMode>(
                         value: ThemeMode.light,
-                        label: Text('Light'),
                         icon: Icon(Icons.light_mode_outlined),
+                        tooltip: 'Light theme',
                       ),
                       ButtonSegment<ThemeMode>(
                         value: ThemeMode.dark,
-                        label: Text('Dark'),
                         icon: Icon(Icons.dark_mode_outlined),
+                        tooltip: 'Dark theme',
                       ),
                     ],
                     selected: {themeMode},

@@ -211,13 +211,11 @@ class _AuthInterceptor extends QueuedInterceptor {
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) async {
-    // Automatically save token on login success
     final path = response.requestOptions.path;
     if ((path == ApiEndpoints.login || path == ApiEndpoints.register)) {
       final responseBody = response.data;
       if (responseBody is Map<String, dynamic> &&
           responseBody['success'] == true) {
-        // Token is nested under data.token, not at root level
         final data = responseBody['data'];
         if (data is Map<String, dynamic>) {
           final token = data['token'];

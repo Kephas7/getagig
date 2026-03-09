@@ -6,7 +6,6 @@ final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
   throw UnimplementedError('SharedPreferences must be overridden in main.dart');
 });
 
-// UserSessionService provider
 final userSessionServiceProvider = Provider<UserSessionService>((ref) {
   final prefs = ref.read(sharedPreferencesProvider);
   return UserSessionService(prefs);
@@ -42,7 +41,7 @@ class UserSessionService {
     await _prefs.setString(_keyUserEmail, email);
     await _prefs.setString(_keyUserName, username);
     await _prefs.setString(_keyUserRole, role);
-    // Persist the JWT so ApiClient interceptor can attach it to requests
+
     if (token != null && token.isNotEmpty) {
       await _secureStorage.write(key: _keyAuthToken, value: token);
     }

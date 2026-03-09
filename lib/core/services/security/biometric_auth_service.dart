@@ -30,7 +30,6 @@ class BiometricAuthService {
   }
 
   Future<bool> isFingerprintSupported() async {
-    // Backward-compatible wrapper used in older call sites/tests.
     return isBiometricSupported();
   }
 

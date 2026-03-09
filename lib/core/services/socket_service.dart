@@ -7,7 +7,6 @@ import 'dart:async';
 final socketServiceProvider = Provider<SocketService>((ref) {
   final socketService = SocketService();
 
-  // Connect using the persisted auth token (survives app restarts)
   Future.microtask(() async {
     final session = ref.read(userSessionServiceProvider);
     final token = await session.getToken();
@@ -19,7 +18,6 @@ final socketServiceProvider = Provider<SocketService>((ref) {
     }
   });
 
-  // Ensure socket wraps up when provider gets destroyed
   ref.onDispose(() {
     socketService.disconnect();
   });
@@ -30,7 +28,6 @@ final socketServiceProvider = Provider<SocketService>((ref) {
 class SocketService {
   IO.Socket? _socket;
 
-  // Streams for external UI widgets to listen to
   final _messageStreamController =
       StreamController<Map<String, dynamic>>.broadcast();
   final _notificationStreamController =
@@ -76,8 +73,6 @@ class SocketService {
     _socket?.emit('leaveConversation', conversationId);
   }
 
-  /// Send a notification to a specific user
-  /// Notifies the receiver about messages, gig updates, or other events
   void sendNotification({
     required String userId,
     required String type,
@@ -87,7 +82,7 @@ class SocketService {
   }) {
     _socket?.emit('sendNotification', {
       'userId': userId,
-      'type': type, // 'message', 'gig_update', 'application', etc.
+      'type': type,
       'title': title,
       'content': content,
       'relatedId': relatedId,
